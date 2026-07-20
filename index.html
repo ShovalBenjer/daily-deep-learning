@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>הפוסט היומי</title>
+<meta name="description" content="קורס יומי: Deep RL + Flow Matching, פוסט אחד ביום">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="הפוסט היומי">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  :root { color-scheme: dark; --bg:#0b1220; --panel:#111a2e; --text:#e8edf7; --muted:#8fa0bf; --accent:#5eead4; --link:#7dd3fc; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", Arial, sans-serif;
+    line-height:1.75; font-size:17px;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  header { position: sticky; top:0; background:rgba(11,18,32,.92); backdrop-filter: blur(8px);
+    border-bottom:1px solid #1e293b; padding:.7rem 1rem; display:flex; gap:.6rem; align-items:center; z-index:5; }
+  header h1 { font-size:1.05rem; margin:0; color:var(--accent); font-weight:700; flex:1; white-space:nowrap; }
+  select { background:var(--panel); color:var(--text); border:1px solid #26324d; border-radius:.5rem; padding:.35rem .5rem; font-size:.9rem; max-width:44vw; }
+  main { max-width: 44rem; margin: 0 auto; padding: 1rem 1.1rem 4rem; }
+  .meta { color: var(--muted); font-size:.85rem; margin-bottom:.4rem; }
+  h2 { color:var(--accent); font-size:1.25rem; margin:1.6em 0 .5em; }
+  h3 { font-size:1.08rem; margin:1.3em 0 .4em; }
+  a { color: var(--link); }
+  blockquote { margin:1em 0; padding:.2em 1em; border-inline-start:3px solid var(--accent); color:var(--muted); }
+  pre { direction:ltr; text-align:left; background:#0f172a; border:1px solid #1e293b; border-radius:.6rem;
+    padding:.9rem; overflow-x:auto; font-size:.82rem; line-height:1.5; }
+  code { direction:ltr; unicode-bidi: embed; font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    background:#0f172a; padding:.1em .35em; border-radius:.3rem; font-size:.88em; }
+  pre code { padding:0; background:none; }
+  .katex-display { direction:ltr; overflow-x:auto; overflow-y:hidden; padding:.2em 0; }
+  .katex { direction:ltr; unicode-bidi: isolate; }
+  hr { border:none; border-top:1px solid #1e293b; margin:2em 0; }
+  table { border-collapse: collapse; display:block; overflow-x:auto; }
+  td, th { border:1px solid #26324d; padding:.35rem .6rem; }
+  .navbtns { display:flex; gap:.4rem; }
+  .navbtns button { background:var(--panel); border:1px solid #26324d; color:var(--text); border-radius:.5rem; padding:.25rem .7rem; font-size:1.05rem; }
+  .navbtns button:disabled { opacity:.35; }
+  #status { color:var(--muted); text-align:center; padding:2rem 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>הפוסט היומי</h1>
+  <div class="navbtns"><button id="older" title="פוסט קודם">‹</button><button id="newer" title="פוסט הבא">›</button></div>
+  <select id="picker"></select>
+</header>
+<main>
+  <div id="status">טוען...</div>
+  <article id="post" class="post"></article>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+let index = [], cur = -1;
+
+function typeset(el) {
+  if (window.renderMathInElement) {
+    renderMathInElement(el, { delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '\\[', right: '\\]', display: true },
+      { left: '\\(', right: '\\)', display: false }
+    ], throwOnError: false });
+  } else { setTimeout(() => typeset(el), 120); }
+}
+
+async function boot() {
+  try {
+    index = await (await fetch('posts/index.json', { cache: 'no-cache' })).json();
+  } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
+  const picker = $('#picker');
+  picker.innerHTML = index.map((p, i) =>
+    `<option value="${i}">${p.date} · ש${p.week} י${p.day}</option>`).join('');
+  picker.onchange = () => show(+picker.value, true);
+  $('#older').onclick = () => cur < index.length - 1 && show(cur + 1, true);
+  $('#newer').onclick = () => cur > 0 && show(cur - 1, true);
+  const fromHash = index.findIndex(p => '#' + p.date === location.hash);
+  show(fromHash >= 0 ? fromHash : 0, false);
+}
+
+async function show(i, pushHash) {
+  cur = i; const p = index[i]; $('#picker').value = i;
+  $('#older').disabled = cur >= index.length - 1; $('#newer').disabled = cur <= 0;
+  if (pushHash) history.replaceState(null, '', '#' + p.date);
+  $('#status').textContent = 'טוען...'; $('#post').innerHTML = '';
+  let md;
+  try { md = await (await fetch('posts/' + p.date + '.md', { cache: 'no-cache' })).text(); }
+  catch (e) { $('#status').textContent = 'הפוסט לא זמין כרגע.'; return; }
+  $('#status').textContent = '';
+  $('#post').innerHTML = '<div class="meta">שבוע ' + p.week + ' · יום ' + p.day + ' · ' + p.date + '</div>' + marked.parse(md);
+  typeset($('#post'));
+  window.scrollTo(0, 0);
+}
+boot();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "start_date": "2026-07-21",
+  "weeks": 10,
+  "playlists": {
+    "cs224r": "https://www.youtube.com/playlist?list=PLoROMvodv4rPwxE0ONYRa_itZFdaKCylL",
+    "mit_6s184": "https://www.youtube.com/playlist?list=PL57nT7tSGAAUDnli1LhTOoCxlEPGS19vH"
+  },
+  "week_plan": [
+    { "week": 1, "primary": "CS224R L1: Intro to Deep RL, MDPs, imitation learning", "secondary": null },
+    { "week": 2, "primary": "CS224R L2: Policy gradients, REINFORCE, variance reduction", "secondary": null },
+    { "week": 3, "primary": "CS224R L3: Actor-critic, value functions, GAE", "secondary": "MIT 6.S184 L1: ODEs, flows, generative modeling basics" },
+    { "week": 4, "primary": "CS224R L4: Q-learning, off-policy methods, DQN family", "secondary": "MIT 6.S184 L2: Flow matching training objective" },
+    { "week": 5, "primary": "CS224R L5: Model-based RL, world models", "secondary": "MIT 6.S184 L3: Conditional flow matching, guidance" },
+    { "week": 6, "primary": "CS224R L6: Offline RL", "secondary": "MIT 6.S184 L4: Score matching and the diffusion connection" },
+    { "week": 7, "primary": "CS224R L7: Exploration, intrinsic motivation", "secondary": "MIT 6.S184 L5: Applications, samplers, distillation" },
+    { "week": 8, "primary": "CS224R L8: RLHF and RL for LLMs/agents", "secondary": "Diffusion/flow policies in robotics (bridge week)" },
+    { "week": 9, "primary": "CS224R L9: Meta-RL, multi-task, transfer", "secondary": null },
+    { "week": 10, "primary": "CS224R L10: Frontiers, open problems, course synthesis", "secondary": null }
+  ],
+  "plan_note": "Lecture titles are approximate; the daily agent verifies against the playlists and follows reality, noting deviations.",
+  "world_scan_sources": [
+    "https://github.com/NVIDIA", "https://github.com/google-deepmind",
+    "https://github.com/microsoft", "https://github.com/facebookresearch",
+    "https://github.com/apple", "https://github.com/anthropics/claude-code",
+    "https://github.com/huggingface", "https://github.com/mistralai",
+    "https://github.com/EleutherAI", "https://github.com/merlihson/scientific-resources",
+    "https://t.me/MathyAIwithMike"
+  ],
+  "projects": [
+    "SIU: competitive ad-analysis with TabPFN, Chronos, quality gates, HITL",
+    "Figma4All: design automation with constraint solver, semantic layout, QA gates"
+  ]
+}

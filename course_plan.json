@@ -18,6 +18,26 @@
     { "week": 10, "primary": "CS224R L10: Frontiers, open problems, course synthesis", "secondary": null }
   ],
   "plan_note": "Lecture titles are approximate; the daily agent verifies against the playlists and follows reality, noting deviations.",
+  "quest_map": {
+    "oracle": "Probability Oracle: the RL + Flow Matching course thread (math core)",
+    "crafting": "Agent Architect: from-scratch coding drill (Python, SQL, DS&A, agents)",
+    "azure": "Cloud Warden: AI-103 arc, one item per day",
+    "lore": "Discovery: world scan + vetted paper cards"
+  },
+  "ai103_arc": [
+    { "week": 1, "focus": "Plan and manage an AI solution (25-30%)", "items": ["Foundry service and model selection", "deployment options and CI/CD", "Managed Identity, keyless auth, private networking, RBAC", "responsible AI: filters, guardrails, evaluators", "monitoring: drift, safety, grounding", "audit, provenance, approval workflows"] },
+    { "week": 2, "focus": "Generative AI + agentic (30-35%)", "items": ["Foundry SDK generative apps", "RAG", "multistep tool-augmented flows", "eval: fabrication, relevance, safety", "agents: roles, tools, memory", "multi-agent orchestration and autonomous-with-approval", "observability, tracing, token analytics"] },
+    { "week": 3, "focus": "The tail: CV, text, extraction (~30%, weakest first)", "items": ["image and video generation, multimodal understanding", "Content Understanding, prompt injection in images, watermarks", "entity, topic, JSON extraction, sentiment", "Translator and LLM translation, speech", "AI Search: ingest, index, semantic, hybrid, vector", "OCR, layout, document extraction"] },
+    { "week": 4, "focus": "Exam-ready", "items": ["2x full official practice assessment", "exam sandbox aka.ms/examdemo", "gap-list review", "schedule and sit"] },
+    { "after": "From week 5 on: practice-assessment loop on weakest domains. Voucher: redeem by 2026-08-18, sit by 2026-10-18, pass 700/1000." }
+  ],
+  "ai103_links": {
+    "study_guide": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103",
+    "cert_page": "https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-apps-and-agents-developer-associate/",
+    "exam_sandbox": "https://aka.ms/examdemo"
+  },
+  "weekly_rhythm": { "saturday": "Raid: spaced-retrieval challenges across all four trees, no new material", "sunday": "Repair: weekly synthesis + Feynman re-teach of the weakest concept + next-week bridge" },
+  "mastery_habits": ["predict-then-peek", "build-first-diff-second", "review-like-a-PR", "Feynman re-teach", "spaced retrieval"],
   "world_scan_sources": [
     "https://github.com/NVIDIA", "https://github.com/google-deepmind",
     "https://github.com/microsoft", "https://github.com/facebookresearch",
@@ -27,7 +47,12 @@
     "https://t.me/MathyAIwithMike"
   ],
   "projects": [
-    "SIU: competitive ad-analysis with TabPFN, Chronos, quality gates, HITL",
-    "Figma4All: design automation with constraint solver, semantic layout, QA gates"
+    "MatchIQ sports probability engine (Poisson, Dixon-Coles, calibration, Kelly)",
+    "Claude harness and orchestration, MCP and A2A systems",
+    "agenteval-bench: agent evaluation and regression tracking",
+    "mcp-guard and protobuf-fuzz-guard: adversarial fuzzing and security",
+    "SQLTok and SQL analytics",
+    "Azure AI applications on Foundry (brn-azai)",
+    "Kith: on-device personal-relationship engine (Expo, Gemma)"
   ]
 }

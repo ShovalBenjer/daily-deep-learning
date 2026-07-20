@@ -1,66 +1,122 @@
 <!doctype html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>הפוסט היומי</title>
-<meta name="description" content="קורס יומי: Deep RL + Flow Matching, פוסט אחד ביום">
-<meta name="theme-color" content="#0b1220">
+<title>The Living Codex</title>
+<meta name="description" content="Daily quests: RL + Flow Matching, coding craft, Azure, research lore.">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151320">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#efe6d2">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="הפוסט היומי">
+<meta name="apple-mobile-web-app-title" content="Living Codex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@400;500;700&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<style>
-  :root { color-scheme: dark; --bg:#0b1220; --panel:#111a2e; --text:#e8edf7; --muted:#8fa0bf; --accent:#5eead4; --link:#7dd3fc; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text);
-    font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", Arial, sans-serif;
-    line-height:1.75; font-size:17px;
-    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
-  header { position: sticky; top:0; background:rgba(11,18,32,.92); backdrop-filter: blur(8px);
-    border-bottom:1px solid #1e293b; padding:.7rem 1rem; display:flex; gap:.6rem; align-items:center; z-index:5; }
-  header h1 { font-size:1.05rem; margin:0; color:var(--accent); font-weight:700; flex:1; white-space:nowrap; }
-  select { background:var(--panel); color:var(--text); border:1px solid #26324d; border-radius:.5rem; padding:.35rem .5rem; font-size:.9rem; max-width:44vw; }
-  main { max-width: 44rem; margin: 0 auto; padding: 1rem 1.1rem 4rem; }
-  .meta { color: var(--muted); font-size:.85rem; margin-bottom:.4rem; }
-  h2 { color:var(--accent); font-size:1.25rem; margin:1.6em 0 .5em; }
-  h3 { font-size:1.08rem; margin:1.3em 0 .4em; }
-  a { color: var(--link); }
-  blockquote { margin:1em 0; padding:.2em 1em; border-inline-start:3px solid var(--accent); color:var(--muted); }
-  pre { direction:ltr; text-align:left; background:#0f172a; border:1px solid #1e293b; border-radius:.6rem;
-    padding:.9rem; overflow-x:auto; font-size:.82rem; line-height:1.5; }
-  code { direction:ltr; unicode-bidi: embed; font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-    background:#0f172a; padding:.1em .35em; border-radius:.3rem; font-size:.88em; }
-  pre code { padding:0; background:none; }
-  .katex-display { direction:ltr; overflow-x:auto; overflow-y:hidden; padding:.2em 0; }
-  .katex { direction:ltr; unicode-bidi: isolate; }
-  hr { border:none; border-top:1px solid #1e293b; margin:2em 0; }
-  table { border-collapse: collapse; display:block; overflow-x:auto; }
-  td, th { border:1px solid #26324d; padding:.35rem .6rem; }
-  .navbtns { display:flex; gap:.4rem; }
-  .navbtns button { background:var(--panel); border:1px solid #26324d; color:var(--text); border-radius:.5rem; padding:.25rem .7rem; font-size:1.05rem; }
-  .navbtns button:disabled { opacity:.35; }
-  #status { color:var(--muted); text-align:center; padding:2rem 0; }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <h1>הפוסט היומי</h1>
-  <div class="navbtns"><button id="older" title="פוסט קודם">‹</button><button id="newer" title="פוסט הבא">›</button></div>
-  <select id="picker"></select>
+<canvas id="codexbg" aria-hidden="true"></canvas>
+<script src="codex-bg.js" defer></script>
+<div id="progress" role="presentation"></div>
+<header class="bar">
+  <a class="wordmark" id="home" href="#/codex" aria-label="Open the Codex dashboard">
+    <span class="t"><span class="sigil">&#8711;</span> The Living Codex</span>
+    <span class="r" id="rankline">Systems Artificer</span>
+  </a>
+  <span class="chip" id="daychip" hidden></span>
+  <button class="iconbtn" id="themeToggle" aria-label="Toggle light and dark mode">
+    <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/></svg>
+    <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" hidden><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
 </header>
+
 <main>
-  <div id="status">טוען...</div>
-  <article id="post" class="post"></article>
+  <div id="status">Opening the Codex...</div>
+  <div id="view"></div>
 </main>
+
+<nav class="paddles" id="paddles" hidden>
+  <a class="paddle" id="pPrev"><span class="lbl">Previous</span><span class="val" id="pPrevVal">&middot;</span></a>
+  <a class="paddle codex-btn" href="#/codex"><span class="lbl">Codex</span><span class="val">&#8711;</span></a>
+  <a class="paddle" id="pNext"><span class="lbl">Next</span><span class="val" id="pNextVal">&middot;</span></a>
+</nav>
+
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-let index = [], cur = -1;
+const iso = d => d.toISOString().slice(0, 10);
+let index = [], plan = null;
+
+/* ---- quests registry ---- */
+const QUESTS = {
+  oracle:    { name: 'Oracle Quest',  hour: '08:00', tree: 'oracle',    xpKey: 'oracle',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M5 7l14 10M19 7 5 17"/></svg>' },
+  crafting:  { name: 'Crafting Quest', hour: '12:00', tree: 'architect', xpKey: 'architect',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m14.5 6.5 3 3L7 20l-4 1 1-4Z"/><path d="m13 8 3-3 3 3-3 3M17.5 2.5l4 4"/></svg>' },
+  azure:     { name: 'Azure Dungeon', hour: '17:00', tree: 'warden',    xpKey: 'warden',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6M4 12h16"/></svg>' },
+  lore:      { name: 'Lore Quest',    hour: '22:00', tree: 'discovery', xpKey: 'discovery',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4Z"/><path d="M20 4h-6a0 0 0 0 0 0 0v13a2 2 0 0 1 2 2h4Z" transform="scale(-1,1) translate(-34,0)"/><path d="M20 4h-6v13a2 2 0 0 1 2 2h4Z"/></svg>' }
+};
+const RANKS = [[0,'Initiate'],[16,'Apprentice'],[40,'Scholar'],[80,'Engineer'],[140,'Architect'],[220,'Master'],[320,'Grandmaster'],[440,'Keeper of the Living Codex']];
+
+/* ---- persistent state (local, honest) ---- */
+const store = {
+  load() {
+    let st = JSON.parse(localStorage.getItem('codex-state') || 'null');
+    if (!st) { // migrate v1
+      const old = JSON.parse(localStorage.getItem('dl-state') || 'null');
+      st = { read: old ? old.read : [], quests: {}, xp: { oracle: 0, architect: 0, warden: 0, discovery: 0 }, streak: { count: 0, last: null } };
+      if (old) old.drill.forEach(d => { st.quests[d] = ['crafting']; st.xp.architect += 2; });
+    }
+    return st;
+  },
+  save(st) { localStorage.setItem('codex-state', JSON.stringify(st)); },
+};
+let S = store.load();
+const totalXP = () => Object.values(S.xp).reduce((a, b) => a + b, 0);
+const rank = () => { let r = RANKS[0][1]; for (const [t, n] of RANKS) if (totalXP() >= t) r = n; return r; };
+const nextRank = () => RANKS.find(([t]) => totalXP() < t);
+const gapDays = () => {
+  if (!S.streak.last) return 0;
+  return Math.floor((new Date(iso(new Date())) - new Date(S.streak.last)) / 86400000);
+};
+function completeQuest(date, key, on) {
+  const q = S.quests[date] || (S.quests[date] = []);
+  const xk = QUESTS[key].xpKey;
+  if (on && !q.includes(key)) {
+    q.push(key); S.xp[xk] += 2;
+    const today = iso(new Date());
+    if (date === today && S.streak.last !== today) {
+      S.streak.count += 1; S.streak.last = today; // recovery: a gap never resets, any quest continues the journey
+    }
+  } else if (!on && q.includes(key)) {
+    S.quests[date] = q.filter(k => k !== key); S.xp[xk] = Math.max(0, S.xp[xk] - 2);
+  }
+  store.save(S); paintRank();
+}
+const questDone = (date, key) => (S.quests[date] || []).includes(key);
+function paintRank() {
+  $('#rankline').textContent = 'Systems Artificer — ' + rank();
+  $('#daychip').textContent = 'Journey ' + S.streak.count;
+}
+
+/* ---- theme ---- */
+const applyTheme = t => {
+  document.documentElement.dataset.theme = t;
+  $('#sunIcon').hidden = t !== 'dark'; $('#moonIcon').hidden = t === 'dark';
+};
+applyTheme(localStorage.getItem('codex-theme') || 'dark');
+$('#themeToggle').onclick = () => {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('codex-theme', t); applyTheme(t);
+};
 
 function typeset(el) {
   if (window.renderMathInElement) {
@@ -69,37 +125,220 @@ function typeset(el) {
       { left: '\\[', right: '\\]', display: true },
       { left: '\\(', right: '\\)', display: false }
     ], throwOnError: false });
-  } else { setTimeout(() => typeset(el), 120); }
+  } else setTimeout(() => typeset(el), 120);
 }
 
-async function boot() {
-  try {
-    index = await (await fetch('posts/index.json', { cache: 'no-cache' })).json();
-  } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
-  const picker = $('#picker');
-  picker.innerHTML = index.map((p, i) =>
-    `<option value="${i}">${p.date} · ש${p.week} י${p.day}</option>`).join('');
-  picker.onchange = () => show(+picker.value, true);
-  $('#older').onclick = () => cur < index.length - 1 && show(cur + 1, true);
-  $('#newer').onclick = () => cur > 0 && show(cur - 1, true);
-  const fromHash = index.findIndex(p => '#' + p.date === location.hash);
-  show(fromHash >= 0 ? fromHash : 0, false);
+function questKeyFromHeading(txt) {
+  const t = txt.trim().toLowerCase();
+  if (t.startsWith('oracle quest')) return 'oracle';
+  if (t.startsWith('crafting quest')) return 'crafting';
+  if (t.startsWith('azure dungeon')) return 'azure';
+  if (t.startsWith('lore quest')) return 'lore';
+  return null;
 }
 
-async function show(i, pushHash) {
-  cur = i; const p = index[i]; $('#picker').value = i;
-  $('#older').disabled = cur >= index.length - 1; $('#newer').disabled = cur <= 0;
-  if (pushHash) history.replaceState(null, '', '#' + p.date);
-  $('#status').textContent = 'טוען...'; $('#post').innerHTML = '';
-  let md;
-  try { md = await (await fetch('posts/' + p.date + '.md', { cache: 'no-cache' })).text(); }
-  catch (e) { $('#status').textContent = 'הפוסט לא זמין כרגע.'; return; }
-  $('#status').textContent = '';
-  $('#post').innerHTML = '<div class="meta">שבוע ' + p.week + ' · יום ' + p.day + ' · ' + p.date + '</div>' + marked.parse(md);
-  typeset($('#post'));
+/* ---- post view ---- */
+async function renderPost(i) {
+  const p = index[i]; if (!p) return renderDash();
+  await swapView(async view => {
+    let md;
+    try { md = await (await fetch('posts/' + p.date + '.md', { cache: 'no-cache' })).text(); }
+    catch (e) { view.innerHTML = '<div id="status">This entry is not reachable right now.</div>'; return; }
+
+    const tmp = document.createElement('div');
+    tmp.innerHTML = marked.parse(md);
+    const h1 = tmp.querySelector('h1');
+
+    const art = document.createElement('article');
+    const hero = document.createElement('div'); hero.className = 'hero';
+    hero.innerHTML = `<div class="watermark">${p.week}</div>
+      <span class="kicker">Week ${p.week} &middot; Day ${p.day} / 70 &middot; ${p.date}</span>
+      <h1>${h1 ? h1.innerHTML : p.title}</h1>`;
+    if (h1) h1.remove();
+    art.appendChild(hero);
+
+    let card = null, body = null, ci = 0;
+    const newCard = (qkey, headingEl) => {
+      card = document.createElement('section');
+      const q = qkey && QUESTS[qkey];
+      card.className = 'card plate reveal';
+      card.style.setProperty('--stagger', (ci % 4) * 45 + 'ms');
+      if (q) card.style.setProperty('--tree', `var(--${q.tree})`);
+      ci++;
+      if (q) {
+        card.id = 'q-' + qkey;
+        const bar = document.createElement('div'); bar.className = 'qbar';
+        bar.innerHTML = `<span class="rune">${q.icon}</span><span class="qn">${q.name} &middot; ${q.hour}</span>`;
+        card.appendChild(bar);
+      }
+      body = document.createElement('div'); body.className = 'body';
+      card.appendChild(body);
+      if (headingEl) body.appendChild(headingEl);
+      if (q) {
+        const done = questDone(p.date, qkey);
+        const btn = document.createElement('button');
+        btn.className = 'markbtn' + (done ? ' done' : '');
+        btn.dataset.q = qkey;
+        btn.innerHTML = markLabel(done);
+        btn.onclick = () => {
+          const on = !questDone(p.date, qkey);
+          completeQuest(p.date, qkey, on);
+          btn.classList.toggle('done', on); btn.innerHTML = markLabel(on);
+        };
+        card.dataset.markbtn = '1';
+        card.appendChild(btn);
+      }
+      art.appendChild(card);
+    };
+    [...tmp.childNodes].forEach(node => {
+      if (node.nodeType === 1 && node.tagName === 'H2') newCard(questKeyFromHeading(node.textContent), node);
+      else if (body) body.appendChild(node);
+      else if (!(node.nodeType === 3 && !node.textContent.trim())) { newCard(null, null); body.appendChild(node); }
+    });
+
+    view.innerHTML = ''; view.appendChild(art);
+    typeset(view);
+
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }), { threshold: 0.05 });
+    view.querySelectorAll('.card.reveal').forEach(c => io.observe(c));
+
+    if (!S.read) S.read = [];
+    if (!S.read.includes(p.date)) { S.read.push(p.date); store.save(S); }
+
+    $('#daychip').hidden = false; paintRank();
+    const paddles = $('#paddles'); paddles.hidden = false;
+    setPaddle('#pPrev', '#pPrevVal', index[i + 1]);
+    setPaddle('#pNext', '#pNextVal', index[i - 1]);
+  });
   window.scrollTo(0, 0);
 }
-boot();
+const markLabel = done => (done
+  ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m4.5 12.5 5 5 10-11"/></svg> Complete &middot; +2 XP'
+  : 'Mark complete');
+function setPaddle(btn, val, target) {
+  const b = $(btn);
+  if (target) { b.href = '#/' + target.date; b.removeAttribute('aria-disabled'); $(val).textContent = 'Day ' + target.day; }
+  else { b.setAttribute('aria-disabled', 'true'); $(val).textContent = '·'; }
+}
+
+/* ---- dashboard ---- */
+async function renderDash() {
+  await swapView(view => {
+    const latest = index[0];
+    const today = iso(new Date());
+    const isToday = latest && latest.date === today;
+    const gap = gapDays();
+    $('#daychip').hidden = false; $('#paddles').hidden = true; paintRank();
+
+    const nx = nextRank();
+    const trees = [
+      ['Probability Oracle', 'oracle'], ['Agent Architect', 'architect'],
+      ['Cloud Warden', 'warden'], ['Discovery', 'discovery']
+    ];
+    const maxXp = Math.max(10, ...trees.map(([, k]) => S.xp[k]));
+    let html = `<div class="rankplate plate">
+      <div class="title">Systems Artificer</div>
+      <div class="sub">${rank()}${nx ? ` &middot; ${nx[0] - totalXP()} XP to ${nx[1]}` : ''} &middot; Journey ${S.streak.count}</div>
+      ${gap > 1 ? '<div class="recovery">Recovery available — any quest continues the journey. Nothing is lost.</div>' : ''}
+      <div class="xp">` + trees.map(([n, k]) =>
+        `<div class="row"><span class="lbl">${n}</span>
+          <span class="bar"><span class="fill" style="--tree:var(--${k}); width:${Math.min(100, S.xp[k] / maxXp * 100)}%"></span></span>
+          <span class="val">${S.xp[k]}</span></div>`).join('') + `</div></div>`;
+
+    if (latest) {
+      html += `<div class="qhead"><h2>${isToday ? "Today's Quests" : 'Available Quests'}</h2><span class="d">${latest.date}</span></div>
+      <div class="questgrid">` + Object.entries(QUESTS).map(([k, q]) => {
+        const done = questDone(latest.date, k);
+        return `<a class="quest plate ${done ? 'done' : ''}" style="--tree:var(--${q.tree})" href="#/${latest.date}" data-scroll="q-${k}">
+          <span class="rune">${q.icon}</span>
+          <span class="qt"><span class="n">${q.name}</span><br><span class="h">${q.hour}</span></span>
+          <span class="state">${done ? 'Complete' : 'Available'}</span>
+        </a>`;
+      }).join('') + `</div>`;
+    }
+
+    const byDate = new Map(index.map(p => [p.date, p]));
+    const readSet = new Set(S.read || []);
+    const start = new Date((plan && plan.start_date) || '2026-07-21');
+    html += `<div class="qhead"><h2>The Journey</h2><span class="d">10 weeks</span></div><div class="weeks">`;
+    for (let w = 1; w <= ((plan && plan.weeks) || 10); w++) {
+      const wp = plan && plan.week_plan.find(x => x.week === w);
+      let dots = '';
+      for (let d = 1; d <= 7; d++) {
+        const dt = new Date(start); dt.setDate(start.getDate() + (w - 1) * 7 + (d - 1));
+        const ds = iso(dt);
+        const cls = ds === today && byDate.has(ds) ? 'dot today'
+          : byDate.has(ds) ? (readSet.has(ds) ? 'dot read' : 'dot has') : 'dot';
+        dots += `<span class="${cls}"></span>`;
+      }
+      const wposts = index.filter(p => p.week === w);
+      html += `<${wposts.length ? 'a href="#/' + wposts[wposts.length - 1].date + '"' : 'div'}
+        class="week-tile plate${wposts.length ? '' : ' locked'}">
+        <div class="wnum">${String(w).padStart(2, '0')}</div>
+        <div class="wtitle" dir="ltr">${wp ? wp.primary : ''}</div>
+        <div class="dots">${dots}</div>
+      </${wposts.length ? 'a' : 'div'}>`;
+    }
+    html += `</div><p class="map-note">A new entry is inscribed each morning at 06:00. Return when ready — the Codex keeps your place.</p>`;
+    view.innerHTML = html;
+    view.querySelectorAll('[data-scroll]').forEach(a => a.addEventListener('click', () => {
+      sessionStorage.setItem('codex-scroll', a.dataset.scroll);
+    }));
+  });
+  window.scrollTo(0, 0);
+}
+
+/* ---- view swap + routing ---- */
+async function swapView(builder) {
+  const view = $('#view');
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    view.classList.add('fade'); await new Promise(r => setTimeout(r, 170));
+  }
+  await builder(view);
+  $('#status').textContent = '';
+  requestAnimationFrame(() => {
+    view.classList.remove('fade');
+    const target = sessionStorage.getItem('codex-scroll');
+    if (target) {
+      sessionStorage.removeItem('codex-scroll');
+      const el = document.getElementById(target);
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+    }
+  });
+}
+function route() {
+  if (!index.length) return;
+  const h = location.hash;
+  if (h === '#/codex' || h === '#/map') return renderDash();
+  const m = h.match(/^#\/(\d{4}-\d{2}-\d{2})$/);
+  if (m) { const i = index.findIndex(p => p.date === m[1]); return renderPost(i >= 0 ? i : 0); }
+  renderDash();
+}
+addEventListener('hashchange', route);
+
+/* reading progress */
+let ticking = false;
+addEventListener('scroll', () => {
+  if (ticking) return; ticking = true;
+  requestAnimationFrame(() => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    $('#progress').style.width = (max > 0 ? (scrollY / max) * 100 : 0) + '%';
+    ticking = false;
+  });
+}, { passive: true });
+
+/* boot */
+(async function boot() {
+  try {
+    [index, plan] = await Promise.all([
+      fetch('posts/index.json', { cache: 'no-cache' }).then(r => r.json()),
+      fetch('course_plan.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null)
+    ]);
+  } catch (e) { $('#status').textContent = 'Offline, and no cached copy yet.'; return; }
+  paintRank(); route();
+})();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>

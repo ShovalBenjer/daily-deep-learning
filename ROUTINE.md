@@ -1,68 +1,92 @@
-# ROUTINE.md - contract for the daily post agent
+# ROUTINE.md - contract for the daily quest-post agent
 
-You are the daily generator for this site. One run = one new post file + one index
-update + one commit. Nothing else. Run time: 06:00 Asia/Jerusalem, daily.
+You are the daily generator for The Living Codex. One run = one new post file +
+one index update + one commit. Nothing else. Run time: 06:00 Asia/Jerusalem.
 
 ## 1. Compute the slot
 
 - `day_number` = days since 2026-07-21 (inclusive; 2026-07-21 is day 1).
 - `week` = ceil(day_number / 7), capped at 10.
-- `day_in_week` = ((day_number - 1) mod 7) + 1.
-- Slot meaning: days 1-5 = five sequential deep-dive parts of this week's lecture;
-  day 6 = review + drills day (חזרה ותרגול); day 7 = weekly synthesis + bridge to
-  next week.
-- Week -> lecture mapping lives in `course_plan.json`. VERIFY the actual lecture
-  title against the playlists linked there before writing; if the plan deviates
-  from reality, follow reality and note the deviation in the post.
+- Weekday rule (Asia/Jerusalem):
+  - Mon-Fri: a normal day. Advance the course thread: the current week's lecture
+    (from `course_plan.json` -> `week_plan`) is split into sequential parts
+    across the week's normal days.
+  - Saturday: RAID day. No new course material. Spaced-retrieval raid: 5-7
+    recall challenges across all four trees drawn from THIS week's posts.
+  - Sunday: REPAIR day. Weekly synthesis + re-teach the week's weakest or most
+    fragile concept (Feynman style) + bridge to next week.
+- Idempotency guard: if `posts/YYYY-MM-DD.md` for today already exists, STOP
+  and change nothing.
+- VERIFY lecture titles against the playlists in `course_plan.json` before
+  writing; follow reality and note deviations.
 
-## 2. Write the post
+## 2. Post structure (exact)
 
-Idempotency guard: if `posts/YYYY-MM-DD.md` for today already exists, STOP and
-exit without changing anything. The day is already done.
+File: `posts/YYYY-MM-DD.md`. Content language: Hebrew (technical nouns stay
+English). Quest headings are ENGLISH and EXACT, since the UI keys on them:
 
-File: `posts/YYYY-MM-DD.md` (today's date, Asia/Jerusalem). Language: Hebrew,
-technical nouns stay English. Style: gadial.net register, PhD level made intuitive.
-Structure, in order:
+```
+# בוקר טוב YYYY-MM-DD! <Hebrew title>
+<one welcoming intro line>
+## Oracle Quest: <Hebrew subtitle>
+## Crafting Quest: <Hebrew subtitle>
+## Azure Dungeon: <Hebrew subtitle>
+## Lore Quest: <Hebrew subtitle>
+<closing line, verbatim: לימוד פורה. מה דעתכם על זה?>
+```
 
-1. `# בוקר טוב YYYY-MM-DD! <title>` opening line welcoming to "הפוסט היומי שלנו".
-2. `## חלק 1` course material for this slot:
-   - start with simple intuition ("תחשבו על זה כמו...")
-   - explain why it is mathematically beautiful (properties, invariants)
-   - central equations in LaTeX, delimiters `\(...\)` inline and `\[...\]` display
-     (KaTeX renders these; do NOT use bare `$...$`)
-   - a short proof or proof sketch
-   - connect back to the previous day and week
-   - end with PyTorch pseudocode in a fenced python block
-3. `## חלק 2: שינויים בעולם (24 שעות אחרונות)` - scan GitHub orgs and sources
-   listed in `course_plan.json` -> `world_scan_sources`. Only high-signal items
-   related to: agentic systems (MCP, long-horizon planning), diffusion/flow
-   matching, RL for LLMs/agents, multimodal, evals. Every item MUST have a real
-   link you fetched today. If nothing high-signal happened, write one line saying
-   so. NEVER fabricate an item.
-4. `## חלק 3: חיבור לפרויקטים` - 1-3 concrete suggestions connecting today's
-   material to the projects listed in `course_plan.json` -> `projects`, each with
-   a specific stack.
-5. `## תרגיל היום` - one from-scratch coding drill, 15-30 minutes, interview
-   caliber, directly tied to today's material.
-6. Closing line, verbatim: `לימוד פורה 🙏 מה דעתכם על זה?`
+Inside quests use `###` subsections only (never `##`, it would start a new card).
 
-Hard style rules: no em-dash or en-dash anywhere, no bullet-symmetry padding,
-length 600-1200 words, level "מהנדס ML בכיר שרוצה להיות מוביל תחום". Code blocks
-and equations are LTR inside the RTL page; the site handles that, just use normal
-markdown.
+### Oracle Quest (the course thread, ~10-15 min read)
+- gadial.net register, PhD level made intuitive: start with simple intuition
+  ("תחשבו על זה כמו..."), explain why it is mathematically beautiful, central
+  equations in KaTeX (`\(...\)` inline, `\[...\]` display; never bare `$`),
+  a short proof or sketch, connect to the previous day and week, end with
+  PyTorch pseudocode in a fenced python block.
 
-## 3. Update the index
+### Crafting Quest (Agent Architect, 15-30 min hands-on)
+- ONE from-scratch coding drill, interview caliber, tied to today's material
+  (or DS&A/SQL on Raid/Repair days). Predict-then-peek discipline: state the
+  task and constraints first; then hints and the reference solution go inside
+  `<details><summary>רמז / פתרון</summary>...</details>` so nothing is revealed
+  before an attempt.
 
-Prepend to `posts/index.json` (newest first):
+### Azure Dungeon (Cloud Warden, ~40+15 min)
+- The next unchecked item from `course_plan.json` -> `ai103_arc`, honoring the
+  60-min template (module+lab, then questions, then gap log). Link the REAL
+  Microsoft Learn module or study-guide anchor.
+- 2-3 predict-then-verify questions on that item; answers inside `<details>`.
+
+### Lore Quest (Discovery, ~10 min)
+- World scan of the last 24h over `course_plan.json` -> `world_scan_sources`:
+  only high-signal items (agentic systems/MCP, diffusion/flow matching, RL for
+  LLMs, evals). EVERY item must carry a real link you fetched THIS run. If
+  nothing high-signal happened, say so in one line. NEVER fabricate.
+- 2-3 times a week include one paper card: title, venue, publication status
+  (accepted / published / preprint, as actually sourced), the problem, the
+  mechanism, evidence, limitations, hype-versus-real verdict, and one concrete
+  application to a project in `course_plan.json` -> `projects`.
+
+## 3. Language and style rules
+
+- New technical term => inline Hebrew gloss on first use, bold, this shape:
+  **Overdispersion, פיזור יתר**: variance larger than the model expects.
+- No em-dash or en-dash anywhere. No emojis. 700-1400 words total.
+- Level: senior ML engineer aiming to lead. Respect the reader's time.
+- Mastery habits to embody (from fundamentals-mastery-plan): predict-then-peek,
+  build-first-diff-second, Feynman re-teach, spaced retrieval.
+
+## 4. Update the index
+
+Prepend to `posts/index.json` (newest first), valid JSON:
 
 ```json
 { "date": "YYYY-MM-DD", "week": W, "day": D, "title": "<short Hebrew title>" }
 ```
 
-Keep the file valid JSON. Never edit or delete past posts or past index entries.
+Never edit or delete past posts or entries.
 
-## 4. Commit
+## 5. Commit
 
-Single commit on `main`, message: `post: YYYY-MM-DD (wW dD)`. Push. The deploy
-pipeline republishes automatically. Do not touch any file other than the new post
-and `posts/index.json`.
+Single commit on `main`: `post: YYYY-MM-DD (wW dD)`. Push. The deploy pipeline
+republishes. Touch nothing except the new post and `posts/index.json`.

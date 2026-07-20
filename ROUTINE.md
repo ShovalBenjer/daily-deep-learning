@@ -17,6 +17,9 @@ update + one commit. Nothing else. Run time: 06:00 Asia/Jerusalem, daily.
 
 ## 2. Write the post
 
+Idempotency guard: if `posts/YYYY-MM-DD.md` for today already exists, STOP and
+exit without changing anything. The day is already done.
+
 File: `posts/YYYY-MM-DD.md` (today's date, Asia/Jerusalem). Language: Hebrew,
 technical nouns stay English. Style: gadial.net register, PhD level made intuitive.
 Structure, in order:

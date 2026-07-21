@@ -143,10 +143,10 @@ const applyTheme = t => {
   $('#sunIcon').style.display = t === 'dark' ? '' : 'none';
   $('#moonIcon').style.display = t === 'dark' ? 'none' : '';
 };
-applyTheme(localStorage.getItem('sadna-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+applyTheme(localStorage.getItem('sadna-theme2') || 'dark');
 $('#themeToggle').onclick = () => {
   const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('sadna-theme', t); applyTheme(t);
+  localStorage.setItem('sadna-theme2', t); applyTheme(t);
 };
 
 /* ---------- markdown + math ---------- */

@@ -96,7 +96,8 @@ function paintFolio(txt) {
 /* ---------- theme ---------- */
 const applyTheme = t => {
   document.documentElement.dataset.theme = t;
-  $('#sunIcon').hidden = t !== 'dark'; $('#moonIcon').hidden = t === 'dark';
+  $('#sunIcon').style.display = t === 'dark' ? '' : 'none';
+  $('#moonIcon').style.display = t === 'dark' ? 'none' : '';
 };
 applyTheme(localStorage.getItem('sadna-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 $('#themeToggle').onclick = () => {

@@ -66,6 +66,20 @@ Two fenced-block kinds, each a SINGLE LINE of valid JSON inside the fence:
     {"id":"dN-...","tree":"...","prompt":"...","answer":"...","alt":["..."],"explain":"..."}
     ```
 
+A third kind, `widget`, mounts an EXPLORABLE or MICRO-GAME from the app's
+catalog (the interactive IS the lesson; prose supports it):
+
+    ```widget
+    {"type":"decay","gamma":0.9,"title":"..."}
+    ```
+
+Catalog today: `decay` (discount-factor explorable: bars, sum, effective
+horizon), `gridworld` (playable MDP: goal/trap/step-cost, live discounted
+return). Every עיון SHOULD open or close with one widget when the day's concept
+fits one; if the catalog lacks a fitting widget, note the missing widget type
+at the end of the post as `<!-- widget-request: <type>: <one line spec> -->`
+so it gets built.
+
 Rules: ids unique forever (prefix with the day, e.g. d14-az-q2). `tree` is the
 talent tree the points feed: systems | craft | ops (course/drill -> craft or
 systems by topic; AI-103 -> ops; judgment -> the domain's tree per

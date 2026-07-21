@@ -279,6 +279,7 @@ nav.tabs {
 .sync-line button { background: none; border: 1px solid var(--rule); color: var(--red); cursor: pointer; font-family: inherit; padding: .2rem .7rem; min-height: 34px; }
 
 /* teacher chat */
+#chatPane[hidden], #chatFab[hidden], #tree3dhost[hidden], #flat2d[hidden] { display: none !important; }
 #chatFab {
   position: fixed; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); inset-inline-start: 14px; z-index: 35;
   min-height: 48px; padding: 0 1.1rem; cursor: pointer; font-family: inherit; font-weight: 700;

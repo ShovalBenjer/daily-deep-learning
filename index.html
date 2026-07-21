@@ -476,7 +476,8 @@ let scene3d = null;
 function gateFor(tree, nodeId) {
   let ti = 0, node = null;
   tree.tiers.forEach((tier, i) => tier.nodes.forEach(n => { if (n.id === nodeId) { ti = i; node = n; } }));
-  return { open: spentIn(tree.id) >= talents.tier_gate * ti, reqOk: !node.req || nodeRank(node.req) >= 1, node };
+  const st = nodeState(tree, ti, node);
+  return { open: st.open, reqOk: st.reqOk, node };
 }
 async function mount3d() {
   const host = $('#tree3dhost');
@@ -496,7 +497,7 @@ async function mount3d() {
     });
   } catch (e) {
     localStorage.setItem('sadna-3d', 'off');
-    host.hidden = true; const f = $('#flat2d'); if (f) f.hidden = false; drawTree();
+    host.hidden = true; const f = $('#flat2d'); if (f) f.hidden = false; renderPanel();
   }
 }
 const domainOf = id => jmap.domains.find(d => d.id === id);

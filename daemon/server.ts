@@ -64,7 +64,9 @@ Bun.serve({
       return new Response('unauthorized', { status: 401, headers: cors });
 
     if (url.pathname === '/chat' && req.method === 'POST') {
-      const body = await req.json().catch(() => ({}));
+      const body = await req.json().catch(() => null);
+      if (!body || typeof body.message !== 'string' || !body.message.trim() || body.message.length > 4000)
+        return Response.json({ error: 'message required (1-4000 chars)' }, { status: 400, headers: cors });
       const state = await getState();
       const history = (body.history || []).slice(-8)
         .map((m: any) => (m.role === 'user' ? 'שובל: ' : 'המורה: ') + m.text).join('\n');

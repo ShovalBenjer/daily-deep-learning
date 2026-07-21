@@ -278,6 +278,37 @@ nav.tabs {
 .sync-line { color: var(--faded); font-size: .82rem; text-align: center; margin-top: 2rem; }
 .sync-line button { background: none; border: 1px solid var(--rule); color: var(--red); cursor: pointer; font-family: inherit; padding: .2rem .7rem; min-height: 34px; }
 
+/* teacher chat */
+#chatFab {
+  position: fixed; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); inset-inline-start: 14px; z-index: 35;
+  min-height: 48px; padding: 0 1.1rem; cursor: pointer; font-family: inherit; font-weight: 700;
+  background: var(--ink); color: var(--paper); border: 1px solid var(--gold, var(--rule));
+  box-shadow: 0 8px 22px -12px var(--shadow, rgba(0,0,0,.5));
+}
+#chatPane {
+  position: fixed; inset-inline: 0; bottom: 0; top: 22vh; z-index: 45;
+  background: var(--paper); border-top: 2px solid var(--red);
+  display: flex; flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.cp-head { display: flex; align-items: center; gap: .6rem; padding: .5rem .9rem; border-bottom: 1px solid var(--rule); }
+.cp-head b { font-size: 1.05rem; }
+.cp-head #cpStatus { flex: 1; color: var(--faded); font-size: .8rem; }
+#cpLog { flex: 1; overflow-y: auto; padding: .8rem 1rem; display: flex; flex-direction: column; gap: .6rem; }
+.msg { max-width: 85%; padding: .5rem .8rem; font-size: .95rem; line-height: 1.65; border: 1px solid var(--rule); }
+.msg.user { align-self: flex-start; background: var(--panel); }
+.msg.bot { align-self: flex-end; border-inline-start: 2px solid var(--red); }
+#cpForm { display: flex; gap: .5rem; padding: .6rem .9rem; border-top: 1px solid var(--rule); }
+#cpInput { flex: 1; min-height: 46px; padding: .4rem .7rem; font-family: inherit; font-size: .95rem;
+  background: var(--panel); color: var(--ink); border: 1px solid var(--rule); }
+#cpSend { min-height: 46px; padding: 0 1.2rem; background: var(--red); color: var(--paper);
+  border: none; cursor: pointer; font-family: inherit; font-weight: 700; }
+
+/* 3d tree */
+.t3-toggle { background: none; border: 1px solid var(--rule); color: var(--faded); cursor: pointer;
+  font-family: inherit; font-size: .8rem; padding: .3rem .8rem; min-height: 38px; margin-top: .6rem; }
+#tree3dhost { margin: .6rem -1.25rem 0; }
+
 @keyframes settle { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes pulse { 0% { transform: scale(1); } 45% { transform: scale(1.14); } 100% { transform: scale(1); } }
 .node .box.pulse { animation: pulse .45s ease-out; }

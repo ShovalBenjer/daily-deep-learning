@@ -1,4 +1,4 @@
-const V = 'sadna-v6';
+const V = 'sadna-v7';
 const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest'];
 const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json'];
 

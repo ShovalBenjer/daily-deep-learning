@@ -41,6 +41,15 @@
 </nav>
 <div id="toast"><span id="toastMsg"></span></div>
 
+<button id="chatFab" aria-label="שיחה עם המורה" hidden>המורה</button>
+<div id="chatPane" hidden>
+  <div class="cp-head"><b>המורה</b><span id="cpStatus"></span>
+    <button class="iconbtn" id="cpClose" aria-label="סגור">✕</button></div>
+  <div id="cpLog"></div>
+  <form id="cpForm"><input id="cpInput" type="text" autocomplete="off" placeholder="שאל, או הדבק תשובה לדירוג...">
+    <button id="cpSend">שלח</button></form>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -334,18 +343,54 @@ function renderTalents() {
   setTab('tab-map');
   if (!activeTree) activeTree = talents.trees[0].id;
   const view = $('#view');
+  const want3d = localStorage.getItem('sadna-3d') !== 'off' && !!window.WebGLRenderingContext;
   view.innerHTML = `<div class="view-head"><h1>העץ</h1>
     <p>נקודות נצברות מתשובות נכונות בדפים; אתה בוחר איפה להשקיע. שכבה נפתחת אחרי ${talents.tier_gate} נקודות בעץ, וצומת תלוי דורש דרגה 1 בקודמו.</p></div>
+    <button class="t3-toggle" id="t3toggle">${want3d ? 'תצוגה שטוחה' : 'תצוגה תלת-ממדית'}</button>
+    <div id="tree3dhost" ${want3d ? '' : 'hidden'}></div>
+    <div ${want3d ? 'hidden' : ''} id="flat2d">
     <div class="tree-tabs">${talents.trees.map(t =>
       `<button class="tree-tab ${t.id === activeTree ? 'active' : ''}" data-t="${t.id}">${t.name}</button>`).join('')}</div>
     <p class="pool-line" id="poolLine"></p>
-    <div class="tree" id="tree"><svg class="edges"></svg></div>
+    <div class="tree" id="tree"><svg class="edges"></svg></div></div>
     <div id="sheet"></div>`;
   $('#status').textContent = '';
   view.querySelectorAll('.tree-tab').forEach(b => b.onclick = () => { activeTree = b.dataset.t; selNode = null; renderTalents(); });
-  drawTree();
+  $('#t3toggle').onclick = () => {
+    localStorage.setItem('sadna-3d', want3d ? 'off' : 'on');
+    if (scene3d) { scene3d.dispose(); scene3d = null; }
+    renderTalents();
+  };
+  if (want3d) mount3d(); else drawTree();
   paintFolio();
   window.scrollTo(0, 0);
+}
+let scene3d = null;
+function gateFor(tree, nodeId) {
+  let ti = 0, node = null;
+  tree.tiers.forEach((tier, i) => tier.nodes.forEach(n => { if (n.id === nodeId) { ti = i; node = n; } }));
+  return { open: spentIn(tree.id) >= talents.tier_gate * ti, reqOk: !node.req || nodeRank(node.req) >= 1, node };
+}
+async function mount3d() {
+  const host = $('#tree3dhost');
+  host.innerHTML = '<div id="status">טוען את העץ...</div>';
+  try {
+    const mod = await import('./tree3d.js');
+    host.innerHTML = '';
+    scene3d = await mod.mountTree3D(host, {
+      talents, domainOf, rank: nodeRank,
+      onSelect: (treeId, n) => {
+        const tree = talents.trees.find(t => t.id === treeId);
+        activeTree = treeId; selNode = n.id;
+        const g = gateFor(tree, n.id);
+        renderNodeSheet(tree, n, g);
+        $('#sheet').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  } catch (e) {
+    localStorage.setItem('sadna-3d', 'off');
+    host.hidden = true; const f = $('#flat2d'); if (f) f.hidden = false; drawTree();
+  }
 }
 const domainOf = id => jmap.domains.find(d => d.id === id);
 const spentIn = tid => (S.points[tid] || { spent: 0 }).spent;
@@ -423,7 +468,8 @@ function renderNodeSheet(tree, n, gate) {
     S.points[tree.id].spent += cost;
     S.ranks[n.id] = r + 1; store.save();
     toast(d.name + ' דרגה ' + (r + 1));
-    drawTree(); renderNodeSheet(tree, n, gate); paintFolio();
+    if (scene3d) scene3d.refresh(); else drawTree();
+    renderNodeSheet(tree, n, gate); paintFolio();
     const box = $(`#tree .node[data-id="${n.id}"] .box`);
     if (box) { box.classList.add('pulse'); setTimeout(() => box.classList.remove('pulse'), 500); }
   };
@@ -483,6 +529,43 @@ function renderLadder() {
   window.scrollTo(0, 0);
 }
 
+/* ---------- chat with the teacher (daemon) ---------- */
+const chat = {
+  hist: JSON.parse(localStorage.getItem('sadna-chat') || '[]'),
+  save() { localStorage.setItem('sadna-chat', JSON.stringify(this.hist.slice(-40))); }
+};
+function paintChat() {
+  const log = $('#cpLog');
+  log.innerHTML = chat.hist.map(m => `<div class="msg ${m.role}">${m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>`).join('');
+  log.scrollTop = log.scrollHeight;
+}
+function chatAvailable() { return !!(syncKey() && S.daemon_url); }
+async function sendChat(text) {
+  chat.hist.push({ role: 'user', text }); chat.save(); paintChat();
+  $('#cpStatus').textContent = 'חושב...';
+  try {
+    const r = await fetch(S.daemon_url + '/chat', {
+      method: 'POST',
+      headers: { 'authorization': 'Bearer ' + syncKey(), 'content-type': 'application/json' },
+      body: JSON.stringify({ message: text, history: chat.hist.slice(-9, -1), context: { view: location.hash, latest: index[0] && index[0].date, level: level() } })
+    });
+    const j = await r.json();
+    chat.hist.push({ role: 'bot', text: j.reply || 'אין תשובה.' });
+  } catch (e) {
+    chat.hist.push({ role: 'bot', text: 'המורה לא זמין כרגע (המחשב בבית כבוי או המנהרה נפלה). נסה שוב מאוחר יותר.' });
+  }
+  chat.save(); paintChat(); $('#cpStatus').textContent = '';
+}
+$('#chatFab').onclick = () => { $('#chatPane').hidden = false; $('#chatFab').hidden = true; paintChat(); $('#cpInput').focus(); };
+$('#cpClose').onclick = () => { $('#chatPane').hidden = true; $('#chatFab').hidden = false; };
+$('#cpForm').onsubmit = e => {
+  e.preventDefault();
+  const v = $('#cpInput').value.trim();
+  if (!v) return;
+  $('#cpInput').value = '';
+  sendChat(v);
+};
+
 /* ---------- routing ---------- */
 function route() {
   if (!index.length) return;
@@ -516,6 +599,7 @@ addEventListener('scroll', () => {
     ]);
   } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
+  $('#chatFab').hidden = !chatAvailable();
   paintFolio(); route();
 })();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

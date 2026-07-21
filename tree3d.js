@@ -19,7 +19,9 @@ export async function mountTree3D(host, api) {
   scene.fog = new THREE.Fog(bg(), 14, 34);
 
   const camera = new THREE.PerspectiveCamera(46, W / H, 0.1, 100);
-  camera.position.set(0, 3.2, 13);
+  const aspect = W / H;
+  camera.position.set(0, 3.2, aspect < 1 ? 21 : 13);
+  camera.lookAt(0, 3.6, 0);
 
   scene.add(new THREE.AmbientLight(0xffffff, dark() ? 0.35 : 0.8));
   const key = new THREE.DirectionalLight(0xfff2dd, dark() ? 1.1 : 0.9);

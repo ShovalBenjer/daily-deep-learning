@@ -1,0 +1,46 @@
+{
+  "source": "docs/root-cleanup-2026-05-28/Futuristic Learning Stack (April 2026) + docs/ai-103-study-tracker.md (new-recruit)",
+  "phases": [
+    { "id": "build", "name": "לבנות השבוע", "note": "הסטאק קיים בפרודקשן אצל Cursor ו-CodeRabbit; זו לא תוכנית עתידית.",
+      "items": [
+        { "id": "measure-v1", "t": "Measurement stack v1: embeddings + LanceDB + TF-IDF dedup + UMAP/KDE gaps + G-Eval על 5% מדגם" },
+        { "id": "skills-corpus", "t": "סריקת anthropics/skills, דדופ UMAP+HDBSCAN, טקסונומיית סקילים אישית" }
+      ] },
+    { "id": "now", "name": "מיד (סוגר את הפער מ-MDP)",
+      "items": [
+        { "id": "rm-icarte", "t": "Reward Machines: Icarte et al. 2018, הגשר מ-MDP ליעדים לא-מרקוביים" },
+        { "id": "omega-hahn", "t": "Omega-regular objectives: Hahn et al. 2019, הפתרון הראשון model-free" },
+        { "id": "ltl-primer", "t": "LTL primer (Stanford CS357), השפה הלוגית שמעל מרקוב" }
+      ] },
+    { "id": "soon", "name": "חודש-חודשיים",
+      "items": [
+        { "id": "grpo", "t": "GRPO (DeepSeek-Math 2024), האלגוריתם החשוב מאז PPO" },
+        { "id": "panini", "t": "Panini (arXiv 2602.15156), למידה במרחב הטוקנים עם זיכרון מובנה" },
+        { "id": "geval", "t": "G-Eval + תיקון הטיות שופט (arXiv 2511.21140)" },
+        { "id": "tf-grpo", "t": "Training-Free GRPO (arXiv 2510.08191), שיפור RL בלי GPU" }
+      ] },
+    { "id": "deep", "name": "עד חצי שנה",
+      "items": [
+        { "id": "avg-omega", "t": "Average-reward RL ל-omega-regular (JAIR 2025), סוכנים לא-אפיזודיים" },
+        { "id": "pref-morl", "t": "Preference-Controllable RL (ICML 2025), כל חזית פארטו במדיניות אחת" },
+        { "id": "alma", "t": "ALMA (arXiv 2602.07755), מטא-למידה של ארכיטקטורת זיכרון" },
+        { "id": "oxford", "t": "Oxford: Foundations of Self-Programming Agents 2025-26" }
+      ] },
+    { "id": "ongoing", "name": "מתמשך",
+      "items": [
+        { "id": "letta", "t": "Letta: continual learning in token space (בלוג חי)" },
+        { "id": "whitemech", "t": "WhiteMech: temporal RL, restraining bolts, neurosymbolic" },
+        { "id": "arxiv-filter", "t": "arXiv יומי בפילטרים: reward machine, omega-regular, token-space, non-Markovian" }
+      ] }
+  ],
+  "cert": {
+    "name": "AI-103: Azure AI Apps and Agents Developer",
+    "facts": "לממש שובר עד 2026-08-18, לגשת עד 2026-10-18, עובר 700/1000. שעה ביום, שישה ימים בשבוע.",
+    "weeks": [
+      { "id": "ai103-w1", "t": "שבוע 1: Plan and manage (25-30%): Foundry, deployment, Managed Identity, responsible AI, monitoring" },
+      { "id": "ai103-w2", "t": "שבוע 2: Generative + agentic (30-35%): RAG, agents, orchestration, evals, observability" },
+      { "id": "ai103-w3", "t": "שבוע 3: הזנב החלש: CV/multimodal, טקסט, AI Search, extraction" },
+      { "id": "ai103-w4", "t": "שבוע 4: מוכנות מבחן: 2 practice assessments מלאים + sandbox + רשימת פערים" }
+    ]
+  }
+}

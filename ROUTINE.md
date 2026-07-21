@@ -1,92 +1,76 @@
-# ROUTINE.md - contract for the daily quest-post agent
+# ROUTINE.md - contract for the daily page generator (הסדנה)
 
-You are the daily generator for The Living Codex. One run = one new post file +
-one index update + one commit. Nothing else. Run time: 06:00 Asia/Jerusalem.
+One run = one new post + one index update + one commit. Run: 06:00 Asia/Jerusalem.
 
-## 1. Compute the slot
+## 1. Slot
 
-- `day_number` = days since 2026-07-21 (inclusive; 2026-07-21 is day 1).
-- `week` = ceil(day_number / 7), capped at 10.
-- Weekday rule (Asia/Jerusalem):
-  - Mon-Fri: a normal day. Advance the course thread: the current week's lecture
-    (from `course_plan.json` -> `week_plan`) is split into sequential parts
-    across the week's normal days.
-  - Saturday: RAID day. No new course material. Spaced-retrieval raid: 5-7
-    recall challenges across all four trees drawn from THIS week's posts.
-  - Sunday: REPAIR day. Weekly synthesis + re-teach the week's weakest or most
-    fragile concept (Feynman style) + bridge to next week.
-- Idempotency guard: if `posts/YYYY-MM-DD.md` for today already exists, STOP
-  and change nothing.
-- VERIFY lecture titles against the playlists in `course_plan.json` before
-  writing; follow reality and note deviations.
+- `day_number` = days since 2026-07-21 (day 1). `week` = ceil(day_number/7), cap 10.
+- Mon-Fri: normal day; the week's lecture (course_plan.json -> week_plan) advances
+  in sequential parts across the week's normal days.
+- Saturday: retrieval day. No new material; 5-7 spaced-recall challenges over this
+  week's pages, answers in `<details>`.
+- Sunday: repair day. Weekly synthesis + Feynman re-teach of the week's weakest
+  concept + bridge to next week.
+- Idempotency: if `posts/YYYY-MM-DD.md` exists, STOP, change nothing.
+- Verify lecture titles against the playlists; follow reality, note deviations.
 
-## 2. Post structure (exact)
+## 2. Page structure (exact)
 
-File: `posts/YYYY-MM-DD.md`. Content language: Hebrew (technical nouns stay
-English). Quest headings are ENGLISH and EXACT, since the UI keys on them:
+File `posts/YYYY-MM-DD.md`. Hebrew content, technical nouns English. Section
+headings are `##` with these EXACT Hebrew prefixes before the colon (the UI keys
+on them); `###` only inside sections:
 
 ```
-# בוקר טוב YYYY-MM-DD! <Hebrew title>
-<one welcoming intro line>
-## Oracle Quest: <Hebrew subtitle>
-## Crafting Quest: <Hebrew subtitle>
-## Azure Dungeon: <Hebrew subtitle>
-## Lore Quest: <Hebrew subtitle>
-<closing line, verbatim: לימוד פורה. מה דעתכם על זה?>
+# בוקר טוב YYYY-MM-DD! <כותרת>
+<שורת פתיחה אחת>
+## עיון: <תת-כותרת>
+## תרגול: <תת-כותרת>
+## AI-103: <תת-כותרת>
+## מעקב: <תת-כותרת>
+## שיקול דעת: <תת-כותרת>
+<שורת סיום: לימוד פורה. מה דעתכם על זה?>
 ```
 
-Inside quests use `###` subsections only (never `##`, it would start a new card).
+### עיון (the course thread, ~10-15 min read)
+gadial register, PhD level made intuitive: intuition first ("תחשבו על זה כמו..."),
+why it is mathematically beautiful, central equations in KaTeX (`\(...\)` inline,
+`\[...\]` display, never bare `$`), a short proof or sketch, connection to the
+previous day, PyTorch pseudocode in a fenced python block.
 
-### Oracle Quest (the course thread, ~10-15 min read)
-- gadial.net register, PhD level made intuitive: start with simple intuition
-  ("תחשבו על זה כמו..."), explain why it is mathematically beautiful, central
-  equations in KaTeX (`\(...\)` inline, `\[...\]` display; never bare `$`),
-  a short proof or sketch, connect to the previous day and week, end with
-  PyTorch pseudocode in a fenced python block.
+### תרגול (15-30 min, from scratch)
+One interview-caliber drill tied to today's material (DS&A/SQL on Sat/Sun).
+Predict-then-peek: task and constraints first; hints and reference solution only
+inside `<details><summary>רמז, ואז פתרון</summary>`.
 
-### Crafting Quest (Agent Architect, 15-30 min hands-on)
-- ONE from-scratch coding drill, interview caliber, tied to today's material
-  (or DS&A/SQL on Raid/Repair days). Predict-then-peek discipline: state the
-  task and constraints first; then hints and the reference solution go inside
-  `<details><summary>רמז / פתרון</summary>...</details>` so nothing is revealed
-  before an attempt.
+### AI-103 (~40+15 min)
+The next unchecked item from research_ladder.json -> cert.weeks, honoring the
+60-min template. Real Microsoft Learn link. 2-3 predict-then-verify questions,
+answers inside `<details>`.
 
-### Azure Dungeon (Cloud Warden, ~40+15 min)
-- The next unchecked item from `course_plan.json` -> `ai103_arc`, honoring the
-  60-min template (module+lab, then questions, then gap log). Link the REAL
-  Microsoft Learn module or study-guide anchor.
-- 2-3 predict-then-verify questions on that item; answers inside `<details>`.
+### מעקב (~10 min)
+Last-24h scan over course_plan.json -> world_scan_sources. Only items with real
+links fetched THIS run; if quiet, one honest line. 2-3x weekly: one paper card
+(title, venue, sourced publication status, problem, mechanism, evidence,
+limitations, hype-versus-real, one application to course_plan.json -> projects).
+NEVER fabricate.
 
-### Lore Quest (Discovery, ~10 min)
-- World scan of the last 24h over `course_plan.json` -> `world_scan_sources`:
-  only high-signal items (agentic systems/MCP, diffusion/flow matching, RL for
-  LLMs, evals). EVERY item must carry a real link you fetched THIS run. If
-  nothing high-signal happened, say so in one line. NEVER fabricate.
-- 2-3 times a week include one paper card: title, venue, publication status
-  (accepted / published / preprint, as actually sourced), the problem, the
-  mechanism, evidence, limitations, hype-versus-real verdict, and one concrete
-  application to a project in `course_plan.json` -> `projects`.
+### שיקול דעת (the judgment rep, ~5 min)
+One concrete decision scenario from the Principal Engineer Curriculum territory
+(judgment_map.json rules + its source doc). Format: a specific situation with
+real constraints -> "החליטו לפני שפותחים" -> answer inside `<details>` stating
+the decision AND the rule it derives from. Rotate domains day to day; prefer the
+domains with the lowest self-set maturity when known. This is predict-then-peek
+applied to judgment, which is the point of the whole curriculum.
 
-## 3. Language and style rules
+## 3. Style
 
-- New technical term => inline Hebrew gloss on first use, bold, this shape:
-  **Overdispersion, פיזור יתר**: variance larger than the model expects.
-- No em-dash or en-dash anywhere. No emojis. 700-1400 words total.
-- Level: senior ML engineer aiming to lead. Respect the reader's time.
-- Mastery habits to embody (from fundamentals-mastery-plan): predict-then-peek,
-  build-first-diff-second, Feynman re-teach, spaced retrieval.
+- New technical term => inline Hebrew gloss, bold: **Overdispersion, פיזור יתר**: ...
+- No em-dash or en-dash. No emojis. 700-1500 words total. Respect the reader.
+- Habits to embody: predict-then-peek, build-first-diff-second, Feynman, spaced
+  retrieval (docs/fundamentals-mastery-plan.md in new-recruit).
 
-## 4. Update the index
+## 4. Index + commit
 
-Prepend to `posts/index.json` (newest first), valid JSON:
-
-```json
-{ "date": "YYYY-MM-DD", "week": W, "day": D, "title": "<short Hebrew title>" }
-```
-
-Never edit or delete past posts or entries.
-
-## 5. Commit
-
-Single commit on `main`: `post: YYYY-MM-DD (wW dD)`. Push. The deploy pipeline
-republishes. Touch nothing except the new post and `posts/index.json`.
+Prepend `{ "date", "week", "day", "title" }` to `posts/index.json` (valid JSON,
+newest first). Never edit past posts. One commit on main:
+`post: YYYY-MM-DD (wW dD)`, push. Touch nothing else.

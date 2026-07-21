@@ -1,6 +1,6 @@
-const V = 'sadna-v4';
+const V = 'sadna-v5';
 const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest'];
-const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json'];
+const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -1,0 +1,22 @@
+{
+  "note": "Three talent trees over the 17 curriculum domains. Points are EARNED automatically from answered content (first try +2, second +1) and SPENT by choice. Rank cost = next rank. Tier t unlocks after 3*(t-1) points spent in that tree. A dependent node needs rank 1 in its prerequisite.",
+  "max_rank": 5,
+  "tier_gate": 3,
+  "trees": [
+    { "id": "systems", "name": "מערכות", "tiers": [
+      { "nodes": [ { "id": "os" }, { "id": "storage" } ] },
+      { "nodes": [ { "id": "net", "req": "os" }, { "id": "search", "req": "storage" } ] },
+      { "nodes": [ { "id": "lang", "req": "net" }, { "id": "build" } ] }
+    ] },
+    { "id": "craft", "name": "מלאכה", "tiers": [
+      { "nodes": [ { "id": "api" }, { "id": "frontend" } ] },
+      { "nodes": [ { "id": "arch", "req": "api" }, { "id": "aiux", "req": "frontend" } ] },
+      { "nodes": [ { "id": "product" }, { "id": "research", "req": "arch" } ] }
+    ] },
+    { "id": "ops", "name": "תפעול", "tiers": [
+      { "nodes": [ { "id": "sre" }, { "id": "edge" } ] },
+      { "nodes": [ { "id": "finops", "req": "sre" }, { "id": "platform" } ] },
+      { "nodes": [ { "id": "org", "req": "platform" }, { "id": "company", "req": "finops" } ] }
+    ] }
+  ]
+}

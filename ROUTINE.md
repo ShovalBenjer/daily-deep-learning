@@ -31,21 +31,47 @@ on them); `###` only inside sections:
 <שורת סיום: לימוד פורה. מה דעתכם על זה?>
 ```
 
+## 2b. Interactive blocks (the UI turns these into live components)
+
+Two fenced-block kinds, each a SINGLE LINE of valid JSON inside the fence:
+
+    ```quiz
+    {"id":"dN-...-qK","tree":"systems|craft|ops","q":"...","options":["...","...","...","..."],"answer":0,"explain":"..."}
+    ```
+
+    ```fillin
+    {"id":"dN-...","tree":"...","prompt":"...","answer":"...","alt":["..."],"explain":"..."}
+    ```
+
+Rules: ids unique forever (prefix with the day, e.g. d14-az-q2). `tree` is the
+talent tree the points feed: systems | craft | ops (course/drill -> craft or
+systems by topic; AI-103 -> ops; judgment -> the domain's tree per
+judgment_map/talents). Exactly ONE correct option; 4 options; explain must
+justify the answer. Correct answers award points automatically, so never leak
+the answer outside the block. Every section below MUST include its interactive
+blocks; a page with no interactives is a defect.
+
 ### עיון (the course thread, ~10-15 min read)
 gadial register, PhD level made intuitive: intuition first ("תחשבו על זה כמו..."),
 why it is mathematically beautiful, central equations in KaTeX (`\(...\)` inline,
 `\[...\]` display, never bare `$`), a short proof or sketch, connection to the
-previous day, PyTorch pseudocode in a fenced python block.
+previous day, PyTorch pseudocode in a fenced python block. End with ONE `quiz`
+block checking the deepest idea of the day (Hebrew).
 
 ### תרגול (15-30 min, from scratch)
 One interview-caliber drill tied to today's material (DS&A/SQL on Sat/Sun).
 Predict-then-peek: task and constraints first; hints and reference solution only
-inside `<details><summary>רמז, ואז פתרון</summary>`.
+inside `<details><summary>רמז, ואז פתרון</summary>`. Then ONE `fillin` block that
+verifies the drill was actually RUN: ask for a concrete output value of the
+solution on a given input (answer normalized: whitespace/quotes stripped,
+lowercase; provide `alt` spellings).
 
 ### AI-103 (~40+15 min)
 The next unchecked item from research_ladder.json -> cert.weeks, honoring the
-60-min template. Real Microsoft Learn link. 2-3 predict-then-verify questions,
-answers inside `<details>`.
+60-min template. Real Microsoft Learn link. Then 2-3 `quiz` blocks IN ENGLISH,
+exam register (the real exam is English): scenario-style stems, 4 plausible
+options, one correct. Wrong-answered questions from earlier days resurface
+within 2 days (check recent posts for ids you repeated).
 
 ### מעקב (~10 min)
 Last-24h scan over course_plan.json -> world_scan_sources. Only items with real
@@ -56,11 +82,12 @@ NEVER fabricate.
 
 ### שיקול דעת (the judgment rep, ~5 min)
 One concrete decision scenario from the Principal Engineer Curriculum territory
-(judgment_map.json rules + its source doc). Format: a specific situation with
-real constraints -> "החליטו לפני שפותחים" -> answer inside `<details>` stating
-the decision AND the rule it derives from. Rotate domains day to day; prefer the
-domains with the lowest self-set maturity when known. This is predict-then-peek
-applied to judgment, which is the point of the whole curriculum.
+(judgment_map.json rules). Format: 2-3 sentences of specific situation with real
+constraints, then ONE `quiz` block (Hebrew): 4 plausible architecture/tool
+choices, one correct per the curriculum rule; `explain` states the decision AND
+the rule it derives from, including when the runner-up would be right. Rotate
+domains day to day. This is predict-then-peek applied to judgment, which is the
+point of the whole curriculum.
 
 ## 3. Style
 

@@ -49,6 +49,9 @@ const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
 const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
 let index = [], jmap = null, ladder = null, talents = null;
+const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
+const syncKey = () => localStorage.getItem('sadna-sync-key') || '';
+const LEVELS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320];
 
 /* ---------- state ---------- */
 const store = {
@@ -61,9 +64,34 @@ const store = {
     st.ranks = st.ranks || {};                            // domainId -> rank
     return st;
   },
-  save() { localStorage.setItem('sadna-state', JSON.stringify(S)); }
+  save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
 };
 let S = store.load();
+let pushT = null;
+function schedulePush() {
+  if (!syncKey()) return;
+  clearTimeout(pushT);
+  pushT = setTimeout(() => {
+    fetch(SYNC_URL, { method: 'POST', keepalive: true,
+      headers: { 'authorization': 'Bearer ' + syncKey(), 'content-type': 'application/json' },
+      body: JSON.stringify(S) }).catch(() => {});
+  }, 1500);
+}
+async function pullState() {
+  if (!syncKey()) return;
+  try {
+    const r = await fetch(SYNC_URL, { headers: { 'authorization': 'Bearer ' + syncKey() } });
+    const remote = await r.json();
+    if (remote && remote.ts && (!S.ts || remote.ts > S.ts)) {
+      S = Object.assign(store.load(), remote);
+      localStorage.setItem('sadna-state', JSON.stringify(S));
+    }
+  } catch (e) { /* offline is fine */ }
+}
+function enableSync() {
+  const k = prompt('מפתח סנכרון (חד פעמי, מהמסמך שקיבלת):');
+  if (k && k.trim()) { localStorage.setItem('sadna-sync-key', k.trim()); schedulePush(); toast('סנכרון פעיל'); route(); }
+}
 const toggle = (arr, v, on) => { const i = arr.indexOf(v); if (on && i < 0) arr.push(v); if (!on && i >= 0) arr.splice(i, 1); store.save(); };
 const pool = t => { const p = S.points[t] || { earned: 0, spent: 0 }; return p.earned - p.spent; };
 const poolAll = () => talents ? talents.trees.reduce((a, t) => a + pool(t.id), 0) : 0;
@@ -87,10 +115,15 @@ function runLength() {
   while (read.has(iso(d))) { n++; d.setDate(d.getDate() - 1); }
   return n;
 }
+const totalEarned = () => Object.values(S.points).reduce((a, p) => a + (p.earned || 0), 0);
+const level = () => { let l = 1; LEVELS.forEach((t, i) => { if (totalEarned() >= t) l = i + 1; }); return l; }
 function paintFolio(txt) {
   if (txt !== undefined) { $('#folio').textContent = txt; return; }
   const p = poolAll(), n = runLength();
-  $('#folio').textContent = (p > 0 ? p + ' נק׳ פנויות' : '') + (p > 0 && n >= 2 ? ' · ' : '') + (n >= 2 ? 'רצף ' + n : '');
+  const bits = ['רמה ' + level()];
+  if (p > 0) bits.push(p + ' נק׳ פנויות');
+  if (n >= 2) bits.push('רצף ' + n);
+  $('#folio').textContent = bits.join(' · ');
 }
 
 /* ---------- theme ---------- */
@@ -141,8 +174,11 @@ function buildQuiz(d) {
   const wrap = document.createElement('div'); wrap.className = 'qz';
   const dir = isLtr(d.q) ? 'ltr' : 'rtl';
   wrap.innerHTML = `<p class="qq" dir="${dir}">${d.q}</p><div class="opts"></div>
+    <label class="conf-row">ביטחון <input type="range" min="0" max="100" step="5" value="70"><b>70%</b></label>
     <div class="qz-foot"><button class="qz-check" disabled>בדיקה</button>
     <span class="qz-msg"></span><span class="qz-pts"></span></div>`;
+  const confInp = wrap.querySelector('.conf-row input'), confVal = wrap.querySelector('.conf-row b');
+  confInp.oninput = () => confVal.textContent = confInp.value + '%';
   const opts = wrap.querySelector('.opts');
   const btns = d.options.map((o, i) => {
     const b = document.createElement('button'); b.className = 'opt'; b.dir = isLtr(o) ? 'ltr' : 'rtl';
@@ -156,7 +192,7 @@ function buildQuiz(d) {
     btns.forEach(b => { b.disabled = true; b.classList.remove('sel'); });
     btns[d.answer].classList.add('right');
     if (!ok && chosen >= 0 && chosen !== d.answer) btns[chosen].classList.add('wrong');
-    check.remove();
+    check.remove(); wrap.querySelector('.conf-row').remove();
     msg.textContent = ok ? 'נכון.' : 'התשובה מסומנת.';
     msg.className = 'qz-msg ' + (ok ? 'ok' : 'no');
     if (ok) pts.textContent = attempts === 1 ? '+2' : '+1';
@@ -174,11 +210,12 @@ function buildQuiz(d) {
   check.onclick = () => {
     if (selected < 0) return;
     attempts++;
+    const conf = +confInp.value;
     if (selected === d.answer) {
-      S.answers[d.id] = { ok: true, attempts, chosen: selected }; store.save();
+      S.answers[d.id] = { ok: true, attempts, chosen: selected, conf, tree: d.tree, date: iso(new Date()) }; store.save();
       finish(true, selected); award(d.tree, attempts === 1 ? 2 : 1);
     } else if (attempts >= 2) {
-      S.answers[d.id] = { ok: false, attempts, chosen: selected }; store.save();
+      S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, date: iso(new Date()) }; store.save();
       finish(false, selected);
     } else {
       msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no';
@@ -220,10 +257,10 @@ function buildFillin(d) {
     if (!inp.value.trim()) return;
     attempts++;
     if (good.includes(norm(inp.value))) {
-      S.answers[d.id] = { ok: true, attempts, val: inp.value }; store.save();
+      S.answers[d.id] = { ok: true, attempts, val: inp.value, tree: d.tree, date: iso(new Date()) }; store.save();
       finish(true); award(d.tree, attempts <= 1 ? 2 : 1);
     } else if (attempts >= 2) {
-      S.answers[d.id] = { ok: false, attempts }; store.save(); finish(false);
+      S.answers[d.id] = { ok: false, attempts, tree: d.tree, date: iso(new Date()) }; store.save(); finish(false);
     } else {
       msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no';
     }
@@ -258,6 +295,13 @@ async function renderPost(i) {
     mark.textContent = MARKS[Math.min(mi, MARKS.length - 1)]; mi++;
     head.appendChild(mark);
     if (headingEl) head.appendChild(headingEl);
+    if (headingEl) {
+      const q = encodeURIComponent(`אני לומד ב"הסדנה" (יום ${p.day} שבוע ${p.week}, ${p.date}), מדור "${headingEl.textContent.trim()}". `);
+      const ask = document.createElement('a');
+      ask.className = 'ask'; ask.href = 'https://claude.ai/new?q=' + q;
+      ask.target = '_blank'; ask.rel = 'noopener'; ask.textContent = 'שאל את קלוד';
+      head.appendChild(ask);
+    }
     part.appendChild(head);
     body = document.createElement('div'); part.appendChild(body);
     art.appendChild(part);
@@ -380,31 +424,62 @@ function renderNodeSheet(tree, n, gate) {
     S.ranks[n.id] = r + 1; store.save();
     toast(d.name + ' דרגה ' + (r + 1));
     drawTree(); renderNodeSheet(tree, n, gate); paintFolio();
+    const box = $(`#tree .node[data-id="${n.id}"] .box`);
+    if (box) { box.classList.add('pulse'); setTimeout(() => box.classList.remove('pulse'), 500); }
   };
 }
 
 /* ---------- ladder ---------- */
 function renderLadder() {
   setTab('tab-ladder');
-  paintFolio('');
+  paintFolio();
   const view = $('#view');
-  const item = it => `<label class="ladder-item ${S.ladder.includes(it.id) ? 'done' : ''}" data-id="${it.id}">
-    <input type="checkbox" ${S.ladder.includes(it.id) ? 'checked' : ''}><span>${it.t}</span></label>`;
+  const allItems = [...ladder.phases.flatMap(ph => ph.items.map(it => ({ ...it, phase: ph.name }))),
+                    ...ladder.cert.weeks.map(it => ({ ...it, phase: ladder.cert.name }))];
+  const next = allItems.find(it => !S.ladder.includes(it.id));
+
+  const chips = it => `<span class="chip2">~${it.min} דק׳</span><span class="chip2">רמה ${it.level}</span>`;
+  const row = it => `<div class="ladder-item ${S.ladder.includes(it.id) ? 'done' : ''}" data-id="${it.id}">
+    <input type="checkbox" ${S.ladder.includes(it.id) ? 'checked' : ''} aria-label="בוצע">
+    <div class="li-body"><div class="li-t"><span>${it.t}</span>${chips(it)}</div>
+      <div class="li-why">${it.why}</div>
+      <div class="li-action">${it.action} · <a href="${it.url}" target="_blank" rel="noopener">מקור</a></div>
+    </div></div>`;
+
   let html = `<div class="view-head"><h1>המסלול</h1>
-    <p>סדר הלימוד מתוך Futuristic Learning Stack (אפריל 2026) ומסלול ההסמכה. סימון עצמי, בלי אשמה.</p></div>`;
+    <p>סדר הלימוד מהמסמכים שלך. פריט אחד פתוח בכל רגע: זה שלמטה. השאר הקשר, לא משימות.</p></div>`;
+  if (next) {
+    html += `<div class="next-card">
+      <div class="nc-kicker">הבא בתור · ${next.phase}</div>
+      <h2>${next.t}</h2>
+      <p class="nc-why">${next.why}</p>
+      <p class="nc-action">${next.action}</p>
+      <div class="nc-foot">${chips(next)}
+        <a class="nc-open" href="${next.url}" target="_blank" rel="noopener">פתח מקור</a>
+        <button class="nc-done" data-id="${next.id}">סיימתי</button>
+      </div></div>`;
+  } else {
+    html += `<div class="next-card"><h2>המסלול הושלם.</h2></div>`;
+  }
   ladder.phases.forEach((ph, i) => {
     html += `<div class="phase"><div class="phase-head"><span class="mark">${MARKS[i]}</span><h2>${ph.name}</h2></div>
-      ${ph.note ? `<p class="note">${ph.note}</p>` : ''}${ph.items.map(item).join('')}</div>`;
+      ${ph.note ? `<p class="note">${ph.note}</p>` : ''}${ph.items.map(row).join('')}</div>`;
   });
   html += `<div class="phase"><div class="phase-head"><span class="mark">${MARKS[ladder.phases.length]}</span><h2>${ladder.cert.name}</h2></div>
-    <p class="cert-facts">${ladder.cert.facts}</p>${ladder.cert.weeks.map(item).join('')}</div>`;
+    <p class="cert-facts">${ladder.cert.facts}</p>${ladder.cert.weeks.map(row).join('')}</div>`;
+  html += `<p class="sync-line">סנכרון בין מכשירים והתאמה אישית של הדף היומי: <b>${syncKey() ? 'פעיל' : 'כבוי'}</b>
+    ${syncKey() ? '' : '· <button id="syncBtn">הפעל</button>'}</p>`;
   view.innerHTML = html;
   $('#status').textContent = '';
   view.querySelectorAll('.ladder-item input').forEach(inp => inp.onchange = e => {
     const id = inp.closest('.ladder-item').dataset.id;
     toggle(S.ladder, id, e.target.checked);
-    inp.closest('.ladder-item').classList.toggle('done', e.target.checked);
+    renderLadder();
   });
+  const nd = view.querySelector('.nc-done');
+  if (nd) nd.onclick = () => { toggle(S.ladder, nd.dataset.id, true); toast('הבא בתור התקדם'); renderLadder(); };
+  const sb = view.querySelector('#syncBtn');
+  if (sb) sb.onclick = enableSync;
   window.scrollTo(0, 0);
 }
 
@@ -440,6 +515,7 @@ addEventListener('scroll', () => {
       fetch('talents.json', { cache: 'no-cache' }).then(r => r.json())
     ]);
   } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
+  await pullState();
   paintFolio(); route();
 })();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

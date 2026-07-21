@@ -1,0 +1,7 @@
+name = "sadna-sync"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+
+[[kv_namespaces]]
+binding = "STATE"
+id = "9a4001260c914316a6f63f1494b69d7d"

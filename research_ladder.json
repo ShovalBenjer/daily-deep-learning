@@ -1,46 +1,47 @@
 {
-  "source": "docs/root-cleanup-2026-05-28/Futuristic Learning Stack (April 2026) + docs/ai-103-study-tracker.md (new-recruit)",
+  "source": "Futuristic Learning Stack (April 2026) + ai-103-study-tracker (new-recruit)",
   "phases": [
-    { "id": "build", "name": "לבנות השבוע", "note": "הסטאק קיים בפרודקשן אצל Cursor ו-CodeRabbit; זו לא תוכנית עתידית.",
+    { "id": "build", "name": "לבנות השבוע", "note": "הסטאק הזה רץ בפרודקשן אצל Cursor ו-CodeRabbit. זו לא תוכנית עתידית.",
       "items": [
-        { "id": "measure-v1", "t": "Measurement stack v1: embeddings + LanceDB + TF-IDF dedup + UMAP/KDE gaps + G-Eval על 5% מדגם" },
-        { "id": "skills-corpus", "t": "סריקת anthropics/skills, דדופ UMAP+HDBSCAN, טקסונומיית סקילים אישית" }
+        { "id": "measure-v1", "t": "Measurement stack v1", "why": "בלי מדידה אין למידה מסתגלת; זה הבסיס לכל השאר", "action": "פתח פרויקט: embeddings + LanceDB, TF-IDF דדופ, UMAP/KDE לזיהוי פערים, G-Eval על 5% מדגם", "min": 180, "level": 4, "url": "https://www.lancedb.com/blog/hybrid-search-rag-for-real-life-production-grade-applications-e1e727b3965a" },
+        { "id": "skills-corpus", "t": "טקסונומיית סקילים אישית", "why": "לומדים מקריאת פרומפטים ברמת פרודקשן", "action": "סרוק את anthropics/skills, הרץ דדופ UMAP+HDBSCAN, תייג מול הפרויקטים שלך", "min": 120, "level": 3, "url": "https://github.com/anthropics/skills" }
       ] },
-    { "id": "now", "name": "מיד (סוגר את הפער מ-MDP)",
+    { "id": "now", "name": "מיד: לסגור את הפער מ-MDP",
       "items": [
-        { "id": "rm-icarte", "t": "Reward Machines: Icarte et al. 2018, הגשר מ-MDP ליעדים לא-מרקוביים" },
-        { "id": "omega-hahn", "t": "Omega-regular objectives: Hahn et al. 2019, הפתרון הראשון model-free" },
-        { "id": "ltl-primer", "t": "LTL primer (Stanford CS357), השפה הלוגית שמעל מרקוב" }
+        { "id": "rm-icarte", "t": "Reward Machines (Icarte 2018)", "why": "הגשר מ-MDP ליעדים לא-מרקוביים; קצר ובר-מימוש", "action": "קרא את המאמר, ממש את הדוגמה כאוטומט 4 מצבים בפייתון", "min": 90, "level": 2, "url": "https://proceedings.mlr.press/v80/icarte18a.html" },
+        { "id": "omega-hahn", "t": "Omega-regular RL (Hahn 2019)", "why": "הפתרון הראשון model-free ליעדי LTL", "action": "קרא סעיפים 1-4; סכם ב-5 שורות איך ההמרה לאוטומט עובדת", "min": 75, "level": 3, "url": "https://ris.utwente.nl/ws/files/247405321/Hahn2019omega_regular.pdf" },
+        { "id": "ltl-primer", "t": "LTL primer", "why": "השפה הלוגית שמעל מרקוב; דרושה לשני הקודמים", "action": "קרא את הפריימר של סטנפורד; כתוב 3 דוגמאות LTL על סוכן קוד", "min": 45, "level": 1, "url": "https://web.stanford.edu/class/cs357/" }
       ] },
     { "id": "soon", "name": "חודש-חודשיים",
       "items": [
-        { "id": "grpo", "t": "GRPO (DeepSeek-Math 2024), האלגוריתם החשוב מאז PPO" },
-        { "id": "panini", "t": "Panini (arXiv 2602.15156), למידה במרחב הטוקנים עם זיכרון מובנה" },
-        { "id": "geval", "t": "G-Eval + תיקון הטיות שופט (arXiv 2511.21140)" },
-        { "id": "tf-grpo", "t": "Training-Free GRPO (arXiv 2510.08191), שיפור RL בלי GPU" }
+        { "id": "grpo", "t": "GRPO (DeepSeek-Math)", "why": "האלגוריתם החשוב מאז PPO; בלי מודל critic", "action": "קרא את סעיף האלגוריתם; גזור ידנית את ה-advantage היחסי-לקבוצה", "min": 90, "level": 4, "url": "https://arxiv.org/abs/2402.03300" },
+        { "id": "panini", "t": "Panini: זיכרון מובנה בטוקנים", "why": "הלמידה המתמשכת הכי עקרונית של 2026", "action": "קרא; שרטט את ה-GSW כגרף; חשוב איך זה משרת את ההרנס שלך", "min": 90, "level": 4, "url": "https://arxiv.org/abs/2602.15156" },
+        { "id": "geval", "t": "G-Eval + תיקון הטיות", "why": "שופט LLM מכויל, לשלב 5 של הסדנה", "action": "קרא את נוסחת התיקון; חשב דוגמה עם q1=0.9, q0=0.8", "min": 60, "level": 4, "url": "https://arxiv.org/abs/2511.21140" },
+        { "id": "tf-grpo", "t": "Training-Free GRPO", "why": "שיפור RL בלי GPU, ישים על הסוכנים שלך היום", "action": "קרא; רשום איך prior בטוקנים מחליף עדכון משקלים", "min": 60, "level": 4, "url": "https://arxiv.org/abs/2510.08191" }
       ] },
     { "id": "deep", "name": "עד חצי שנה",
       "items": [
-        { "id": "avg-omega", "t": "Average-reward RL ל-omega-regular (JAIR 2025), סוכנים לא-אפיזודיים" },
-        { "id": "pref-morl", "t": "Preference-Controllable RL (ICML 2025), כל חזית פארטו במדיניות אחת" },
-        { "id": "alma", "t": "ALMA (arXiv 2602.07755), מטא-למידה של ארכיטקטורת זיכרון" },
-        { "id": "oxford", "t": "Oxford: Foundations of Self-Programming Agents 2025-26" }
+        { "id": "avg-omega", "t": "Average-reward omega-regular (JAIR 2025)", "why": "סוכנים לא-אפיזודיים, ההגדרה הנכונה לסוכן קוד רץ", "action": "קריאה עמוקה + סיכום עמוד", "min": 120, "level": 5, "url": "https://arxiv.org/abs/2505.15693" },
+        { "id": "pref-morl", "t": "Preference-Controllable RL (ICML 2025)", "why": "כל חזית פארטו במדיניות אחת: מהירות מול נכונות מול עלות", "action": "קריאה + מיפוי ל-tradeoffs של ההרנס", "min": 120, "level": 5, "url": "https://icml.cc/virtual/2025/poster/46501" },
+        { "id": "alma", "t": "ALMA: מטא-למידת זיכרון", "why": "לומדת את ארכיטקטורת הזיכרון, לא רק את התוכן", "action": "קריאה + השוואה ל-Panini", "min": 90, "level": 5, "url": "https://arxiv.org/abs/2602.07755" },
+        { "id": "oxford", "t": "Oxford: Self-Programming Agents", "why": "הקורס האקדמי היחיד על סוכנים שמתכנתים את עצמם", "action": "עבור על הסילבוס; בחר 3 הרצאות", "min": 60, "level": 5, "url": "https://www.cs.ox.ac.uk/teaching/courses/2025-2026/foundagent/" }
       ] },
     { "id": "ongoing", "name": "מתמשך",
       "items": [
-        { "id": "letta", "t": "Letta: continual learning in token space (בלוג חי)" },
-        { "id": "whitemech", "t": "WhiteMech: temporal RL, restraining bolts, neurosymbolic" },
-        { "id": "arxiv-filter", "t": "arXiv יומי בפילטרים: reward machine, omega-regular, token-space, non-Markovian" }
+        { "id": "letta", "t": "Letta: continual learning בטוקנים", "why": "הבלוג החי של התחום", "action": "עקוב; פוסט חדש = כרטיס מעקב", "min": 20, "level": 3, "url": "https://www.letta.com/blog/continual-learning" },
+        { "id": "whitemech", "t": "WhiteMech: temporal RL", "why": "הקבוצה של reward machines ו-restraining bolts", "action": "סמן את דפי הקורסים; חזור כשמגיעים ל-RM", "min": 20, "level": 3, "url": "https://whitemech.github.io/courses" },
+        { "id": "arxiv-filter", "t": "פילטרי arXiv יומיים", "why": "reward machine, omega-regular, token-space, non-Markovian", "action": "המדור מעקב עושה זאת; ודא שהוא חי", "min": 5, "level": 1, "url": "https://arxiv.org/list/cs.LG/recent" }
       ] }
   ],
   "cert": {
     "name": "AI-103: Azure AI Apps and Agents Developer",
     "facts": "לממש שובר עד 2026-08-18, לגשת עד 2026-10-18, עובר 700/1000. שעה ביום, שישה ימים בשבוע.",
     "weeks": [
-      { "id": "ai103-w1", "t": "שבוע 1: Plan and manage (25-30%): Foundry, deployment, Managed Identity, responsible AI, monitoring" },
-      { "id": "ai103-w2", "t": "שבוע 2: Generative + agentic (30-35%): RAG, agents, orchestration, evals, observability" },
-      { "id": "ai103-w3", "t": "שבוע 3: הזנב החלש: CV/multimodal, טקסט, AI Search, extraction" },
-      { "id": "ai103-w4", "t": "שבוע 4: מוכנות מבחן: 2 practice assessments מלאים + sandbox + רשימת פערים" }
+      { "id": "ai103-w1", "t": "שבוע 1: Plan and manage (25-30%)", "why": "הבסיס: Foundry, זהויות, אחריות", "action": "מודול Learn ביום לפי המדריך + שאלות היום בדף", "min": 60, "level": 2, "url": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103" },
+      { "id": "ai103-w2", "t": "שבוע 2: Generative + agentic (30-35%)", "why": "החלק הכבד במבחן, והכי קרוב לעבודה שלך", "action": "RAG, agents, evals: מודול + לאב יומי", "min": 60, "level": 3, "url": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103" },
+      { "id": "ai103-w3", "t": "שבוע 3: הזנב: CV, טקסט, Search", "why": "הדומיין החלש; הכי הרבה נקודות אבודות", "action": "מודול + לאב; רשום פערים ל-raid", "min": 60, "level": 3, "url": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103" },
+      { "id": "ai103-w4", "t": "שבוע 4: מוכנות מבחן", "why": "סימולציה לפני אמת", "action": "2 practice assessments מלאים + sandbox + סגירת פערים", "min": 120, "level": 3, "url": "https://aka.ms/examdemo" }
     ]
-  }
+  },
+  "levels_note": "level = הרמה המומלצת להתחיל את הפריט (ראה רמות בספסיפיקציה)."
 }

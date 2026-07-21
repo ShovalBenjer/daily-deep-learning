@@ -46,6 +46,12 @@
     "https://github.com/EleutherAI", "https://github.com/merlihson/scientific-resources",
     "https://t.me/MathyAIwithMike"
   ],
+  "topic_pools": {
+    "note": "The generator draws quiz/drill/judgment topics from these pools and rotates until covered; sourced from the Living Codex starter lists, MatchIQ CONCEPTS, and the curriculum tails.",
+    "oracle": ["mean and variance", "Poisson distribution", "overdispersion", "Negative Binomial", "conditional probability", "Bayes theorem", "calibration", "Brier score", "log loss", "Dixon-Coles", "Kelly criterion", "walk-forward validation", "bootstrap", "data leakage", "bias-variance", "expected value in betting markets"],
+    "architect": ["variables and control flow", "lists and dictionaries", "hash maps", "time complexity", "SQL joins", "window functions", "Git internals", "API status codes", "testing pyramid", "dependency injection", "queues", "caching", "MCP tool schemas", "agent evaluation", "idempotency keys", "keyset pagination", "two pointers", "binary search variants", "dynamic programming intro"],
+    "warden": ["Blob Storage", "Azure SQL", "identity and RBAC", "Managed Identity", "VNets", "App Service", "Functions", "Container Apps", "Azure Monitor", "Application Insights", "Key Vault", "CI/CD", "Azure DevOps pipelines", "reliability and scaling", "AI Search", "Content Understanding", "prompt shields"]
+  },
   "projects": [
     "MatchIQ sports probability engine (Poisson, Dixon-Coles, calibration, Kelly)",
     "Claude harness and orchestration, MCP and A2A systems",

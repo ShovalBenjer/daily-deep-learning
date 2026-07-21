@@ -14,6 +14,29 @@ One run = one new post + one index update + one commit. Run: 06:00 Asia/Jerusale
 - Idempotency: if `posts/YYYY-MM-DD.md` exists, STOP, change nothing.
 - Verify lecture titles against the playlists; follow reality, note deviations.
 
+## 1b. Read the learner state (this is what makes the page personal)
+
+GET the sync endpoint (URL + bearer key are provided in your run instructions).
+It returns the learner's full state: `answers` (per block id: ok, attempts,
+conf 0-100, tree, date), `points`, `ranks`, `ladder`, `read`. If unreachable,
+generate without personalization and say so in one line at the top.
+
+Adaptation rules, applied every run:
+1. **Resurface**: any answer with ok=false OR conf<50 from 2 days ago and from
+   7 days ago -> write a NEW quiz on the same concept (rephrased, new id,
+   same tree) inside the matching section. 1-3 resurfaces per day, oldest first.
+2. **Target weakness**: שיקול דעת picks its domain from the tree with the
+   lowest first-try accuracy (min 3 answers); tie -> lowest total points.
+3. **Coverage**: new quiz topics come from course_plan.json -> topic_pools,
+   preferring topics that never appeared in any previous post (grep posts/).
+4. **Depth by level**: total earned points -> level thresholds
+   0/10/25/45/70/100/140/190/250/320 (levels 1-10). Levels 1-3: intuition and
+   use; 4-6: add proof sketches and failure modes; 7-10: wire in a 2025-26
+   paper. State the level you generated for in the opening line.
+5. **One thread**: the page has ONE central concept; עיון teaches it, תרגול
+   implements it, שיקול דעת decides with it when possible; AI-103 ends with one
+   bridge line to the thread. Five unrelated sections = defect.
+
 ## 2. Page structure (exact)
 
 File `posts/YYYY-MM-DD.md`. Hebrew content, technical nouns English. Section

@@ -6,19 +6,19 @@
     { "name": "CONCEPTS.md", "status": "ingested", "into": "oracle pool: MatchIQ probability topics (Poisson, Dixon-Coles, Kelly, calibration)" },
     { "name": "PROJECTS-MANIFEST.md", "status": "ingested", "into": "projects list, STAR-stories source, honest-positioning constraints" },
     { "name": "AI PR Review Prompt Best Practices.md", "status": "ingested", "into": "architect pool: review-prompt design, actionability gates, CoT scaffolds, CWE anchoring; ladder item apply-to-critic", "date": "2026-07-22" },
-    { "name": "agentic_creativity_july_2026_report.md", "status": "pending", "into": "מעקב paper cards: frontier models, reasoning budgets, verifiers (feed 2-3 cards over next weeks)" },
-    { "name": "computer sciene t.md", "status": "pending", "into": "oracle pool candidates: Kolmogorov/MDL, PAC, wavelets, info geometry (season 2 spine candidate)" },
+    { "name": "agentic_creativity_july_2026_report.md", "status": "ingested", "into": "plan C3/C5 (verifier pass, uncertainty-routed compute), מעקב paper-card queue, season-3 spine candidate", "date": "2026-07-22" },
+    { "name": "computer sciene t.md", "status": "ingested", "into": "season-2 spine #1 (math substrate), plan B3 (graph cohesion analytics), MDL-as-signal research note", "date": "2026-07-22" },
     { "name": "2026 june best practices next gen find me open sou.md", "status": "context-only", "into": "Hedg audio QA context" },
     { "name": "AEO-ONE SOTA Gap Analysis.md", "status": "context-only", "into": "AEO domain context" },
     { "name": "SOTA v4 Code Audit.md", "status": "context-only", "into": "constraint-solver context" },
     { "name": "great. im a solo junior ai engineer with unlimited.md", "status": "ingested", "into": "tooling stance: minimal agentic stack, drop heavy frameworks" },
-    { "name": "@Academic @Wiley Grill and grade, do harshest trut.md", "status": "pending", "into": "grading rubric inspiration for teacher mock interviews" },
-    { "name": "Lets say i have contracts for my agents they are s.md", "status": "pending", "into": "agent-contracts topics for architect pool" },
-    { "name": "הרצאה 3 cato.m4a.txt", "status": "pending", "into": "transcript; council to classify" },
-    { "name": "_1-1_cato_heb.txt", "status": "pending", "into": "transcript; council to classify" },
+    { "name": "@Academic @Wiley Grill and grade, do harshest trut.md", "status": "ingested", "into": "plan C2-C4: grading integrity (single-rater problem, kappa>0.6, test-retest, per-dimension audit)", "date": "2026-07-22" },
+    { "name": "Lets say i have contracts for my agents they are s.md", "status": "ingested", "into": "plan E5/E6/D4: adversarial red-team agent, lane quarantine, reputation flavor", "date": "2026-07-22" },
+    { "name": "הרצאה 3 cato.m4a.txt", "status": "ingested", "into": "plan A5 + season-2 spine #2: enterprise agent architecture module (digital-twin identity, MCP gateway, skills marketplace, memory contracts); interview stories", "date": "2026-07-22" },
+    { "name": "_1-1_cato_heb.txt", "status": "ingested", "into": "plan C3: generator+verifier grading loop pattern; persona-injection flavor note", "date": "2026-07-22" },
     { "name": "1. search reccomended high daily users apify actor.md", "status": "context-only", "into": "hiring-machine context" },
-    { "name": "How much samples i need for this is 10260 acc from.md", "status": "pending", "into": "sample-size/statistics micro-topic for oracle pool" },
+    { "name": "How much samples i need for this is 10260 acc from.md", "status": "ingested", "into": "plan C1: min-n rules for all metric claims; oracle-pool topic sample-size planning", "date": "2026-07-22" },
     { "name": "Is this 2026 july updated. Feels generic ui slop g.md", "status": "ingested", "into": "design anti-slop constitution" },
-    { "name": "the terminal progress bar and unique thinking they.md", "status": "pending", "into": "council to classify" }
+    { "name": "the terminal progress bar and unique thinking they.md", "status": "ingested", "into": "plan E7: chat thinking-status UI (rotating verbs, elapsed); terminal-UI reference", "date": "2026-07-22" }
   ]
 }

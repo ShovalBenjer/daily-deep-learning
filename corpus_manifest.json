@@ -1,0 +1,24 @@
+{
+  "note": "Living syllabus source manifest. The weekly council diffs the Drive folder against this list, ingests new docs (topic_pools, ladder items, paper cards, judgment scenarios), and records them here. Status: ingested | pending | context-only.",
+  "drive_folder": "1gPWBY7buiDUKze_HUxRp9E1v2aK389Oc",
+  "docs": [
+    { "name": "the_living_codex_full_build_prompt.md", "status": "ingested", "into": "product design: quests, mastery ranks, no-guilt mechanics, starter topic pools" },
+    { "name": "CONCEPTS.md", "status": "ingested", "into": "oracle pool: MatchIQ probability topics (Poisson, Dixon-Coles, Kelly, calibration)" },
+    { "name": "PROJECTS-MANIFEST.md", "status": "ingested", "into": "projects list, STAR-stories source, honest-positioning constraints" },
+    { "name": "AI PR Review Prompt Best Practices.md", "status": "ingested", "into": "architect pool: review-prompt design, actionability gates, CoT scaffolds, CWE anchoring; ladder item apply-to-critic", "date": "2026-07-22" },
+    { "name": "agentic_creativity_july_2026_report.md", "status": "pending", "into": "מעקב paper cards: frontier models, reasoning budgets, verifiers (feed 2-3 cards over next weeks)" },
+    { "name": "computer sciene t.md", "status": "pending", "into": "oracle pool candidates: Kolmogorov/MDL, PAC, wavelets, info geometry (season 2 spine candidate)" },
+    { "name": "2026 june best practices next gen find me open sou.md", "status": "context-only", "into": "Hedg audio QA context" },
+    { "name": "AEO-ONE SOTA Gap Analysis.md", "status": "context-only", "into": "AEO domain context" },
+    { "name": "SOTA v4 Code Audit.md", "status": "context-only", "into": "constraint-solver context" },
+    { "name": "great. im a solo junior ai engineer with unlimited.md", "status": "ingested", "into": "tooling stance: minimal agentic stack, drop heavy frameworks" },
+    { "name": "@Academic @Wiley Grill and grade, do harshest trut.md", "status": "pending", "into": "grading rubric inspiration for teacher mock interviews" },
+    { "name": "Lets say i have contracts for my agents they are s.md", "status": "pending", "into": "agent-contracts topics for architect pool" },
+    { "name": "הרצאה 3 cato.m4a.txt", "status": "pending", "into": "transcript; council to classify" },
+    { "name": "_1-1_cato_heb.txt", "status": "pending", "into": "transcript; council to classify" },
+    { "name": "1. search reccomended high daily users apify actor.md", "status": "context-only", "into": "hiring-machine context" },
+    { "name": "How much samples i need for this is 10260 acc from.md", "status": "pending", "into": "sample-size/statistics micro-topic for oracle pool" },
+    { "name": "Is this 2026 july updated. Feels generic ui slop g.md", "status": "ingested", "into": "design anti-slop constitution" },
+    { "name": "the terminal progress bar and unique thinking they.md", "status": "pending", "into": "council to classify" }
+  ]
+}

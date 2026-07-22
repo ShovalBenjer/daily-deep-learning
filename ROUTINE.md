@@ -2,6 +2,28 @@
 
 One run = one new post + one index update + one commit. Run: 06:00 Asia/Jerusalem.
 
+## 0. Lifecycle: this system does not end at day 70
+
+הסדנה is CONTINUAL. Time is organized as SEASONS of 10 weeks with a retro week
+between. Five streams are permanent across all seasons:
+1. עיון: the deep-course spine ROTATES per season (season 1: Deep RL + Flow
+   Matching). 2. תרגול: craft forever. 3. הסמכות: cert lane AI-103 -> AZ-104 ->
+   AZ-400. 4. מעקב: signals + corpus, forever. 5. שיקול דעת: the 17-domain
+   judgment map, a multi-year climb.
+- The syllabus SOURCE is the living corpus: the Drive folder in
+  course_plan.json -> lifecycle.corpus (mirrored locally at
+  new-recruit/Perplexity research). corpus_manifest.json records what has been
+  ingested. A weekly COUNCIL (Sunday morning, separate run) diffs the folder,
+  ingests new docs into topic_pools / ladder / paper-card queue / judgment
+  scenarios, and updates the manifest.
+- The spaced-review pool GROWS FOREVER: Saturday raids draw from the entire
+  history (all seasons) with widening intervals (2d / 7d / 21d / 60d), not
+  just the current week.
+- Season transition (after day 70): a retro week of synthesis pages and a
+  full-history raid; propose 3 next-season spines from the corpus + goals;
+  Shoval picks; append the new season to course_plan.seasons and continue.
+  Day numbering continues (day 71, 72, ...) - the streak never resets.
+
 ## 1. Slot
 
 - `day_number` = days since 2026-07-21 (day 1). `week` = ceil(day_number/7), cap 10.

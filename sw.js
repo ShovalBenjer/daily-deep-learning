@@ -1,7 +1,10 @@
-const V = 'sadna-v14';
+const V = 'sadna-v15';
 const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest',
   'vendor/katex.min.css', 'vendor/katex.min.js', 'vendor/auto-render.min.js', 'vendor/marked.min.js'];
-const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json'];
+const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json', 'corpus_manifest.json'];
+// The shell itself is NETWORK-FIRST so an open with connectivity always gets
+// the latest app (staleness burned us repeatedly); cache is the offline fallback.
+const NETFIRST_SHELL = ['index.html', 'style.css', 'tree3d.js', 'sw.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -15,23 +18,28 @@ self.addEventListener('activate', e => {
   );
 });
 
+function netFirst(e) {
+  e.respondWith(
+    fetch(e.request).then(r => {
+      const cp = r.clone();
+      caches.open(V).then(c => c.put(e.request, cp));
+      return r;
+    }).catch(() => caches.match(e.request, { ignoreSearch: e.request.mode === 'navigate' })
+      .then(hit => hit || caches.match('index.html')))
+  );
+}
+
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+  const path = url.pathname;
 
-  // Content that changes daily: network-first, cache fallback offline.
-  if (FRESH.some(f => url.pathname.includes(f))) {
-    e.respondWith(
-      fetch(e.request).then(r => {
-        const cp = r.clone();
-        caches.open(V).then(c => c.put(e.request, cp));
-        return r;
-      }).catch(() => caches.match(e.request))
-    );
-    return;
+  if (e.request.mode === 'navigate' || NETFIRST_SHELL.some(f => path.endsWith('/' + f)) ||
+      FRESH.some(f => path.includes(f))) {
+    return netFirst(e);
   }
 
-  // Shell, fonts, CDN: cache-first.
+  // Fonts, vendor libs, icons: cache-first (immutable in practice).
   e.respondWith(
     caches.match(e.request).then(hit => hit || fetch(e.request).then(r => {
       if (r.ok || r.type === 'opaque') {

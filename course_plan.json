@@ -1,4 +1,17 @@
 {
+  "lifecycle": {
+    "model": "continual: seasons of 10 weeks + retro week between; five permanent streams (עיון spine rotates per season; תרגול, הסמכות, מעקב, שיקול דעת are forever)",
+    "season": 1,
+    "season_goal": "hire by 2026-09-30; season 1 spine = Deep RL + Flow Matching",
+    "cert_lane": ["AI-103 (sit ~2026-09-15)", "AZ-104", "AZ-400"],
+    "corpus": {
+      "drive_folder": "1gPWBY7buiDUKze_HUxRp9E1v2aK389Oc",
+      "local_mirror": "new-recruit/Perplexity research",
+      "manifest": "corpus_manifest.json",
+      "rule": "the Drive folder is the living syllabus source; the weekly council diffs it, ingests new docs into topic_pools/ladder/paper-cards, and updates the manifest. A doc dropped into Drive enters the program within a week."
+    },
+    "season_transition": "day 70 -> retro week: synthesis page, full-history raid, metrics review; system proposes 3 next-season spines from corpus+goals, Shoval picks; new season appended to seasons[]"
+  },
   "start_date": "2026-07-21",
   "weeks": 10,
   "playlists": {
@@ -49,7 +62,7 @@
   "topic_pools": {
     "note": "The generator draws quiz/drill/judgment topics from these pools and rotates until covered; sourced from the Living Codex starter lists, MatchIQ CONCEPTS, and the curriculum tails.",
     "oracle": ["mean and variance", "Poisson distribution", "overdispersion", "Negative Binomial", "conditional probability", "Bayes theorem", "calibration", "Brier score", "log loss", "Dixon-Coles", "Kelly criterion", "walk-forward validation", "bootstrap", "data leakage", "bias-variance", "expected value in betting markets"],
-    "architect": ["variables and control flow", "lists and dictionaries", "hash maps", "time complexity", "SQL joins", "window functions", "Git internals", "API status codes", "testing pyramid", "dependency injection", "queues", "caching", "MCP tool schemas", "agent evaluation", "idempotency keys", "keyset pagination", "two pointers", "binary search variants", "dynamic programming intro"],
+    "architect": ["variables and control flow", "lists and dictionaries", "hash maps", "time complexity", "SQL joins", "window functions", "Git internals", "API status codes", "testing pyramid", "dependency injection", "queues", "caching", "MCP tool schemas", "agent evaluation", "idempotency keys", "keyset pagination", "two pointers", "binary search variants", "dynamic programming intro", "AI code-review prompt design (persona specificity, diff-only scope)", "actionability gates for review comments", "CoT scaffolding for low-reasoning-effort models", "security anchoring with CWE/OWASP in prompts", "hallucination guards and uncertainty disclosure"],
     "warden": ["Blob Storage", "Azure SQL", "identity and RBAC", "Managed Identity", "VNets", "App Service", "Functions", "Container Apps", "Azure Monitor", "Application Insights", "Key Vault", "CI/CD", "Azure DevOps pipelines", "reliability and scaling", "AI Search", "Content Understanding", "prompt shields"]
   },
   "projects": [

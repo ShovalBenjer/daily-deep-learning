@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=IBM+Plex+Mono:wght@400&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="vendor/katex.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,6 +23,7 @@
 <header class="bar">
   <a class="wordmark" href="#/"><b>ה</b>סדנה</a>
   <span id="xpwrap"><span class="folio" id="folio"></span><span id="xpbar"><span id="xpfill"></span></span></span>
+  <svg id="ring" viewBox="0 0 36 36" aria-label="התקדמות היום"><circle class="rbg" cx="18" cy="18" r="15.5"/><circle class="rfg" cx="18" cy="18" r="15.5"/><text x="18" y="21.5" text-anchor="middle">0</text></svg>
   <button class="iconbtn" id="themeToggle" aria-label="מצב תאורה">
     <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/></svg>
     <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" hidden><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -40,6 +41,8 @@
   <a href="#/ladder" id="tab-ladder">המסלול</a>
 </nav>
 <div id="toast"><span id="toastMsg"></span></div>
+<canvas id="fx"></canvas>
+<div id="overlay" hidden><div class="ov-plate plate"><div id="ovBody"></div><button id="ovClose">המשך</button></div></div>
 
 <button id="chatFab" aria-label="שיחה עם המורה" hidden>המורה</button>
 <div id="chatPane" hidden>
@@ -50,9 +53,9 @@
     <button id="cpSend">שלח</button></form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="vendor/marked.min.js"></script>
+<script defer src="vendor/katex.min.js"></script>
+<script defer src="vendor/auto-render.min.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
@@ -71,6 +74,8 @@ const store = {
     st.answers = st.answers || {};                       // blockId -> {ok, attempts}
     st.points = st.points || {};                          // tree -> {earned, spent}
     st.ranks = st.ranks || {};                            // domainId -> rank
+    st.daysDone = st.daysDone || [];                      // explicitly completed days
+    st.lastLevel = st.lastLevel || 1;
     return st;
   },
   save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
@@ -105,12 +110,68 @@ const toggle = (arr, v, on) => { const i = arr.indexOf(v); if (on && i < 0) arr.
 const pool = t => { const p = S.points[t] || { earned: 0, spent: 0 }; return p.earned - p.spent; };
 const poolAll = () => talents ? talents.trees.reduce((a, t) => a + pool(t.id), 0) : 0;
 
-function award(tree, pts) {
+let combo = 0;
+function award(tree, pts, el, firstTry) {
   if (!tree) tree = 'craft';
   S.points[tree] = S.points[tree] || { earned: 0, spent: 0 };
-  S.points[tree].earned += pts; store.save();
+  S.points[tree].earned += pts;
+  if (firstTry) {
+    combo++;
+    if (combo >= 3 && combo % 3 === 0) { S.points[tree].earned += 1; toast('קומבו x' + combo + '! בונוס +1'); }
+  } else if (firstTry === false) combo = 0;
+  store.save();
+  if (el) burst(el);
   toast('+' + pts + ' נקודות לעץ');
-  paintFolio();
+  paintFolio(); paintRing();
+}
+
+/* gold burst */
+function burst(el) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const cv = $('#fx'), dpr = Math.min(devicePixelRatio, 2);
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const P = Array.from({ length: 26 }, () => {
+    const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 4;
+    return { x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, life: 1, s: 2 + Math.random() * 3 };
+  });
+  const gold = themeC('--gold'), hi = themeC('--gold-hi');
+  let t0 = performance.now();
+  (function fr(now) {
+    const dt = (now - t0) / 16; t0 = now;
+    x.clearRect(0, 0, innerWidth, innerHeight);
+    let alive = false;
+    P.forEach(p => {
+      p.life -= 0.03 * dt; if (p.life <= 0) return;
+      alive = true;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.25 * dt;
+      x.globalAlpha = Math.max(0, p.life);
+      x.fillStyle = Math.random() > .5 ? gold : hi;
+      x.fillRect(p.x, p.y, p.s, p.s);
+    });
+    x.globalAlpha = 1;
+    if (alive) requestAnimationFrame(fr); else x.clearRect(0, 0, innerWidth, innerHeight);
+  })(performance.now());
+}
+
+/* celebration overlay */
+function celebrate(html, onclose) {
+  $('#ovBody').innerHTML = html;
+  $('#overlay').hidden = false;
+  $('#ovClose').onclick = () => { $('#overlay').hidden = true; if (onclose) onclose(); };
+}
+function currentPost() { const m = location.hash.match(/^#\/(\d{4}-\d{2}-\d{2})$/); return index.find(p => p.date === (m ? m[1] : null)) || index.find(p => !S.daysDone.includes(p.date) && true) || index[0]; }
+function paintRing() {
+  const ring = $('#ring'); if (!ring) return;
+  const total = document.querySelectorAll('#view .qz').length;
+  const done = document.querySelectorAll('#view .qz.answered').length;
+  ring.style.display = total ? '' : 'none';
+  if (!total) return;
+  const C = 2 * Math.PI * 15.5, f = ring.querySelector('.rfg');
+  f.style.strokeDasharray = C;
+  f.style.strokeDashoffset = C * (1 - done / total);
+  ring.querySelector('text').textContent = done + '/' + total;
 }
 let toastT = null;
 function toast(msg) {
@@ -129,12 +190,20 @@ const level = () => { let l = 1; LEVELS.forEach((t, i) => { if (totalEarned() >=
 function paintFolio(txt) {
   if (txt !== undefined) { $('#folio').textContent = txt; return; }
   const p = poolAll(), n = runLength(), e = totalEarned(), lv = level();
-  const bits = ['רמה ' + lv, e + ' XP'];
+  const bits = [];
+  if (currentDay) bits.push('יום ' + currentDay);
+  bits.push('רמה ' + lv, e + ' XP');
+  if (combo >= 2) bits.push('קומבו x' + combo);
   if (p > 0) bits.push(p + ' להשקעה');
   if (n >= 2) bits.push('רצף ' + n);
   $('#folio').textContent = bits.join(' · ');
   const lo = LEVELS[lv - 1] || 0, hi = LEVELS[lv] || (lo + 80);
   $('#xpfill').style.width = Math.min(100, ((e - lo) / (hi - lo)) * 100) + '%';
+  if (lv > (S.lastLevel || 1)) {
+    S.lastLevel = lv; store.save();
+    celebrate(`<div class="ov-kicker">עלית רמה</div><h2>רמה ${lv}</h2>
+      <p>${lv >= 4 ? 'מעכשיו הדפים מעמיקים: הוכחות ומקרי כשל.' : 'ההתמדה נצברת. המשך.'}</p>`);
+  }
 }
 
 /* ---------- theme ---------- */
@@ -401,7 +470,7 @@ function widgetGridworld(d) {
 }
 
 function buildQuiz(d) {
-  const wrap = document.createElement('div'); wrap.className = 'qz';
+  const wrap = document.createElement('div'); wrap.className = 'qz'; wrap.dataset.qid = d.id;
   const dir = isLtr(d.q) ? 'ltr' : 'rtl';
   wrap.innerHTML = `<p class="qq" dir="${dir}">${d.q}</p><div class="opts"></div>
     <label class="conf-row">ביטחון <input type="range" min="0" max="100" step="5" value="70"><b>70%</b></label>
@@ -419,6 +488,7 @@ function buildQuiz(d) {
   let selected = -1, attempts = prior ? prior.attempts : 0;
 
   const finish = (ok, chosen) => {
+    wrap.classList.add('answered');
     btns.forEach(b => { b.disabled = true; b.classList.remove('sel'); });
     btns[d.answer].classList.add('right');
     if (!ok && chosen >= 0 && chosen !== d.answer) btns[chosen].classList.add('wrong');
@@ -443,10 +513,11 @@ function buildQuiz(d) {
     const conf = +confInp.value;
     if (selected === d.answer) {
       S.answers[d.id] = { ok: true, attempts, chosen: selected, conf, tree: d.tree, date: iso(new Date()) }; store.save();
-      finish(true, selected); award(d.tree, attempts === 1 ? 2 : 1);
+      finish(true, selected); award(d.tree, attempts === 1 ? 2 : 1, wrap, attempts === 1);
     } else if (attempts >= 2) {
       S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, date: iso(new Date()) }; store.save();
-      finish(false, selected);
+      combo = 0;
+      finish(false, selected); paintRing();
     } else {
       msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no';
       btns[selected].classList.add('wrong'); btns[selected].disabled = true;
@@ -457,7 +528,7 @@ function buildQuiz(d) {
 }
 
 function buildFillin(d) {
-  const wrap = document.createElement('div'); wrap.className = 'qz';
+  const wrap = document.createElement('div'); wrap.className = 'qz'; wrap.dataset.qid = d.id;
   const dir = isLtr(d.prompt) ? 'ltr' : 'rtl';
   wrap.innerHTML = `<p class="qq" dir="${dir}">${d.prompt}</p>
     <input class="fill" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="...">
@@ -471,6 +542,7 @@ function buildFillin(d) {
   let attempts = prior ? prior.attempts : 0;
 
   const finish = ok => {
+    wrap.classList.add('answered');
     inp.disabled = true; check.remove();
     if (!ok) inp.value = d.answer;
     msg.textContent = ok ? 'נכון.' : 'הפתרון הוצב בשדה.';
@@ -488,9 +560,10 @@ function buildFillin(d) {
     attempts++;
     if (good.includes(norm(inp.value))) {
       S.answers[d.id] = { ok: true, attempts, val: inp.value, tree: d.tree, date: iso(new Date()) }; store.save();
-      finish(true); award(d.tree, attempts <= 1 ? 2 : 1);
+      finish(true); award(d.tree, attempts <= 1 ? 2 : 1, wrap, attempts <= 1);
     } else if (attempts >= 2) {
-      S.answers[d.id] = { ok: false, attempts, tree: d.tree, date: iso(new Date()) }; store.save(); finish(false);
+      S.answers[d.id] = { ok: false, attempts, tree: d.tree, date: iso(new Date()) }; store.save();
+      combo = 0; finish(false); paintRing();
     } else {
       msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no';
     }
@@ -536,10 +609,10 @@ async function renderPost(i) {
     head.appendChild(mark);
     if (headingEl) head.appendChild(headingEl);
     if (headingEl) {
-      const q = encodeURIComponent(`אני לומד ב"הסדנה" (יום ${p.day} שבוע ${p.week}, ${p.date}), מדור "${headingEl.textContent.trim()}". `);
-      const ask = document.createElement('a');
-      ask.className = 'ask'; ask.href = 'https://claude.ai/new?q=' + q;
-      ask.target = '_blank'; ask.rel = 'noopener'; ask.textContent = 'שאל את קלוד';
+      const ctx = `בדף של יום ${p.day} (${p.date}), מדור "${headingEl.textContent.trim()}": `;
+      const ask = document.createElement('button');
+      ask.className = 'ask'; ask.textContent = 'שאל את המורה';
+      ask.onclick = () => openChat(ctx);
       head.appendChild(ask);
     }
     part.appendChild(head);
@@ -551,6 +624,24 @@ async function renderPost(i) {
     else if (body) body.appendChild(node);
     else if (!(node.nodeType === 3 && !node.textContent.trim())) { openPart(null); body.appendChild(node); }
   });
+
+  if (!S.daysDone.includes(p.date)) {
+    const fin = document.createElement('div'); fin.className = 'finish-wrap';
+    fin.innerHTML = `<button class="finish-day">סיים את יום ${p.day}</button><span class="finish-hint"></span>`;
+    fin.querySelector('button').onclick = e => {
+      toggle(S.daysDone, p.date, true);
+      burst(e.target);
+      const pts = totalEarned();
+      celebrate(`<div class="ov-kicker">הסדנה</div><h2>יום ${p.day} הושלם</h2>
+        <p>סה"כ ${pts} XP · רצף ${runLength()} ימים · הנקודות מחכות בעץ</p>`,
+        () => { location.hash = ''; route(); });
+    };
+    art.appendChild(fin);
+  } else {
+    const donep = document.createElement('p'); donep.className = 'finish-hint';
+    donep.textContent = 'יום ' + p.day + ' הושלם.';
+    art.appendChild(donep);
+  }
 
   const older = index[i + 1], newer = index[i - 1];
   const pager = document.createElement('div'); pager.className = 'pager';
@@ -564,9 +655,16 @@ async function renderPost(i) {
   upgradeBlocks(view);
   typeset(view);
   toggle(S.read, p.date, true);
-  paintFolio();
+  currentDay = p.day;
+  const hint = view.querySelector('.finish-hint');
+  if (hint && !S.daysDone.includes(p.date)) {
+    const total = view.querySelectorAll('.qz').length, done = view.querySelectorAll('.qz.answered').length;
+    if (total > done) hint.textContent = 'נותרו ' + (total - done) + ' משימות בדף';
+  }
+  paintFolio(); paintRing();
   window.scrollTo(0, 0);
 }
+let currentDay = null;
 
 /* ---------- talent trees ---------- */
 let activeTree = null, selNode = null;
@@ -779,8 +877,32 @@ function renderLadder() {
       <div class="li-action">${it.action} · <a href="${it.url}" target="_blank" rel="noopener">מקור</a></div>
     </div></div>`;
 
-  let html = `<div class="view-head"><h1>המסלול</h1>
-    <p>סדר הלימוד מהמסמכים שלך. פריט אחד פתוח בכל רגע: זה שלמטה. השאר הקשר, לא משימות.</p></div>`;
+  let html = `<div class="view-head"><h1>המסלול</h1></div>`;
+  if (ladder.hire_goal) {
+    const dl = new Date(ladder.hire_goal.deadline), now = new Date();
+    const days = Math.max(0, Math.ceil((dl - now) / 86400000)), weeks = Math.floor(days / 7);
+    html += `<div class="hire-banner plate">
+      <div class="hb-count">${days}</div>
+      <div class="hb-body"><b>ימים עד היעד: חוזה חתום, 30/09</b>
+      <span>${weeks} שבועות · ${ladder.hire_goal.line}</span></div></div>`;
+  }
+  if (plan && plan.week_plan) {
+    const start = new Date(plan.start_date);
+    html += `<details class="syllabus"><summary>הסילבוס המלא: 10 שבועות, 70 ימים</summary>` +
+      plan.week_plan.map(wp => {
+        let dots = '';
+        for (let d = 1; d <= 7; d++) {
+          const dt = new Date(start); dt.setDate(start.getDate() + (wp.week - 1) * 7 + (d - 1));
+          const ds = iso(dt);
+          const cls = S.daysDone.includes(ds) ? 'sy-dot done' : index.some(p => p.date === ds) ? 'sy-dot has' : 'sy-dot';
+          dots += `<span class="${cls}"></span>`;
+        }
+        return `<div class="sy-week"><div class="sy-dots">${dots}</div>
+          <div class="sy-t"><b>שבוע ${wp.week}</b> · <span dir="ltr">${wp.primary}</span>${wp.secondary ? `<br><small dir="ltr">${wp.secondary}</small>` : ''}</div></div>`;
+      }).join('') +
+      `<p class="sy-note">כל יום: עיון, תרגול, AI-103, מעקב, שיקול דעת. שבת חזרה, ראשון תיקון. מדור מעקב מזרים מאמרים חדשים מהסריקה היומית אל הדפים.</p></details>`;
+  }
+  html += `<p class="view-head" style="margin-top:1rem"><span style="color:var(--faded);font-size:.88rem">סדר הלימוד מהמסמכים שלך. פריט אחד פתוח בכל רגע: זה שלמטה.</span></p>`;
   if (next) {
     html += `<div class="next-card">
       <div class="nc-kicker">הבא בתור · ${next.phase}</div>
@@ -827,8 +949,31 @@ function paintChat() {
   log.scrollTop = log.scrollHeight;
 }
 function chatAvailable() { return !!(syncKey() && S.daemon_url); }
+function openChat(prefill) {
+  $('#chatPane').hidden = false; $('#chatFab').hidden = true;
+  const form = $('#cpForm');
+  let keyRow = $('#cpKeyRow');
+  if (!syncKey() && !keyRow) {
+    keyRow = document.createElement('div'); keyRow.id = 'cpKeyRow';
+    keyRow.innerHTML = `<input id="cpKey" type="text" placeholder="מפתח סנכרון חד-פעמי" autocomplete="off">
+      <button id="cpKeySave">שמור</button>`;
+    form.parentNode.insertBefore(keyRow, form);
+    keyRow.querySelector('#cpKeySave').onclick = async () => {
+      const k = keyRow.querySelector('#cpKey').value.trim();
+      if (!k) return;
+      localStorage.setItem('sadna-sync-key', k);
+      keyRow.remove(); toast('סנכרון פעיל'); schedulePush(); await pullState();
+    };
+  }
+  paintChat();
+  if (prefill) { $('#cpInput').value = prefill; }
+  $('#cpInput').focus();
+}
 async function sendChat(text) {
   chat.hist.push({ role: 'user', text }); chat.save(); paintChat();
+  if (!syncKey()) { chat.hist.push({ role: 'bot', text: 'כדי לדבר איתי צריך להזין פעם אחת את מפתח הסנכרון (השדה למעלה).' }); chat.save(); paintChat(); return; }
+  if (!S.daemon_url) { await pullState(); }
+  if (!S.daemon_url) { chat.hist.push({ role: 'bot', text: 'הדמון עוד לא נרשם. ודא שהמחשב בבית דולק, ונסה שוב בעוד דקה.' }); chat.save(); paintChat(); return; }
   $('#cpStatus').textContent = 'חושב...';
   try {
     const r = await fetch(S.daemon_url + '/chat', {
@@ -843,7 +988,7 @@ async function sendChat(text) {
   }
   chat.save(); paintChat(); $('#cpStatus').textContent = '';
 }
-$('#chatFab').onclick = () => { $('#chatPane').hidden = false; $('#chatFab').hidden = true; paintChat(); $('#cpInput').focus(); };
+$('#chatFab').onclick = () => openChat();
 $('#cpClose').onclick = () => { $('#chatPane').hidden = true; $('#chatFab').hidden = false; };
 $('#cpForm').onsubmit = e => {
   e.preventDefault();
@@ -860,8 +1005,10 @@ function route() {
   if (h === '#/map') return renderTalents();
   if (h === '#/ladder') return renderLadder();
   const m = h.match(/^#\/(\d{4}-\d{2}-\d{2})$/);
-  const i = m ? index.findIndex(p => p.date === m[1]) : 0;
-  renderPost(i >= 0 ? i : 0);
+  if (m) { const i = index.findIndex(p => p.date === m[1]); return renderPost(i >= 0 ? i : 0); }
+  // default: YOUR current day = oldest not-yet-completed page
+  const open = [...index].reverse().find(p => !S.daysDone.includes(p.date)) || index[0];
+  renderPost(index.findIndex(p => p.date === open.date));
 }
 addEventListener('hashchange', route);
 addEventListener('resize', () => { if (location.hash === '#/map') requestAnimationFrame(drawPanelEdges); }, { passive: true });
@@ -886,10 +1033,23 @@ addEventListener('scroll', () => {
     ]);
   } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
-  $('#chatFab').hidden = !chatAvailable();
   paintFolio(); route();
 })();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw && nw.addEventListener('statechange', () => {
+        if (nw.state === 'activated' && navigator.serviceWorker.controller) {
+          const el = $('#toastMsg');
+          el.textContent = 'גרסה חדשה מוכנה · הקש לרענון';
+          el.classList.add('show', 'click');
+          el.onclick = () => location.reload();
+        }
+      });
+    });
+  });
+}
 </script>
 </body>
 </html>

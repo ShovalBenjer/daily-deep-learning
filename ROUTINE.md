@@ -86,6 +86,12 @@ of the post as `<!-- widget-request: <type>: <one line spec> -->` so it gets
 built. When the day's drill maps to a classic DSA algorithm, also link the
 matching visualizer page on https://visualgo.net as enrichment.
 
+Imagery rule: NO stock photos, ever. The page's imagery is (a) the widgets,
+(b) ONE hand-authored inline `<svg>` diagram in עיון when the concept has a
+shape (an MDP loop, an architecture, a flow): small, viewBox 0 0 320 180,
+stroke="currentColor", theme-neutral, labels in Hebrew, wrapped in a plain
+paragraph. Raw inline SVG passes through markdown untouched.
+
 Rules: ids unique forever (prefix with the day, e.g. d14-az-q2). `tree` is the
 talent tree the points feed: systems | craft | ops (course/drill -> craft or
 systems by topic; AI-103 -> ops; judgment -> the domain's tree per

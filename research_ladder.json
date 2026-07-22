@@ -1,6 +1,15 @@
 {
   "source": "Futuristic Learning Stack (April 2026) + ai-103-study-tracker (new-recruit)",
+  "hire_goal": { "deadline": "2026-09-30", "line": "חוזה חתום עד סוף ספטמבר. כל פריט כאן קיים כי הוא מקרב לחוזה, או שהוא לא כאן." },
   "phases": [
+    { "id": "interview", "name": "ראיונות: הציר שקובע (כל יום, במקביל)", "note": "3 ראיונות איכותיים בשבוע הם ה-KPI של מכונת הגיוס. הסדנה קיימת כדי שלא תיכנס לאף אחד מהם קר.",
+      "items": [
+        { "id": "iv-daily-drill", "t": "תרגול קוד יומי בדף (תרגול + algviz)", "why": "from-scratch תחת לחץ הוא הפער המוצהר שלך; הדף סוגר אותו יום-יום", "action": "לסיים את מדור תרגול של היום, כולל בדיקת הריצה", "min": 25, "level": 1, "url": "https://daily-deep-learning.pages.dev" },
+        { "id": "iv-mock-teacher", "t": "מוק-ראיון עם המורה, פעמיים בשבוע", "why": "המורה מדרג תשובות חופשיות 1-10 עם מה חסר, על הידע שנלמד השבוע", "action": "פתח את הצ'אט, בקש: ראיין אותי על החומר של השבוע, דרג כל תשובה", "min": 30, "level": 2, "url": "https://daily-deep-learning.pages.dev" },
+        { "id": "iv-system-design", "t": "תרגיל system design שבועי", "why": "שיקול הדעת מהמפה הוא בדיוק החומר; ראיון סיסטם דיזיין = שרשרת הכרעות כאלה", "action": "קח תרחיש שיקול-דעת מהשבוע והרחב אותו ל-45 דקות עיצוב מלא מול המורה", "min": 45, "level": 3, "url": "https://daily-deep-learning.pages.dev" },
+        { "id": "iv-star-stories", "t": "בנק סיפורי STAR: שמונה סיפורים", "why": "24->64%, ה-KB, הטלפוניה, ה-merger: הסיפורים קיימים, צריך ניסוח קבוע", "action": "כתוב 8 סיפורים בפורמט STAR מתוך PROJECTS-MANIFEST; שנן שניים בשבוע", "min": 90, "level": 1, "url": "https://daily-deep-learning.pages.dev" },
+        { "id": "iv-ai103-sit", "t": "לקבוע מועד AI-103 לאמצע ספטמבר", "why": "הסמכה ביד לפני גל ההצעות של סוף ספטמבר, לא אחריו (חלון עד 18/10 אבל היעד שלנו קודם)", "action": "קבע מבחן ל-15/09 בערך אחרי שבוע 4 של הקשת", "min": 10, "level": 2, "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-apps-and-agents-developer-associate/" }
+      ] },
     { "id": "build", "name": "לבנות השבוע", "note": "הסטאק הזה רץ בפרודקשן אצל Cursor ו-CodeRabbit. זו לא תוכנית עתידית.",
       "items": [
         { "id": "measure-v1", "t": "Measurement stack v1", "why": "בלי מדידה אין למידה מסתגלת; זה הבסיס לכל השאר", "action": "פתח פרויקט: embeddings + LanceDB, TF-IDF דדופ, UMAP/KDE לזיהוי פערים, G-Eval על 5% מדגם", "min": 180, "level": 4, "url": "https://www.lancedb.com/blog/hybrid-search-rag-for-real-life-production-grade-applications-e1e727b3965a" },

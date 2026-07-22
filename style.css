@@ -369,6 +369,56 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 30;
 #cpSend { min-height: 46px; padding: 0 1.2rem; background: var(--gold); color: var(--bg);
   border: none; cursor: pointer; font-family: inherit; font-weight: 700; border-radius: 3px; }
 
+/* fun layer */
+#fx { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+#ring { width: 30px; height: 30px; flex: none; align-self: center; }
+#ring .rbg { fill: none; stroke: var(--line-soft); stroke-width: 3.4; }
+#ring .rfg { fill: none; stroke: var(--gold); stroke-width: 3.4; stroke-linecap: round;
+  transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset .5s ease;
+  filter: drop-shadow(0 0 4px var(--gold)); }
+#ring text { fill: var(--ink); font-size: 10.5px; font-family: "IBM Plex Mono", monospace; }
+#overlay { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center;
+  background: rgba(6,5,10,.78); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+#overlay[hidden] { display: none; }
+.ov-plate { max-width: 21rem; width: 86vw; text-align: center; padding: 1.6rem 1.4rem 1.3rem; animation: settle .35s ease-out; }
+.ov-kicker { color: var(--gold); font-size: .74rem; font-weight: 700; letter-spacing: .18em; }
+.ov-plate h2 { font-size: 1.7rem; font-weight: 900; margin: .3rem 0 .4rem; color: var(--gold-hi);
+  text-shadow: 0 0 20px color-mix(in oklab, var(--gold) 60%, transparent); }
+.ov-plate p { color: var(--faded); font-size: .92rem; margin: 0 0 1rem; }
+#ovClose { min-height: 46px; padding: 0 1.6rem; background: var(--gold); color: var(--bg);
+  border: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: .95rem; border-radius: 3px; }
+.qz.answered { opacity: .82; }
+.finish-wrap { display: flex; align-items: center; gap: .9rem; margin-top: 2rem; flex-wrap: wrap; }
+.finish-day { min-height: 50px; padding: 0 1.6rem; background: var(--gold); color: var(--bg);
+  border: none; cursor: pointer; font-family: inherit; font-weight: 900; font-size: 1rem; border-radius: 3px;
+  box-shadow: 0 0 24px -10px var(--gold); }
+.finish-hint { color: var(--faded); font-size: .85rem; }
+
+/* hire banner + syllabus */
+.hire-banner { display: flex; align-items: center; gap: 1rem; padding: .8rem 1rem; margin: .8rem 0 1rem; }
+.hb-count { font-family: "Frank Ruhl Libre", serif; font-weight: 900; font-size: 2.2rem; color: var(--gold-hi);
+  line-height: 1; text-shadow: 0 0 18px color-mix(in oklab, var(--gold) 50%, transparent); font-variant-numeric: tabular-nums; }
+.hb-body { display: flex; flex-direction: column; gap: .15rem; font-size: .92rem; }
+.hb-body span { color: var(--faded); font-size: .82rem; }
+.syllabus { border: 1px solid var(--line); border-radius: 3px; padding: .6rem .9rem; margin: 0 0 .6rem; }
+.syllabus summary { color: var(--gold); font-weight: 700; }
+.sy-week { display: flex; align-items: center; gap: .7rem; padding: .45rem 0; border-top: 1px solid var(--line-soft); }
+.sy-week:first-of-type { border-top: none; }
+.sy-dots { display: flex; gap: .22rem; flex: none; }
+.sy-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line); }
+.sy-dot.has { background: color-mix(in oklab, var(--gold) 40%, var(--panel)); border-color: var(--gold); }
+.sy-dot.done { background: var(--gold); border-color: var(--gold-hi); }
+.sy-t { font-size: .82rem; line-height: 1.45; }
+.sy-t small { color: var(--faded); }
+.sy-note { color: var(--faded); font-size: .8rem; margin: .6rem 0 0; }
+
+/* chat key row */
+#cpKeyRow { display: flex; gap: .5rem; padding: .5rem .9rem 0; }
+#cpKeyRow input { flex: 1; min-height: 44px; padding: .3rem .7rem; font-family: "IBM Plex Mono", monospace;
+  direction: ltr; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 3px; font-size: .8rem; }
+#cpKeyRow button { min-height: 44px; padding: 0 1rem; background: var(--panel-2); border: 1px solid var(--gold);
+  color: var(--gold); cursor: pointer; font-family: inherit; font-weight: 700; border-radius: 3px; }
+
 /* toast */
 #toast { position: fixed; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); inset-inline: 0;
   display: flex; justify-content: center; pointer-events: none; z-index: 50; }
@@ -376,6 +426,7 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 30;
   border: 1px solid var(--gold); border-radius: 3px; box-shadow: 0 0 22px -8px var(--gold);
   padding: .45rem 1.1rem; opacity: 0; transform: translateY(8px); transition: opacity .25s ease, transform .25s ease; }
 #toast span.show { opacity: 1; transform: none; }
+#toast span.click { pointer-events: auto; cursor: pointer; }
 
 @keyframes settle { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes popin { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }

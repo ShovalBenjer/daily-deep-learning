@@ -1,5 +1,5 @@
 {
-  "note": "Living syllabus source manifest. The weekly council diffs the Drive folder against this list, ingests new docs (topic_pools, ladder items, paper cards, judgment scenarios), and records them here. Status: ingested | pending | context-only.",
+  "note": "Living syllabus source manifest. The weekly council diffs the Drive folder against this list, ingests new docs (topic_pools, ladder items, paper cards, judgment scenarios), and records them here. Status: ingested | pending | context-only. paper_card_queue: subjects for the daily מעקב section to turn into paper cards. judgment_scenario_ideas: decision-rule seeds for שיקול דעת. review_backlog: wrong/low-confidence topics from sync state, appended weekly, drawn by Saturday raids.",
   "drive_folder": "1gPWBY7buiDUKze_HUxRp9E1v2aK389Oc",
   "docs": [
     { "name": "the_living_codex_full_build_prompt.md", "status": "ingested", "into": "product design: quests, mastery ranks, no-guilt mechanics, starter topic pools" },
@@ -19,6 +19,15 @@
     { "name": "1. search reccomended high daily users apify actor.md", "status": "context-only", "into": "hiring-machine context" },
     { "name": "How much samples i need for this is 10260 acc from.md", "status": "ingested", "into": "plan C1: min-n rules for all metric claims; oracle-pool topic sample-size planning", "date": "2026-07-22" },
     { "name": "Is this 2026 july updated. Feels generic ui slop g.md", "status": "ingested", "into": "design anti-slop constitution" },
-    { "name": "the terminal progress bar and unique thinking they.md", "status": "ingested", "into": "plan E7: chat thinking-status UI (rotating verbs, elapsed); terminal-UI reference", "date": "2026-07-22" }
-  ]
+    { "name": "the terminal progress bar and unique thinking they.md", "status": "ingested", "into": "plan E7: chat thinking-status UI (rotating verbs, elapsed); terminal-UI reference", "date": "2026-07-22" },
+    { "name": "MCP Sensitive Data Integration Best Practices.md", "status": "ingested", "into": "architect pool: MCP gateway, PII redaction/tokenization/pseudo-anonymization/hashing, trust tiering, action-selector + dual-LLM injection defenses; warden pool: identity propagation/workload identity, immutable audit logging; ladder soon: mcp-pii-tokenize, mcp-trust-tiers; paper_card_queue: arXiv 2504.08623 + Invariant Labs WhatsApp exfil; judgment_scenario_ideas: PII-handling method choice", "date": "2026-07-22" }
+  ],
+  "paper_card_queue": [
+    { "subject": "Enterprise-Grade Security for the Model Context Protocol", "url": "https://arxiv.org/html/2504.08623v1", "angle": "zero-trust MCP architecture; map to mcp-guard and the Seekapa gateway", "source_doc": "MCP Sensitive Data Integration Best Practices.md" },
+    { "subject": "Invariant Labs WhatsApp MCP exfiltration (April 2025)", "url": "https://rafter.so/blog/mcp-whatsapp-exfiltration-case-study", "angle": "tool-chaining as the core MCP vulnerability: exfiltration without breaking E2E encryption", "source_doc": "MCP Sensitive Data Integration Best Practices.md" }
+  ],
+  "judgment_scenario_ideas": [
+    { "idea": "זרימת תמלולי call-center לתוך סוכן: לבחור בין redaction / tokenization / pseudo-anonymization / hashing. הכלל: redaction כשהסוכן לא צריך את הערך, tokenization כשצריך להפנות בלי לראות, pseudo-anonymization כשניתוח דורש קוהרנטיות סמנטית, hashing לקורלציה בין רשומות; והאכיפה ב-gateway, לא בפרומפט", "domain": "architecture/operations", "source_doc": "MCP Sensitive Data Integration Best Practices.md" }
+  ],
+  "review_backlog": []
 }

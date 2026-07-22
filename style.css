@@ -90,6 +90,9 @@ header.bar {
 }
 .wordmark { font-weight: 900; font-size: 1.2rem; text-decoration: none; color: var(--ink); cursor: pointer; line-height: 1.1; }
 .wordmark b { color: var(--gold); }
+.alpha-chip { font-size: .58rem; font-weight: 700; letter-spacing: .1em; color: var(--faded);
+  border: 1px solid var(--line); border-radius: 2px; padding: .05rem .3rem; vertical-align: middle; }
+.tchip { align-self: center; }
 #xpwrap { flex: 1; min-width: 0; }
 .folio { display: block; color: var(--faded); font-size: .72rem; font-variant-numeric: tabular-nums; letter-spacing: .05em; }
 #xpbar { display: block; height: 4px; margin-top: 3px; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 2px; overflow: hidden; }
@@ -204,13 +207,13 @@ summary::marker { color: var(--gold); }
 
 /* ---------- tabs ---------- */
 nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 30;
-  display: flex; justify-content: center; gap: 2rem;
-  padding: .5rem 1rem calc(.55rem + env(safe-area-inset-bottom, 0px));
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;
+  padding: .45rem .4rem calc(.5rem + env(safe-area-inset-bottom, 0px));
   background: color-mix(in oklab, var(--bg) 90%, transparent);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-top: 1px solid var(--line-soft); }
-.tabs a { text-decoration: none; color: var(--faded); font-weight: 700; font-size: .95rem;
-  min-height: 44px; min-width: 64px; display: grid; place-items: center; border-top: 2px solid transparent; }
+.tabs a { text-decoration: none; color: var(--faded); font-weight: 700; font-size: .82rem;
+  min-height: 44px; min-width: 0; display: grid; place-items: center; border-top: 2px solid transparent; white-space: nowrap; }
 .tabs a.active { color: var(--gold); border-top-color: var(--gold); text-shadow: 0 0 12px color-mix(in oklab, var(--gold) 50%, transparent); }
 
 /* ---------- views shared ---------- */

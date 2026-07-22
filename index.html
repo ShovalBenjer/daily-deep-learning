@@ -21,7 +21,7 @@
 <body>
 <div id="progress" role="presentation"></div>
 <header class="bar">
-  <a class="wordmark" href="#/"><b>ה</b>סדנה</a>
+  <a class="wordmark" href="#/"><b>ה</b>סדנה <span class="alpha-chip">אלפא</span></a>
   <span id="xpwrap"><span class="folio" id="folio"></span><span id="xpbar"><span id="xpfill"></span></span></span>
   <svg id="ring" viewBox="0 0 36 36" aria-label="התקדמות היום"><circle class="rbg" cx="18" cy="18" r="15.5"/><circle class="rfg" cx="18" cy="18" r="15.5"/><text x="18" y="21.5" text-anchor="middle">0</text></svg>
   <button class="iconbtn" id="themeToggle" aria-label="מצב תאורה">
@@ -38,21 +38,21 @@
 <nav class="tabs">
   <a href="#/" id="tab-today">היום</a>
   <a href="#/map" id="tab-map">העץ</a>
-  <a href="#/kodex" id="tab-kodex">הקודקס</a>
+  <a href="#/kodex" id="tab-kodex">האוצר</a>
   <a href="#/discover" id="tab-discover">תגליות</a>
   <a href="#/ladder" id="tab-ladder">המסלול</a>
 </nav>
 
-<div id="qplayer" hidden>
+<div id="qplayer" role="dialog" aria-modal="true" aria-label="בוחן" hidden>
   <div class="qp-head"><span id="qpProgress"></span><button class="iconbtn" id="qpClose" aria-label="סגור">✕</button></div>
   <div id="qpBody"></div>
 </div>
 <div id="toast"><span id="toastMsg"></span></div>
 <canvas id="fx"></canvas>
-<div id="overlay" hidden><div class="ov-plate plate"><div id="ovBody"></div><button id="ovClose">המשך</button></div></div>
+<div id="overlay" role="dialog" aria-modal="true" hidden><div class="ov-plate plate"><div id="ovBody"></div><button id="ovClose">המשך</button></div></div>
 
 <button id="chatFab" aria-label="שיחה עם המורה" hidden>המורה</button>
-<div id="chatPane" hidden>
+<div id="chatPane" role="dialog" aria-modal="true" aria-label="המורה" hidden>
   <div class="cp-head"><b>המורה</b><span id="cpStatus"></span>
     <button class="iconbtn" id="cpClose" aria-label="סגור">✕</button></div>
   <div id="cpLog"></div>
@@ -61,6 +61,7 @@
 </div>
 
 <script src="vendor/marked.min.js"></script>
+<script src="vendor/purify.min.js"></script>
 <script defer src="vendor/katex.min.js"></script>
 <script defer src="vendor/auto-render.min.js"></script>
 <script>
@@ -189,10 +190,11 @@ function toast(msg) {
   clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 1800);
 }
 function runLength() {
-  const read = new Set(S.read);
+  // Streak counts COMPLETED days only (opening a page proves nothing).
+  const done = new Set(S.daysDone);
   let n = 0, d = new Date();
-  if (!read.has(iso(d))) d.setDate(d.getDate() - 1);
-  while (read.has(iso(d))) { n++; d.setDate(d.getDate() - 1); }
+  if (!done.has(iso(d))) d.setDate(d.getDate() - 1);
+  while (done.has(iso(d))) { n++; d.setDate(d.getDate() - 1); }
   return n;
 }
 const totalEarned = () => Object.values(S.points).reduce((a, p) => a + (p.earned || 0), 0);
@@ -229,14 +231,21 @@ $('#themeToggle').onclick = () => {
 };
 
 /* ---------- markdown + math ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function renderMarkdown(md) {
-  // Protect KaTeX spans from marked's escape handling, restore after.
+  // Protect KaTeX spans from marked's escape handling, restore after; then
+  // sanitize: generated/ingested content must never execute script (XSS gate).
   const bank = [];
   const guarded = md.replace(/(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\))/g,
     m => { bank.push(m); return '@@MATH' + (bank.length - 1) + '@@'; });
   let html = marked.parse(guarded);
   html = html.replace(/@@MATH(\d+)@@/g, (_, i) => bank[+i]);
-  return html;
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true, svg: true },
+    ADD_TAGS: ['details', 'summary'],
+    FORBID_TAGS: ['style', 'form', 'iframe', 'object', 'embed'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'srcdoc']
+  });
 }
 function typeset(el) {
   if (window.renderMathInElement) {
@@ -646,9 +655,9 @@ async function renderPost(i) {
   const art = document.createElement('article');
   if (!localStorage.getItem('sadna-intro-done')) {
     const ip = document.createElement('div'); ip.className = 'intro-plate plate';
-    ip.innerHTML = `<h2>מה זה הסדנה</h2>
-      <p>משחק למידה אישי אחד: דף יומי (קורס RL, תרגול קוד, AI-103, שיקול דעת), כל תשובה נכונה = XP, את ה-XP משקיעים בעץ הכישרונות. המערכת קוראת את הביצועים שלך וכותבת את מחר בהתאם.</p>
-      <p>25 דקות ביום. שבת חזרה, ראשון תיקון. המורה (כפתור צף) עונה ומדרג בזמן אמת.</p>
+    ip.innerHTML = `<h2>מה זה הסדנה <span class="alpha-chip">אלפא</span></h2>
+      <p>משחק למידה אישי אחד: דף יומי (קורס RL, תרגול קוד, AI-103, שיקול דעת), כל תשובה נכונה = XP, את ה-XP משקיעים בעץ. המערכת קוראת את הביצועים וכותבת את מחר בהתאם.</p>
+      <p>הזמן בידיים שלך: מינימום 12 דק׳ (הבוחן + מושג אחד), רגיל ~40, צלילה עמוקה 90. ליד כל מדור מופיע אומדן. שבת חזרה, ראשון תיקון.</p>
       <button class="dismiss">הבנתי, תתחיל</button>`;
     ip.querySelector('.dismiss').onclick = () => { localStorage.setItem('sadna-intro-done', '1'); ip.remove(); };
     art.appendChild(ip);
@@ -667,6 +676,15 @@ async function renderPost(i) {
     mark.textContent = MARKS[Math.min(mi, MARKS.length - 1)]; mi++;
     head.appendChild(mark);
     if (headingEl) head.appendChild(headingEl);
+    if (headingEl) {
+      const EST = { 'עיון': 25, 'תרגול': 25, 'AI-103': 15, 'מעקב': 5, 'שיקול דעת': 5 };
+      const pref = Object.keys(EST).find(k => headingEl.textContent.trim().startsWith(k));
+      if (pref) {
+        const tc = document.createElement('span'); tc.className = 'chip2 tchip';
+        tc.textContent = '~' + EST[pref] + ' דק׳';
+        head.appendChild(tc);
+      }
+    }
     if (headingEl) {
       const ctx = `בדף של יום ${p.day} (${p.date}), מדור "${headingEl.textContent.trim()}": `;
       const ask = document.createElement('button');
@@ -735,6 +753,7 @@ let currentDay = null;
 let activeTree = null, selNode = null;
 function renderTalents() {
   setTab('tab-map');
+  if (!talents || !jmap) { $('#view').innerHTML = '<p class="finish-hint">העץ לא זמין כרגע.</p>'; $('#status').textContent = ''; return; }
   if (!activeTree) activeTree = talents.trees[0].id;
   const view = $('#view');
   const want3d = localStorage.getItem('sadna-3d') === 'on' && !!window.WebGLRenderingContext;
@@ -888,11 +907,11 @@ function drawPanelEdges() {
   svg.innerHTML = defs + paths;
 }
 const RANK_MEANING = ['',
-  'מכיר: מזהה את המושג ואת מקומו במפה',
-  'מסביר: מסוגל ללמד את זה במילים שלך',
-  'מיישם: כתבת או הפעלת את זה בפועל',
-  'מחבר: קושר אותו לתחומים ולפרויקטים אחרים',
-  'מאתגר: יודע מתי זה נשבר ומה בא במקומו'];
+  'יעד הדרגה, מכיר: מזהה את המושג ואת מקומו במפה',
+  'יעד הדרגה, מסביר: מסוגל ללמד את זה במילים שלך',
+  'יעד הדרגה, מיישם: כתבת או הפעלת את זה בפועל',
+  'יעד הדרגה, מחבר: קושר אותו לתחומים ולפרויקטים אחרים',
+  'יעד הדרגה, מאתגר: יודע מתי זה נשבר ומה בא במקומו'];
 function renderNodeSheet(tree, n, gate) {
   const d = domainOf(n.id); const r = nodeRank(n.id);
   const cost = r + 1, p = pool(tree.id);
@@ -906,8 +925,9 @@ function renderNodeSheet(tree, n, gate) {
     <div class="dhead"><h2>${d.name}</h2><span class="en">${d.en}</span></div>
     <p class="line">${d.line}</p>
     <p class="rule-q"><b>הכלל:</b> ${d.rule}</p>
-    <p class="rank-flavor">${r > 0 ? `<b>דרגה ${r}</b> · ${RANK_MEANING[r]}` : 'טרם הושקעה נקודה.'}
-      ${r < talents.max_rank ? `<br><span class="next">הדרגה הבאה, ${RANK_MEANING[r + 1].split(':')[0]}: ${RANK_MEANING[r + 1].split(': ')[1]}</span>` : ''}</p>
+    <p class="rank-flavor">${r > 0 ? `<b>דרגת השקעה ${r}</b> · ${RANK_MEANING[r]}` : 'טרם הושקעה נקודה.'}
+      ${r < talents.max_rank ? `<br><span class="next">${RANK_MEANING[r + 1]}</span>` : ''}
+      <br><span class="next">דרגה = השקעת נקודות; הוכחת שליטה נמדדת בנפרד, בתשובות ובאוצר.</span></p>
     <div class="invest-row">
       <button class="invest" ${can ? '' : 'disabled'}>השקע ${cost} ${cost === 1 ? 'נקודה' : 'נקודות'} → ${RANK_MEANING[Math.min(r + 1, 5)].split(':')[0]}</button>
       <span class="invest-why">${can ? 'דרגה ' + r + ' מתוך ' + talents.max_rank : why}</span>
@@ -930,6 +950,7 @@ function renderLadder() {
   setTab('tab-ladder');
   paintFolio();
   const view = $('#view');
+  if (!ladder) { view.innerHTML = '<p class="finish-hint">המסלול לא זמין כרגע.</p>'; $('#status').textContent = ''; return; }
   const allItems = [...ladder.phases.flatMap(ph => ph.items.map(it => ({ ...it, phase: ph.name }))),
                     ...ladder.cert.weeks.map(it => ({ ...it, phase: ladder.cert.name }))];
   const next = allItems.find(it => !S.ladder.includes(it.id));
@@ -1014,16 +1035,16 @@ function paintChat() {
   const last = chat.hist[chat.hist.length - 1];
   if (last && last.role === 'bot' && last.text.length > 40) {
     const row = document.createElement('div'); row.className = 'cp-actions';
-    row.innerHTML = `<button data-a="save">שמור לקודקס</button><button data-a="deep">העמק</button>
+    row.innerHTML = `<button data-a="save">שמור לאוצר</button><button data-a="deep">העמק</button>
       <button data-a="ex">דוגמה מחושבת</button><button data-a="mock">ראיין אותי על זה</button>`;
     row.onclick = e => {
       const a = e.target.dataset.a; if (!a) return;
       if (a === 'save') {
         S.notes.push({ t: last.text.slice(0, 800), d: iso(new Date()), ctx: location.hash });
-        store.save(); toast('נשמר לקודקס');
+        store.save(); toast('נשמר לאוצר');
       } else {
         const map = { deep: 'העמק בתשובה האחרונה: שכבה אחת יותר פורמלית, כולל מקרה קצה.', ex: 'תן דוגמה מחושבת ביד, מספר-מספר, לתשובה האחרונה.', mock: 'ראיין אותי על הנושא של התשובה האחרונה: שאלה אחת, חכה לתשובתי, ואז דרג 1-10 עם מה שחסר.' };
-        sendChat(map[a]);
+        sendChat(map[a], a === 'mock');
       }
     };
     log.appendChild(row);
@@ -1051,7 +1072,7 @@ function openChat(prefill) {
   if (prefill) { $('#cpInput').value = prefill; }
   $('#cpInput').focus();
 }
-async function sendChat(text) {
+async function sendChat(text, verify) {
   chat.hist.push({ role: 'user', text }); chat.save(); paintChat();
   if (!syncKey()) { chat.hist.push({ role: 'bot', text: 'כדי לדבר איתי צריך להזין פעם אחת את מפתח הסנכרון (השדה למעלה).' }); chat.save(); paintChat(); return; }
   if (!S.daemon_url) { await pullState(); }
@@ -1061,7 +1082,7 @@ async function sendChat(text) {
     const r = await fetch(S.daemon_url + '/chat', {
       method: 'POST',
       headers: { 'authorization': 'Bearer ' + syncKey(), 'content-type': 'application/json' },
-      body: JSON.stringify({ message: text, history: chat.hist.slice(-9, -1), context: { view: location.hash, latest: index[0] && index[0].date, level: level() } })
+      body: JSON.stringify({ message: text, verify: !!verify, history: chat.hist.slice(-9, -1), context: { view: location.hash, latest: index[0] && index[0].date, level: level() } })
     });
     const j = await r.json();
     chat.hist.push({ role: 'bot', text: j.reply || 'אין תשובה.' });
@@ -1086,7 +1107,7 @@ function renderKodex() {
   paintFolio();
   const view = $('#view');
   const cs = (kodex && kodex.concepts) || [];
-  let html = `<div class="view-head"><h1>הקודקס</h1>
+  let html = `<div class="view-head"><h1>האוצר</h1>
     <p>המושגים שנלמדו, הקשרים ביניהם, והערות ששמרת מהמורה. גדל עם כל יום.</p></div>
     <input id="kSearch" type="search" placeholder="חיפוש מושג..." autocomplete="off">
     <canvas id="kGraph" height="300"></canvas>
@@ -1102,9 +1123,9 @@ function renderKodex() {
   const list = $('#kList');
   function paintList(q) {
     const f = q ? cs.filter(c => (c.t + ' ' + c.he + ' ' + c.d).toLowerCase().includes(q.toLowerCase())) : cs;
-    list.innerHTML = f.map(c => `<div class="k-card plate" id="k-${c.id}">
-      <div class="k-t"><b>${c.t}</b><span class="k-he">${c.he}</span><span class="chip2">יום ${c.day}</span></div>
-      <p>${c.d}</p>
+    list.innerHTML = f.map(c => `<div class="k-card plate" id="k-${esc(c.id)}">
+      <div class="k-t"><b>${esc(c.t)}</b><span class="k-he">${esc(c.he)}</span><span class="chip2">יום ${esc(c.day)}</span></div>
+      <p>${esc(c.d)}</p>
       ${(c.rel || []).length ? `<div class="k-rel">${c.rel.map(r => { const t = cs.find(x => x.id === r); return t ? `<a class="chip2" href="#k-${r}" onclick="document.getElementById('k-${r}').scrollIntoView({behavior:'smooth'});return false">${t.t}</a>` : ''; }).join(' ')}</div>` : ''}
     </div>`).join('') || '<p class="finish-hint">אין תוצאות.</p>';
   }
@@ -1113,7 +1134,8 @@ function renderKodex() {
   drawKodexGraph(cs);
   window.scrollTo(0, 0);
 }
-function drawKodexGraph(cs) {
+function drawKodexGraph(csAll) {
+  const cs = csAll.slice(0, 60); // main-thread O(n^2) layout: cap; worker + clustering when the treasury grows
   const cv = $('#kGraph'); if (!cv || !cs.length) { if (cv) cv.style.display = 'none'; return; }
   const W = cv.clientWidth || 380, H = 300, dpr = Math.min(devicePixelRatio, 2);
   cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
@@ -1182,9 +1204,9 @@ function renderDiscover() {
     const st = S.sidequests[i.id];
     return `<div class="dq-card plate ${st && st.s === 'done' ? 'dq-done' : ''}" style="--age:${Math.min(ageDays(i.time), 10)}" data-id="${i.id}">
       <div class="dq-top"><span class="chip2">${i.kind}</span><span class="dq-src" dir="ltr">${i.source}</span><span class="dq-time">${ago(i.time)}${i.time_label === 'update' ? ' (עדכון)' : ''}</span></div>
-      <a class="dq-title" dir="ltr" href="${i.url}" target="_blank" rel="noopener">${i.title}</a>
-      <p class="dq-line">${i.line}</p>
-      <div class="dq-quest"><span>${i.quest}</span></div>
+      <a class="dq-title" dir="ltr" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>
+      <p class="dq-line">${esc(i.line)}</p>
+      <div class="dq-quest"><span>${esc(i.quest)}</span></div>
       <div class="dq-foot">
         ${st && st.s === 'done' ? '<span class="dq-donechip">הושלם</span>'
         : st ? `<button class="dq-btn dq-finish" data-id="${i.id}" data-tree="${i.tree}">סיימתי את המסע (+1)</button>`
@@ -1234,6 +1256,12 @@ function route() {
   renderPost(index.findIndex(p => p.date === open.date));
 }
 addEventListener('hashchange', route);
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('#qplayer').hidden) { $('#qpClose').click(); }
+  else if (!$('#overlay').hidden) { $('#ovClose').click(); }
+  else if (!$('#chatPane').hidden) { $('#cpClose').click(); }
+});
 addEventListener('resize', () => { if (location.hash === '#/map') requestAnimationFrame(drawPanelEdges); }, { passive: true });
 
 let ticking = false;
@@ -1247,17 +1275,16 @@ addEventListener('scroll', () => {
 }, { passive: true });
 
 (async function boot() {
-  try {
-    [index, jmap, ladder, talents, plan, kodex] = await Promise.all([
-      fetch('posts/index.json', { cache: 'no-cache' }).then(r => r.json()),
-      fetch('judgment_map.json', { cache: 'no-cache' }).then(r => r.json()),
-      fetch('research_ladder.json', { cache: 'no-cache' }).then(r => r.json()),
-      fetch('talents.json', { cache: 'no-cache' }).then(r => r.json()),
-      fetch('course_plan.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null),
-      fetch('concepts.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null)
-    ]);
-    disco = await fetch('discoveries.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null);
-  } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
+  // Each resource degrades independently; only the post index is required.
+  const j = u => fetch(u, { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; return r.json(); });
+  const rs = await Promise.allSettled([
+    j('posts/index.json'), j('judgment_map.json'), j('research_ladder.json'),
+    j('talents.json'), j('course_plan.json'), j('concepts.json'), j('discoveries.json')
+  ]);
+  const val = i => rs[i].status === 'fulfilled' ? rs[i].value : null;
+  index = val(0) || []; jmap = val(1); ladder = val(2); talents = val(3);
+  plan = val(4); kodex = val(5); disco = val(6);
+  if (!index.length) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
   paintFolio(); route();
 })();

@@ -41,8 +41,8 @@
     { "week": 1, "focus": "Plan and manage an AI solution (25-30%)", "items": ["Foundry service and model selection", "deployment options and CI/CD", "Managed Identity, keyless auth, private networking, RBAC", "responsible AI: filters, guardrails, evaluators", "monitoring: drift, safety, grounding", "audit, provenance, approval workflows"] },
     { "week": 2, "focus": "Generative AI + agentic (30-35%)", "items": ["Foundry SDK generative apps", "RAG", "multistep tool-augmented flows", "eval: fabrication, relevance, safety", "agents: roles, tools, memory", "multi-agent orchestration and autonomous-with-approval", "observability, tracing, token analytics"] },
     { "week": 3, "focus": "The tail: CV, text, extraction (~30%, weakest first)", "items": ["image and video generation, multimodal understanding", "Content Understanding, prompt injection in images, watermarks", "entity, topic, JSON extraction, sentiment", "Translator and LLM translation, speech", "AI Search: ingest, index, semantic, hybrid, vector", "OCR, layout, document extraction"] },
-    { "week": 4, "focus": "Exam-ready", "items": ["2x full official practice assessment", "exam sandbox aka.ms/examdemo", "gap-list review", "schedule and sit"] },
-    { "after": "From week 5 on: practice-assessment loop on weakest domains. Voucher: redeem by 2026-08-18, sit by 2026-10-18, pass 700/1000." }
+    { "week": 4, "focus": "Exam-ready", "items": ["full-length practice via exam sandbox (aka.ms/examdemo) + question banks (NOTE: official AI-103 practice assessment listed as not available as of 2026-07-22; re-verify)", "gap-list review", "schedule and sit"] },
+    { "after": "From week 5 on: practice loop on weakest domains. Voucher: redeem by 2026-08-18, sit by 2026-10-18, pass 700/1000. Facts last verified 2026-07-22 against the official study guide; the generator must not improvise Microsoft product facts." }
   ],
   "ai103_links": {
     "study_guide": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103",

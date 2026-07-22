@@ -20,7 +20,7 @@
       "rule": "HTTP/3 בקצה (CDN) לכל שירות חדש; תעבורה פנימית בין שירותים יכולה לחכות." },
     { "id": "storage", "group": "systems", "name": "אחסון", "en": "Storage",
       "line": "B-tree מול LSM, object/block/file/NVMe, איפה גרים משקולות מודל ו-KV cache.",
-      "rule": "PostgreSQL עד שכתיבות עוברות ~50K/s. משקולות ב-object storage, KV cache על NVMe מקומי, לעולם לא NAS בנתיב החם." },
+      "rule": "כתיבה מתמשכת בעשרות-אלפים לשנייה מטה את הכף ל-LSM, אבל רק אחרי השאלות: גודל אירוע, batching/COPY, אינדקסים, עמידות, תפעול. קבע ברירת מחדל, הגדר מדידה, והחלף ארכיטקטורה כשהמדידה אומרת. משקולות ב-object storage, KV cache על NVMe מקומי, לעולם לא NAS בנתיב החם." },
     { "id": "search", "group": "systems", "name": "חיפוש", "en": "Search",
       "line": "Typesense כברירת מחדל לאפליקציות, Elasticsearch ללוגים/SIEM, PG FTS עד ~10M מסמכים.",
       "rule": "מתאימים מנוע לעומס, לא ליוקרה. Elasticsearch לקטלוג של 50K מסמכים זו הנדסת יתר פרועה." },

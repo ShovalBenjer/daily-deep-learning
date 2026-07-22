@@ -102,6 +102,27 @@ marginal cost.
 - **BREAK** (retro week ~28/09, post-hire-push): A5, A6, B3, C4, D2-D4, F4, G1, G2
 - **CONT**: E5, F5, council, economy tuning
 
+## Addendum 2026-07-22 late: external audit adopted (GPT review)
+
+The independent audit's P0s were implemented same-day: markdown sanitization
+(DOMPurify, vendored) + CSP `_headers`; daemon on the Agent SDK with tool
+allowlists, zero-tool verifier, rate limit, input caps; the REINFORCE baseline
+order bug fixed in day 2; the storage judgment rewritten reasoning-first (rule
+softened in judgment_map); AI-103 claims de-categoricalized + practice-
+assessment removed + verified-dates added; streak now counts completed days
+only; ranks relabeled investment-vs-evidence; honest tiered time commitment
+(12/40/90) with per-section estimates; 5-tab grid nav for 375px; dialogs get
+role/aria/Escape; boot degrades per-resource; graph capped pending worker.
+ADOPTED DISCIPLINE: until 30/09, BREAK-stage items (3D, reels, audio, public
+feed, graph analytics) are frozen; the daily ritual + interviews + AI-103 +
+one portfolio project outrank everything. Remaining from the audit, scheduled:
+scoped separate tokens + named tunnel + CF Access (E2), evidence-based mastery
+(B1), tiered lesson paths as structure (not just copy), module split + unit
+tests, content-validation/expiry automation, canvas keyboard alternatives.
+Pushbacks recorded: five parallel sections stay (his own spec) but with time
+chips now and collapsible secondary streams next; purchased ranks stay as the
+agency mechanic per the Living Codex spec, relabeled honestly.
+
 ## Standing laws (from the whole arc, non-negotiable)
 
 References are literal specs. Excavate before building. No stock imagery, no

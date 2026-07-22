@@ -9,3 +9,6 @@ node_modules/
 shots/
 
 daemon/.key
+
+daemon/node_modules/
+daemon/bun.lock

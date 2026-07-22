@@ -52,7 +52,7 @@
       { "id": "ai103-w1", "t": "שבוע 1: Plan and manage (25-30%)", "why": "הבסיס: Foundry, זהויות, אחריות", "action": "מודול Learn ביום לפי המדריך + שאלות היום בדף", "min": 60, "level": 2, "url": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103" },
       { "id": "ai103-w2", "t": "שבוע 2: Generative + agentic (30-35%)", "why": "החלק הכבד במבחן, והכי קרוב לעבודה שלך", "action": "RAG, agents, evals: מודול + לאב יומי", "min": 60, "level": 3, "url": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103" },
       { "id": "ai103-w3", "t": "שבוע 3: הזנב: CV, טקסט, Search", "why": "הדומיין החלש; הכי הרבה נקודות אבודות", "action": "מודול + לאב; רשום פערים ל-raid", "min": 60, "level": 3, "url": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103" },
-      { "id": "ai103-w4", "t": "שבוע 4: מוכנות מבחן", "why": "סימולציה לפני אמת", "action": "2 practice assessments מלאים + sandbox + סגירת פערים", "min": 120, "level": 3, "url": "https://aka.ms/examdemo" }
+      { "id": "ai103-w4", "t": "שבוע 4: מוכנות מבחן", "why": "סימולציה לפני אמת", "action": "סימולציה מלאה דרך exam sandbox + מאגרי שאלות (practice assessment רשמי ל-AI-103: לא זמין נכון ל-2026-07-22, לוודא שוב) + סגירת פערים", "min": 120, "level": 3, "url": "https://aka.ms/examdemo" }
     ]
   },
   "levels_note": "level = הרמה המומלצת להתחיל את הפריט (ראה רמות בספסיפיקציה)."

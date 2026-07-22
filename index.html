@@ -60,7 +60,7 @@
 const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
 const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
-let index = [], jmap = null, ladder = null, talents = null;
+let index = [], jmap = null, ladder = null, talents = null, plan = null;
 const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
 const syncKey = () => localStorage.getItem('sadna-sync-key') || '';
 const LEVELS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320];
@@ -1025,22 +1025,24 @@ addEventListener('scroll', () => {
 
 (async function boot() {
   try {
-    [index, jmap, ladder, talents] = await Promise.all([
+    [index, jmap, ladder, talents, plan] = await Promise.all([
       fetch('posts/index.json', { cache: 'no-cache' }).then(r => r.json()),
       fetch('judgment_map.json', { cache: 'no-cache' }).then(r => r.json()),
       fetch('research_ladder.json', { cache: 'no-cache' }).then(r => r.json()),
-      fetch('talents.json', { cache: 'no-cache' }).then(r => r.json())
+      fetch('talents.json', { cache: 'no-cache' }).then(r => r.json()),
+      fetch('course_plan.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null)
     ]);
   } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
   paintFolio(); route();
 })();
 if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('sw.js').then(reg => {
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       nw && nw.addEventListener('statechange', () => {
-        if (nw.state === 'activated' && navigator.serviceWorker.controller) {
+        if (nw.state === 'activated' && hadController) {
           const el = $('#toastMsg');
           el.textContent = 'גרסה חדשה מוכנה · הקש לרענון';
           el.classList.add('show', 'click');

@@ -88,12 +88,25 @@ justify the answer. Correct answers award points automatically, so never leak
 the answer outside the block. Every section below MUST include its interactive
 blocks; a page with no interactives is a defect.
 
-### עיון (the course thread, ~10-15 min read)
-gadial register, PhD level made intuitive: intuition first ("תחשבו על זה כמו..."),
-why it is mathematically beautiful, central equations in KaTeX (`\(...\)` inline,
-`\[...\]` display, never bare `$`), a short proof or sketch, connection to the
-previous day, PyTorch pseudocode in a fenced python block. End with ONE `quiz`
-block checking the deepest idea of the day (Hebrew).
+### עיון (the course thread, 20-30 min read, 1500-2500 words on its own)
+THE SELF-CONTAINED BAR: a reader with zero prior exposure to today's topic must
+be able to MASTER it from this section alone. The videos are enrichment, never
+a prerequisite. "Compressed session notes" are a defect. Required structure
+(h3 subsections, in order):
+1. **פתיחה מאפס**: define every term used today as if seen for the first time,
+   each with its Hebrew gloss.
+2. **האינטואיציה**: gadial register ("תחשבו על זה כמו...").
+3. **הפורמליזם המלא**: central equations in KaTeX (`\(...\)` / `\[...\]`,
+   never bare `$`), with a full derivation or proof, not a sketch reference.
+4. **דוגמה מחושבת ביד**: a small NUMERIC example computed step by step, every
+   arithmetic step shown (e.g., a 2-state MDP, a 3-arm bandit with concrete
+   numbers). This is mandatory; a lesson with no worked numbers is a defect.
+5. **דוגמה שנייה או מקרה קצה**: a second worked case or the edge that breaks
+   naive intuition.
+6. **טעויות נפוצות**: at least 3, each with why it is wrong.
+7. **חיבור**: to yesterday, to the week, and one line to his projects.
+Embed the day's widget where it teaches best; PyTorch code in a fenced block
+with line-by-line explanation after it; end with ONE Hebrew `quiz`.
 
 ### תרגול (15-30 min, from scratch)
 One interview-caliber drill tied to today's material (DS&A/SQL on Sat/Sun).
@@ -103,10 +116,11 @@ verifies the drill was actually RUN: ask for a concrete output value of the
 solution on a given input (answer normalized: whitespace/quotes stripped,
 lowercase; provide `alt` spellings).
 
-### AI-103 (~40+15 min)
-The next unchecked item from research_ladder.json -> cert.weeks, honoring the
-60-min template. Real Microsoft Learn link. Then 2-3 `quiz` blocks IN ENGLISH,
-exam register (the real exam is English): scenario-style stems, 4 plausible
+### AI-103 (~40+15 min, 400-800 words of TEACHING)
+TEACH the day's exam topic inline, self-contained: the actual facts, tables,
+decision rules and gotchas an exam question needs, written out (never "go read
+the module" as the content). The Microsoft Learn link is the deepening, after.
+Then 2-3 `quiz` blocks IN ENGLISH, exam register: scenario stems, 4 plausible
 options, one correct. Wrong-answered questions from earlier days resurface
 within 2 days (check recent posts for ids you repeated).
 
@@ -129,7 +143,9 @@ point of the whole curriculum.
 ## 3. Style
 
 - New technical term => inline Hebrew gloss, bold: **Overdispersion, פיזור יתר**: ...
-- No em-dash or en-dash. No emojis. 700-1500 words total. Respect the reader.
+- No em-dash or en-dash. No emojis. PAGE TOTAL 2500-4500 words: a full
+  self-contained lesson, not session notes. Depth over brevity; every claim
+  explained, never just asserted. The reader chose a 25-40 minute deep session.
 - Habits to embody: predict-then-peek, build-first-diff-second, Feynman, spaced
   retrieval (docs/fundamentals-mastery-plan.md in new-recruit).
 

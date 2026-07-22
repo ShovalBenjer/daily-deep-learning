@@ -538,9 +538,15 @@ function renderPanel() {
     `<button class="tree-tab ${t.id === activeTree ? 'active' : ''}" style="${tint(t)}" data-t="${t.id}">
       ${t.name}<small>${spentIn(t.id)} הושקעו · ${pool(t.id)} פנויות</small></button>`).join('') + `</div>`;
   const tree = talents.trees.find(t => t.id === activeTree);
-  html += `<div class="talent-panel" style="${tint(tree)}"><svg class="tp-edges"></svg>
-    <div class="tp-head"><span class="tp-name">${tree.name}</span>
-    <span class="tp-pts">${pool(tree.id)} נקודות להשקעה</span></div>`;
+  const EMBLEM = { systems: 'os', craft: 'api', ops: 'sre' };
+  const corner = `<svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 24V8C2 4.5 4.5 2 8 2h16M2 13c4 0 6-2.5 6-5.5M13 2c0 4-2.5 6-5.5 6"/></svg>`;
+  html += `<div class="talent-panel" style="${tint(tree)}">
+    <div class="tp-emblem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1">${ICON[EMBLEM[tree.id]] || ''}</svg></div>
+    <svg class="tp-edges"></svg>
+    <span class="tp-corner tl">${corner}</span><span class="tp-corner tr">${corner}</span>
+    <span class="tp-corner bl">${corner}</span><span class="tp-corner br">${corner}</span>
+    <div class="tp-head"><span class="tp-name">עץ ${tree.name}</span>
+    <span class="tp-pts">${spentIn(tree.id)} הושקעו · ${pool(tree.id)} להשקעה</span></div>`;
   tree.tiers.forEach((tier, ti) => {
     const need = talents.tier_gate * ti;
     const open = spentIn(tree.id) >= need;
@@ -588,19 +594,29 @@ function drawPanelEdges() {
     const x1 = ar.left + ar.width / 2 - pr.left, y1 = ar.bottom - pr.top + 2;
     const x2 = br.left + br.width / 2 - pr.left, y2 = br.top - pr.top - 4;
     const on = nodeRank(n.req) >= 1;
-    paths += `<path d="M${x1},${y1} C${x1},${(y1 + y2) / 2} ${x2},${(y1 + y2) / 2} ${x2},${y2}"
-      fill="none" stroke="${on ? gold : dim}" stroke-width="${on ? 2.2 : 1.6}"
-      ${on ? `style="filter:drop-shadow(0 0 4px ${gold})"` : 'stroke-dasharray="5 4"'}
+    const midx = Math.abs(x2 - x1) < 4 ? x1 : null;
+    const d = midx !== null
+      ? `M${x1},${y1} L${x1},${y2}`
+      : `M${x1},${y1} L${x1},${(y1 + y2) / 2} L${x2},${(y1 + y2) / 2} L${x2},${y2}`;
+    paths += `<path d="${d}"
+      fill="none" stroke="${on ? gold : dim}" stroke-width="${on ? 4 : 2.5}" stroke-linejoin="round"
+      ${on ? `style="filter:drop-shadow(0 0 5px ${gold})"` : 'stroke-dasharray="6 5"'}
       marker-end="url(#${on ? 'arrw' : 'arrd'})"/>`;
   });
   svg.innerHTML = defs + paths;
 }
+const RANK_MEANING = ['',
+  'מכיר: מזהה את המושג ואת מקומו במפה',
+  'מסביר: מסוגל ללמד את זה במילים שלך',
+  'מיישם: כתבת או הפעלת את זה בפועל',
+  'מחבר: קושר אותו לתחומים ולפרויקטים אחרים',
+  'מאתגר: יודע מתי זה נשבר ומה בא במקומו'];
 function renderNodeSheet(tree, n, gate) {
   const d = domainOf(n.id); const r = nodeRank(n.id);
   const cost = r + 1, p = pool(tree.id);
   const can = gate.open && gate.reqOk && r < talents.max_rank && p >= cost;
   let why = '';
-  if (r >= talents.max_rank) why = 'הצומת במלואו.';
+  if (r >= talents.max_rank) why = 'הצומת במלואו: מאתגר.';
   else if (!gate.open) why = 'השכבה עוד נעולה.';
   else if (!gate.reqOk) why = 'דרושה דרגה 1 בצומת הקודם.';
   else if (p < cost) why = 'אין מספיק נקודות (עלות ' + cost + ').';
@@ -608,8 +624,10 @@ function renderNodeSheet(tree, n, gate) {
     <div class="dhead"><h2>${d.name}</h2><span class="en">${d.en}</span></div>
     <p class="line">${d.line}</p>
     <p class="rule-q"><b>הכלל:</b> ${d.rule}</p>
+    <p class="rank-flavor">${r > 0 ? `<b>דרגה ${r}</b> · ${RANK_MEANING[r]}` : 'טרם הושקעה נקודה.'}
+      ${r < talents.max_rank ? `<br><span class="next">הדרגה הבאה, ${RANK_MEANING[r + 1].split(':')[0]}: ${RANK_MEANING[r + 1].split(': ')[1]}</span>` : ''}</p>
     <div class="invest-row">
-      <button class="invest" ${can ? '' : 'disabled'}>השקע נקודה (עלות ${cost})</button>
+      <button class="invest" ${can ? '' : 'disabled'}>השקע ${cost} ${cost === 1 ? 'נקודה' : 'נקודות'} → ${RANK_MEANING[Math.min(r + 1, 5)].split(':')[0]}</button>
       <span class="invest-why">${can ? 'דרגה ' + r + ' מתוך ' + talents.max_rank : why}</span>
     </div></div>`;
   const btn = $('#sheet .invest');

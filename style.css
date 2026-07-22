@@ -222,41 +222,71 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 30;
 .tree-tab.active { border-color: var(--tt, var(--gold)); color: var(--tt, var(--gold));
   box-shadow: 0 0 0 1px var(--tt, var(--gold)), 0 0 18px -8px var(--tt, var(--gold)); }
 
-.talent-panel { position: relative; border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
-  background: radial-gradient(140% 100% at 50% 0%, color-mix(in oklab, var(--tt, var(--gold)) 13%, var(--panel)) 0%, var(--panel) 55%, #0c0a11 130%);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gold) 12%, transparent), inset 0 0 60px -20px var(--shadow); }
+.talent-panel { position: relative; border-radius: 4px; overflow: hidden;
+  border: 2px solid color-mix(in oklab, var(--gold) 55%, var(--line));
+  outline: 1px solid color-mix(in oklab, var(--gold) 20%, transparent); outline-offset: 3px;
+  background: radial-gradient(140% 100% at 50% 0%, color-mix(in oklab, var(--tt, var(--gold)) 15%, var(--panel)) 0%, var(--panel) 52%, #0a0910 130%);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.65), inset 0 0 0 2px color-mix(in oklab, var(--gold) 16%, transparent),
+              inset 0 0 80px -24px #000, 0 16px 40px -24px var(--shadow); }
 .talent-panel svg.tp-edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.tp-head { display: flex; align-items: baseline; justify-content: space-between; padding: .7rem 1rem .3rem; }
-.tp-head .tp-name { color: var(--tt, var(--gold)); font-weight: 900; font-size: 1.05rem; letter-spacing: .04em; }
-.tp-head .tp-pts { color: var(--faded); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.tp-emblem { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.tp-emblem svg { width: min(64vw, 300px); height: min(64vw, 300px); color: var(--tt, var(--gold)); opacity: .07;
+  filter: drop-shadow(0 0 30px color-mix(in oklab, var(--tt, var(--gold)) 60%, transparent)); }
+.tp-corner { position: absolute; width: 26px; height: 26px; color: var(--gold); opacity: .85; pointer-events: none; }
+.tp-corner svg { width: 100%; height: 100%; }
+.tp-corner.tl { top: 3px; left: 3px; } .tp-corner.tr { top: 3px; right: 3px; transform: scaleX(-1); }
+.tp-corner.bl { bottom: 3px; left: 3px; transform: scaleY(-1); } .tp-corner.br { bottom: 3px; right: 3px; transform: scale(-1,-1); }
+.tp-head { position: relative; display: flex; align-items: center; justify-content: center; gap: .7rem;
+  margin: .7rem 1rem .2rem; padding: .45rem 1rem; border: 1px solid color-mix(in oklab, var(--gold) 40%, var(--line));
+  border-radius: 3px; background: linear-gradient(180deg, color-mix(in oklab, var(--gold) 12%, var(--panel-2)), var(--panel-2));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.5); }
+.tp-head .tp-name { color: var(--gold-hi); font-weight: 900; font-size: 1.1rem; letter-spacing: .06em;
+  text-shadow: 0 1px 2px #000, 0 0 14px color-mix(in oklab, var(--gold) 45%, transparent); }
+.tp-head .tp-pts { color: var(--faded); font-size: .76rem; font-variant-numeric: tabular-nums; }
 .tp-tier { position: relative; display: flex; justify-content: space-evenly; padding: 1.15rem 0; }
 .tp-tier.locked { opacity: .55; }
 .tp-gate { position: absolute; top: -0.6em; inset-inline-start: .8rem;
   background: var(--panel); border: 1px solid var(--line); border-radius: 2px;
   color: var(--faded); font-size: .68rem; padding: .02rem .5rem; font-variant-numeric: tabular-nums; }
 
-.tnode { position: relative; display: flex; flex-direction: column; align-items: center; gap: .3rem;
-  background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; width: 92px; z-index: 1; }
-.tnode .frame { position: relative; width: 58px; height: 58px; display: grid; place-items: center;
-  background: linear-gradient(160deg, var(--panel-2), var(--code-bg)); border: 2px solid var(--line);
-  border-radius: 6px; color: var(--faded); transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.5), 0 3px 8px -4px var(--shadow); }
-.tnode .frame svg { width: 28px; height: 28px; }
+.tnode { position: relative; display: flex; flex-direction: column; align-items: center; gap: .35rem;
+  background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; width: 94px; z-index: 1; }
+.tnode .frame { position: relative; width: 62px; height: 62px; display: grid; place-items: center;
+  border-radius: 7px; color: var(--faded);
+  border: 2px solid transparent;
+  background: linear-gradient(160deg, #23202f, #0d0c13) padding-box,
+              linear-gradient(150deg, #5a5468, #26232f 60%) border-box;
+  transition: transform .12s ease, box-shadow .2s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -2px 5px rgba(0,0,0,.7), 0 3px 8px -4px #000; }
+.tnode .frame svg { width: 30px; height: 30px; filter: drop-shadow(0 1px 1px #000); }
 .tnode:active .frame { transform: scale(.93); }
-.tnode .pips { position: absolute; bottom: -8px; inset-inline-end: -8px;
-  background: #0c0a11; border: 1px solid var(--line); border-radius: 3px;
-  color: var(--faded); font-size: .66rem; font-weight: 700; padding: .04rem .32rem; font-variant-numeric: tabular-nums; }
-.tnode .nm { font-size: .74rem; color: var(--ink); line-height: 1.25; }
-.tnode.locked .frame { border-style: dashed; filter: grayscale(.7) brightness(.75); }
+.tnode .pips { position: absolute; bottom: -9px; inset-inline-end: -9px;
+  background: linear-gradient(180deg, #16141d, #0a0910); border: 1px solid #4a4456; border-radius: 3px;
+  color: var(--faded); font-size: .7rem; font-weight: 700; padding: .05rem .34rem;
+  font-family: "Frank Ruhl Libre", serif; font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 3px #000; }
+.tnode .nm { font-size: .74rem; color: var(--ink); line-height: 1.25; text-shadow: 0 1px 2px #000; }
+.tnode.locked .frame { filter: grayscale(.85) brightness(.6); }
 .tnode.locked .nm { color: var(--faded); }
-.tnode.avail .frame { border-color: var(--green); color: var(--green);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.5), 0 0 16px -4px var(--green); animation: breathe 2.6s ease-in-out infinite; }
-.tnode.ranked .frame { border-color: color-mix(in oklab, var(--tt, var(--gold)) 70%, var(--line)); color: var(--tt, var(--gold)); }
-.tnode.ranked .pips { color: var(--tt, var(--gold)); border-color: var(--tt, var(--gold)); }
-.tnode.maxed .frame { border-color: var(--gold-hi); color: var(--gold-hi);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.5), 0 0 20px -4px var(--gold); }
-.tnode.maxed .pips { background: var(--gold); color: #0c0a11; border-color: var(--gold-hi); }
+.tnode.avail .frame { color: #cfe8d8;
+  background: linear-gradient(160deg, #223028, #0d130f) padding-box,
+              linear-gradient(150deg, var(--green), #2a4636 65%) border-box;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 18px -4px var(--green); animation: breathe 2.6s ease-in-out infinite; }
+.tnode.avail .pips { border-color: var(--green); color: var(--green); }
+.tnode.ranked .frame { color: var(--gold-hi);
+  background: linear-gradient(160deg, #2b2433, #120e17) padding-box,
+              linear-gradient(150deg, var(--gold-hi), #6b5426 62%) border-box;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 14px -6px var(--gold); }
+.tnode.ranked .pips { color: var(--gold-hi); border-color: var(--gold); }
+.tnode.maxed .frame { color: #ffe9b8;
+  background: linear-gradient(160deg, #383046, #161020) padding-box,
+              linear-gradient(150deg, #ffe9b8, var(--gold) 55%, #7a5f2a) border-box;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 0 26px -4px var(--gold); }
+.tnode.maxed .pips { background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: #14101a; border-color: var(--gold-hi); }
 .tnode.sel .frame { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
+.rank-flavor { margin-top: .6rem; font-size: .88rem; }
+.rank-flavor b { color: var(--gold); }
+.rank-flavor .next { color: var(--faded); font-size: .82rem; }
 
 .domain-sheet { border: 1px solid var(--line); border-top: 2px solid var(--gold); border-radius: 3px;
   background: var(--panel); margin-top: .8rem; padding: .9rem 1rem 1rem; }

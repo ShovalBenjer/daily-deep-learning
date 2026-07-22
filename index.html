@@ -39,6 +39,7 @@
   <a href="#/" id="tab-today">היום</a>
   <a href="#/map" id="tab-map">העץ</a>
   <a href="#/kodex" id="tab-kodex">הקודקס</a>
+  <a href="#/discover" id="tab-discover">תגליות</a>
   <a href="#/ladder" id="tab-ladder">המסלול</a>
 </nav>
 
@@ -66,7 +67,7 @@
 const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
 const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
-let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null;
+let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null, disco = null;
 let pageBlocks = [];
 const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
 const syncKey = () => localStorage.getItem('sadna-sync-key') || '';
@@ -84,6 +85,7 @@ const store = {
     st.daysDone = st.daysDone || [];                      // explicitly completed days
     st.lastLevel = st.lastLevel || 1;
     st.notes = st.notes || [];                            // saved teacher answers
+    st.sidequests = st.sidequests || {};                  // discover layer: taken/done
     return st;
   },
   save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
@@ -1162,6 +1164,61 @@ function drawKodexGraph(cs) {
   };
 }
 
+/* ---------- תגליות: subject shelves of optional side quests ---------- */
+function renderDiscover() {
+  setTab('tab-discover');
+  paintFolio();
+  const view = $('#view');
+  const items = (disco && disco.items) || [];
+  const subjects = (disco && disco.subjects) || [];
+  S.sidequests = S.sidequests || {};
+  const ageDays = t => Math.floor((Date.now() - new Date(t)) / 86400000);
+  const ago = t => { const d = ageDays(t); return d === 0 ? 'היום' : d === 1 ? 'אתמול' : 'לפני ' + d + ' ימים'; };
+
+  const taken = items.filter(i => S.sidequests[i.id] && S.sidequests[i.id].s !== 'done');
+  const done = items.filter(i => S.sidequests[i.id] && S.sidequests[i.id].s === 'done');
+
+  const card = (i, inMy) => {
+    const st = S.sidequests[i.id];
+    return `<div class="dq-card plate ${st && st.s === 'done' ? 'dq-done' : ''}" style="--age:${Math.min(ageDays(i.time), 10)}" data-id="${i.id}">
+      <div class="dq-top"><span class="chip2">${i.kind}</span><span class="dq-src" dir="ltr">${i.source}</span><span class="dq-time">${ago(i.time)}${i.time_label === 'update' ? ' (עדכון)' : ''}</span></div>
+      <a class="dq-title" dir="ltr" href="${i.url}" target="_blank" rel="noopener">${i.title}</a>
+      <p class="dq-line">${i.line}</p>
+      <div class="dq-quest"><span>${i.quest}</span></div>
+      <div class="dq-foot">
+        ${st && st.s === 'done' ? '<span class="dq-donechip">הושלם</span>'
+        : st ? `<button class="dq-btn dq-finish" data-id="${i.id}" data-tree="${i.tree}">סיימתי את המסע (+1)</button>`
+        : `<button class="dq-btn" data-id="${i.id}">צא למסע · ~${i.min} דק׳</button>`}
+      </div></div>`;
+  };
+
+  let html = `<div class="view-head"><h1>תגליות</h1>
+    <p>סריקה יומית של הארגונים, המאגרים והערוצים שלך. הכל אופציונלי: מסעות צדדיים, בלי חובות ובלי פג-תוקף.</p></div>`;
+  if (taken.length) html += `<div class="qhead"><h2>המסעות שלי</h2><span class="d">${taken.length}</span></div>` + taken.map(i => card(i, true)).join('');
+  subjects.forEach(s => {
+    const si = items.filter(i => i.subject === s.id && !(S.sidequests[i.id]));
+    if (!si.length) return;
+    html += `<div class="qhead"><h2>${s.name}</h2><span class="d">${si.length}</span></div>` +
+      si.sort((a, b) => b.time.localeCompare(a.time)).map(i => card(i, false)).join('');
+  });
+  if (done.length) html += `<div class="qhead"><h2>הושלמו</h2><span class="d">${done.length}</span></div>` + done.map(i => card(i, true)).join('');
+  if (!items.length) html += `<p class="finish-hint">הסורק טרם רץ היום. הרצה ראשונה: מחר 07:15, או ידנית מהמחשב.</p>`;
+  view.innerHTML = html;
+  $('#status').textContent = '';
+  view.querySelectorAll('.dq-btn').forEach(b => b.onclick = e => {
+    const id = b.dataset.id;
+    if (b.classList.contains('dq-finish')) {
+      S.sidequests[id] = { s: 'done', d: iso(new Date()) };
+      award(b.dataset.tree || 'craft', 1, b, false);
+      store.save(); renderDiscover();
+    } else {
+      S.sidequests[id] = { s: 'taken', d: iso(new Date()) };
+      store.save(); toast('מסע נלקח. בלי לחץ.'); renderDiscover();
+    }
+  });
+  window.scrollTo(0, 0);
+}
+
 /* ---------- routing ---------- */
 function route() {
   if (!index.length) return;
@@ -1169,6 +1226,7 @@ function route() {
   if (h === '#/map') return renderTalents();
   if (h === '#/ladder') return renderLadder();
   if (h === '#/kodex') return renderKodex();
+  if (h === '#/discover') return renderDiscover();
   const m = h.match(/^#\/(\d{4}-\d{2}-\d{2})$/);
   if (m) { const i = index.findIndex(p => p.date === m[1]); return renderPost(i >= 0 ? i : 0); }
   // default: YOUR current day = oldest not-yet-completed page
@@ -1198,6 +1256,7 @@ addEventListener('scroll', () => {
       fetch('course_plan.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null),
       fetch('concepts.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null)
     ]);
+    disco = await fetch('discoveries.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null);
   } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
   paintFolio(); route();

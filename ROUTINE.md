@@ -170,11 +170,16 @@ options, one correct. Wrong-answered questions from earlier days resurface
 within 2 days (check recent posts for ids you repeated).
 
 ### מעקב (~10 min)
-Last-24h scan over course_plan.json -> world_scan_sources. Only items with real
-links fetched THIS run; if quiet, one honest line. 2-3x weekly: one paper card
-(title, venue, sourced publication status, problem, mechanism, evidence,
-limitations, hype-versus-real, one application to course_plan.json -> projects).
-NEVER fabricate.
+PRIMARY SOURCE: `discoveries.json` (the daily discover scanner's output,
+already time-labeled and deduped). Pick the 2-3 freshest highest-signal items,
+present each with its line + link, and close with "עוד תגליות ומסעות צדדיים
+בטאב תגליות". 2-3x weekly add one paper card, subjects drawn from
+`corpus_manifest.json` -> paper_card_queue first (title, venue, sourced
+publication status, problem, mechanism, evidence, limitations, hype-versus-real,
+one application to course_plan.json -> projects).
+FALLBACK only if discoveries.json is stale (>48h old `generated`): scan
+course_plan.json -> world_scan_sources yourself; only items with real links
+fetched THIS run; if quiet, one honest line. NEVER fabricate.
 
 ### שיקול דעת (the judgment rep, ~5 min)
 One concrete decision scenario from the Principal Engineer Curriculum territory

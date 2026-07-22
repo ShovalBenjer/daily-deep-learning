@@ -412,6 +412,23 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 30;
 .sy-t small { color: var(--faded); }
 .sy-note { color: var(--faded); font-size: .8rem; margin: .6rem 0 0; }
 
+/* discover side quests */
+.dq-card { padding: .75rem .9rem; margin-bottom: .6rem; opacity: calc(1 - var(--age, 0) * 0.04); }
+.dq-top { display: flex; align-items: baseline; gap: .5rem; font-size: .72rem; color: var(--faded); }
+.dq-src { direction: ltr; }
+.dq-time { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+.dq-title { display: block; font-weight: 700; font-size: .95rem; color: var(--ink); text-decoration: none;
+  margin: .3rem 0 .2rem; text-align: left; line-height: 1.45; }
+.dq-line { margin: 0 0 .4rem; font-size: .88rem; color: color-mix(in oklab, var(--ink) 85%, var(--faded)); }
+.dq-quest { border-inline-start: 2px solid var(--gold); padding-inline-start: .7rem; margin: .4rem 0 .6rem;
+  font-size: .86rem; color: var(--gold-hi); }
+.dq-foot { display: flex; align-items: center; gap: .6rem; }
+.dq-btn { min-height: 42px; padding: 0 1rem; background: var(--panel); border: 1px solid var(--gold);
+  color: var(--gold); cursor: pointer; font-family: inherit; font-weight: 700; font-size: .82rem; border-radius: 3px; }
+.dq-btn.dq-finish { background: var(--gold); color: var(--bg); box-shadow: 0 0 14px -8px var(--gold); }
+.dq-donechip { color: var(--green); font-weight: 700; font-size: .82rem; }
+.dq-done { opacity: .55; }
+
 /* chat key row */
 #cpKeyRow { display: flex; gap: .5rem; padding: .5rem .9rem 0; }
 #cpKeyRow input { flex: 1; min-height: 44px; padding: .3rem .7rem; font-family: "IBM Plex Mono", monospace;

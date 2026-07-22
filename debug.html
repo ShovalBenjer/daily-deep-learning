@@ -17,10 +17,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="vendor/katex.min.css">
 <link rel="stylesheet" href="style.css">
-<script>window.onerror=function(m,s,l,c,e){var d=document.createElement("div");d.style.cssText="position:fixed;top:0;left:0;right:0;background:#fff;color:#900;font:12px monospace;z-index:99999;direction:ltr;text-align:left;padding:6px;white-space:pre-wrap";d.textContent="ERR: "+m+" @ "+(s||"").split("/").pop()+":"+l+":"+c+"
-"+(e&&e.stack?e.stack.split("
+<script>
+function __dbg(t){var d=document.getElementById("__dbg");if(!d){d=document.createElement("div");d.id="__dbg";d.style.cssText="position:fixed;top:0;left:0;right:0;background:#fff;color:#900;font:11px monospace;z-index:99999;direction:ltr;text-align:left;padding:5px;white-space:pre-wrap;max-height:60vh;overflow:auto";document.documentElement.appendChild(d)}d.textContent+=t+"
+"}
+window.onerror=function(m,s,l,c,e){__dbg("ERR "+m+" @"+l+":"+c+(e&&e.stack?"
+"+e.stack.split("
+").slice(0,3).join("
+"):""))};
+window.addEventListener("unhandledrejection",function(ev){__dbg("REJ "+(ev.reason&&ev.reason.stack?ev.reason.stack.split("
 ").slice(0,4).join("
-"):"");document.body.appendChild(d)};</script></head>
+"):ev.reason))});
+setTimeout(function(){__dbg("t3s status="+((document.getElementById("status")||{}).textContent||"-")+" viewLen="+((document.getElementById("view")||{innerHTML:""}).innerHTML.length))},3000);
+</script></head>
 <body>
 <div id="progress" role="presentation"></div>
 <header class="bar">

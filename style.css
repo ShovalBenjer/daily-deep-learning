@@ -195,6 +195,12 @@ summary::marker { color: var(--gold); }
 .widget .w-readout b { color: var(--gold-hi); }
 .widget button.w-btn { min-height: 40px; padding: 0 1rem; background: var(--panel); border: 1px solid var(--line);
   color: var(--ink); cursor: pointer; font-family: inherit; font-weight: 700; border-radius: 3px; }
+.av-code { direction: ltr; text-align: left; font-family: "IBM Plex Mono", monospace; font-size: .78rem;
+  background: var(--code-bg); border: 1px solid var(--line-soft); border-radius: 3px; margin-top: .6rem;
+  padding: .45rem 0; color: #8b90a5; line-height: 1.7; }
+.av-ln { padding: 0 .8rem; border-inline-start: 3px solid transparent; transition: background .15s ease; white-space: pre; }
+.av-ln.cur { background: color-mix(in oklab, var(--gold) 16%, transparent); color: var(--gold-hi);
+  border-inline-start-color: var(--gold); }
 
 /* ---------- tabs ---------- */
 nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 30;

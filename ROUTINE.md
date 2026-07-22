@@ -75,10 +75,16 @@ catalog (the interactive IS the lesson; prose supports it):
 
 Catalog today: `decay` (discount-factor explorable: bars, sum, effective
 horizon), `gridworld` (playable MDP: goal/trap/step-cost, live discounted
-return). Every עיון SHOULD open or close with one widget when the day's concept
-fits one; if the catalog lacks a fitting widget, note the missing widget type
-at the end of the post as `<!-- widget-request: <type>: <one line spec> -->`
-so it gets built.
+return), `algviz` (WATCH-THE-ALGORITHM player, the VisuAlgo pattern: state
+canvas + pseudocode with the current line highlighted + play/step/speed;
+`{"type":"algviz","algo":"<recipe>", ...params}`; recipes available:
+`binary-search` (params arr, target), `returns-backward` (params rewards[],
+gamma)). Every עיון SHOULD open or close with one widget when the day's
+concept fits one, and every drill whose algorithm has an algviz recipe SHOULD
+embed it; if the catalog lacks a fitting widget or recipe, note it at the end
+of the post as `<!-- widget-request: <type>: <one line spec> -->` so it gets
+built. When the day's drill maps to a classic DSA algorithm, also link the
+matching visualizer page on https://visualgo.net as enrichment.
 
 Rules: ids unique forever (prefix with the day, e.g. d14-az-q2). `tree` is the
 talent tree the points feed: systems | craft | ops (course/drill -> craft or

@@ -193,7 +193,126 @@ function themeC(k) { return getComputedStyle(document.documentElement).getProper
 function buildWidget(d) {
   if (d.type === 'decay') return widgetDecay(d);
   if (d.type === 'gridworld') return widgetGridworld(d);
+  if (d.type === 'algviz') return widgetAlgviz(d);
   return null;
+}
+
+/* ---- algviz: watch the algorithm run (the VisuAlgo pattern, RL-native) ---- */
+const ALGS = {
+  'binary-search': {
+    name: 'Binary Search',
+    code: ['lo = 0, hi = n-1', 'while lo <= hi:', '  mid = (lo+hi)//2', '  if a[mid] == target: return mid', '  if a[mid] < target: lo = mid+1', '  else: hi = mid-1'],
+    init(p) {
+      const arr = p.arr || Array.from({ length: 15 }, (_, i) => 2 * i + ((i * 7) % 3));
+      arr.sort((a, b) => a - b);
+      return { arr, target: p.target ?? arr[11], lo: 0, hi: arr.length - 1, mid: -1, found: -1, phase: 0, ops: 0 };
+    },
+    step(s) {
+      if (s.found >= 0 || s.lo > s.hi) return { done: true, line: 1, note: s.found >= 0 ? 'נמצא באינדקס ' + s.found : 'לא נמצא' };
+      if (s.phase === 0) { s.mid = (s.lo + s.hi) >> 1; s.ops++; s.phase = 1; return { line: 2, note: 'mid = ' + s.mid }; }
+      s.phase = 0;
+      if (s.arr[s.mid] === s.target) { s.found = s.mid; return { line: 3, note: s.arr[s.mid] + ' = יעד. נמצא!' }; }
+      if (s.arr[s.mid] < s.target) { s.lo = s.mid + 1; return { line: 4, note: s.arr[s.mid] + ' < יעד, זזים ימינה' }; }
+      s.hi = s.mid - 1; return { line: 5, note: s.arr[s.mid] + ' > יעד, זזים שמאלה' };
+    },
+    draw(s, cv) {
+      const W = cv.clientWidth || 320, H = 120, dpr = Math.min(devicePixelRatio, 2);
+      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const n = s.arr.length, bw = Math.min(38, (W - 8) / n), x0 = (W - bw * n) / 2;
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      s.arr.forEach((v, i) => {
+        const inR = i >= s.lo && i <= s.hi;
+        const px = x0 + i * bw;
+        x.fillStyle = i === s.found ? themeC('--green') : i === s.mid ? themeC('--gold') : inR ? themeC('--panel') : 'transparent';
+        x.globalAlpha = i === s.mid || i === s.found ? 1 : inR ? 1 : 0.25;
+        x.fillRect(px + 1, 34, bw - 2, 40);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 34, bw - 2, 40);
+        x.fillStyle = i === s.mid || i === s.found ? '#14101a' : themeC('--ink');
+        x.font = '12px "IBM Plex Mono"'; x.fillText(v, px + bw / 2, 54);
+        x.globalAlpha = 1;
+      });
+      x.fillStyle = themeC('--faded'); x.font = '11px "IBM Plex Mono"';
+      x.fillText('lo=' + s.lo, x0 + s.lo * bw + bw / 2, 90);
+      if (s.hi >= 0 && s.hi !== s.lo) x.fillText('hi=' + s.hi, x0 + s.hi * bw + bw / 2, 90);
+      x.fillStyle = themeC('--gold'); x.font = '700 12px "Frank Ruhl Libre"';
+      x.fillText('יעד: ' + s.target + ' · השוואות: ' + s.ops, W / 2, 14);
+    }
+  },
+  'returns-backward': {
+    name: 'Discounted Returns (backward)',
+    code: ['G = 0', 'for t = T-1 down to 0:', '  G = r[t] + γ·G', '  out[t] = G'],
+    init(p) {
+      const rewards = p.rewards || [0, 1, 0, 0, 2, 0, 1, 3];
+      return { r: rewards, g: p.gamma ?? 0.9, out: Array(rewards.length).fill(null), t: rewards.length, G: 0, ops: 0 };
+    },
+    step(s) {
+      if (s.t <= 0) return { done: true, line: 0, note: 'סיימנו: out הוא וקטור התשואות' };
+      s.t--; s.G = s.r[s.t] + s.g * s.G; s.out[s.t] = s.G; s.ops++;
+      return { line: 2, note: `G = ${s.r[s.t]} + ${s.g}·${(s.out[s.t + 1] ?? 0).toFixed(2)} = ${s.G.toFixed(2)}` };
+    },
+    draw(s, cv) {
+      const W = cv.clientWidth || 320, H = 150, dpr = Math.min(devicePixelRatio, 2);
+      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const n = s.r.length, bw = Math.min(46, (W - 8) / n), x0 = (W - bw * n) / 2;
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillStyle = themeC('--faded'); x.font = '11px "Frank Ruhl Libre"';
+      x.fillText('rewards', x0 - 2 + bw * n + 2 > W ? W - 30 : x0 + bw * n + 2, 30);
+      s.r.forEach((v, i) => {
+        const px = x0 + i * bw, cur = i === s.t;
+        x.fillStyle = cur ? themeC('--gold') : themeC('--panel');
+        x.fillRect(px + 1, 20, bw - 2, 26);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 20, bw - 2, 26);
+        x.fillStyle = cur ? '#14101a' : themeC('--ink'); x.font = '12px "IBM Plex Mono"';
+        x.fillText(v, px + bw / 2, 33);
+      });
+      s.out.forEach((v, i) => {
+        const px = x0 + i * bw, has = v !== null;
+        x.fillStyle = has ? themeC('--green') : 'transparent'; x.globalAlpha = has ? .9 : .2;
+        x.fillRect(px + 1, 78, bw - 2, 30);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 78, bw - 2, 30);
+        x.globalAlpha = 1;
+        if (has) { x.fillStyle = '#0c1410'; x.font = '11px "IBM Plex Mono"'; x.fillText(v.toFixed(2), px + bw / 2, 93); }
+      });
+      x.fillStyle = themeC('--faded'); x.font = '11px "Frank Ruhl Libre"';
+      x.fillText('G (מהסוף להתחלה ←)', W / 2, 128);
+    }
+  }
+};
+
+function widgetAlgviz(d) {
+  const algo = ALGS[d.algo]; if (!algo) return null;
+  const w = widgetShell(d.title || 'צפו באלגוריתם רץ: ' + algo.name);
+  const codeEl = document.createElement('div'); codeEl.className = 'av-code';
+  codeEl.innerHTML = algo.code.map((l, i) => `<div class="av-ln" data-l="${i}">${l.replace(/</g, '&lt;')}</div>`).join('');
+  const cv = document.createElement('canvas');
+  const note = document.createElement('div'); note.className = 'w-readout';
+  const ctr = document.createElement('div'); ctr.className = 'w-controls';
+  ctr.innerHTML = `<button class="w-btn av-play">הפעל</button><button class="w-btn av-step">צעד</button>
+    <button class="w-btn av-reset">איפוס</button>מהירות <input type="range" min="1" max="8" value="3">`;
+  w.appendChild(cv); w.appendChild(codeEl); w.appendChild(note); w.appendChild(ctr);
+  let s, timer = null;
+  const speed = ctr.querySelector('input'), play = ctr.querySelector('.av-play');
+  function highlight(l) { codeEl.querySelectorAll('.av-ln').forEach(e => e.classList.toggle('cur', +e.dataset.l === l)); }
+  function reset() { stop(); s = algo.init(d); algo.draw(s, cv); highlight(-1); note.textContent = ''; }
+  function stop() { if (timer) { clearInterval(timer); timer = null; play.textContent = 'הפעל'; } }
+  function one() {
+    const r = algo.step(s); algo.draw(s, cv); highlight(r.line); note.textContent = r.note || '';
+    if (r.done) { stop(); toast('האלגוריתם סיים'); }
+    return r.done;
+  }
+  play.onclick = () => {
+    if (timer) return stop();
+    play.textContent = 'עצור';
+    timer = setInterval(() => { if (one()) stop(); }, 1400 / +speed.value);
+  };
+  speed.oninput = () => { if (timer) { clearInterval(timer); timer = setInterval(() => { if (one()) stop(); }, 1400 / +speed.value); } };
+  ctr.querySelector('.av-step').onclick = () => { stop(); one(); };
+  ctr.querySelector('.av-reset').onclick = reset;
+  requestAnimationFrame(reset);
+  addEventListener('resize', () => s && algo.draw(s, cv), { passive: true });
+  return w;
 }
 
 function widgetDecay(d) {

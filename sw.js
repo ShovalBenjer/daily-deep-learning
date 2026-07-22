@@ -1,7 +1,7 @@
-const V = 'sadna-v18';
+const V = 'sadna-v19';
 const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest',
   'vendor/katex.min.css', 'vendor/katex.min.js', 'vendor/auto-render.min.js', 'vendor/marked.min.js', 'vendor/purify.min.js'];
-const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json', 'corpus_manifest.json', 'concepts.json', 'discoveries.json'];
+const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json', 'corpus_manifest.json', 'concepts.json', 'discoveries.json', 'skills.json'];
 // The shell itself is NETWORK-FIRST so an open with connectivity always gets
 // the latest app (staleness burned us repeatedly); cache is the offline fallback.
 const NETFIRST_SHELL = ['index.html', 'style.css', 'tree3d.js', 'sw.js'];

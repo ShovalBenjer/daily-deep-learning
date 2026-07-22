@@ -68,7 +68,7 @@
 const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
 const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
-let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null, disco = null;
+let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null, disco = null, skills = null;
 let pageBlocks = [];
 const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
 const syncKey = () => localStorage.getItem('sadna-sync-key') || '';
@@ -87,6 +87,8 @@ const store = {
     st.lastLevel = st.lastLevel || 1;
     st.notes = st.notes || [];                            // saved teacher answers
     st.sidequests = st.sidequests || {};                  // discover layer: taken/done
+    st.skillLevels = st.skillLevels || {};                // ownership ledger overrides
+    st.skillEvidence = st.skillEvidence || {};            // skillId -> [links/notes]
     return st;
   },
   save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
@@ -579,10 +581,10 @@ function buildQuiz(d, onDone) {
     attempts++;
     const conf = +confInp.value;
     if (selected === d.answer) {
-      S.answers[d.id] = { ok: true, attempts, chosen: selected, conf, tree: d.tree, date: iso(new Date()) }; store.save();
+      S.answers[d.id] = { ok: true, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
       finish(true, selected); award(d.tree, attempts === 1 ? 2 : 1, wrap, attempts === 1);
     } else if (attempts >= 2) {
-      S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, date: iso(new Date()) }; store.save();
+      S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
       combo = 0;
       finish(false, selected); paintRing();
     } else {
@@ -627,10 +629,10 @@ function buildFillin(d, onDone) {
     if (!inp.value.trim()) return;
     attempts++;
     if (good.includes(norm(inp.value))) {
-      S.answers[d.id] = { ok: true, attempts, val: inp.value, tree: d.tree, date: iso(new Date()) }; store.save();
+      S.answers[d.id] = { ok: true, attempts, val: inp.value, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
       finish(true); award(d.tree, attempts <= 1 ? 2 : 1, wrap, attempts <= 1);
     } else if (attempts >= 2) {
-      S.answers[d.id] = { ok: false, attempts, tree: d.tree, date: iso(new Date()) }; store.save();
+      S.answers[d.id] = { ok: false, attempts, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
       combo = 0; finish(false); paintRing();
     } else {
       msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no';
@@ -972,6 +974,25 @@ function renderLadder() {
       <div class="hb-body"><b>ימים עד היעד: חוזה חתום, 30/09</b>
       <span>${weeks} שבועות · ${ladder.hire_goal.line}</span></div></div>`;
   }
+  if (skills && skills.skills) {
+    const cur = s => S.skillLevels[s.id] ?? s.current;
+    const rows = skills.skills.slice().sort((a, b) =>
+      (b.resume_risk - a.resume_risk) || ((b.target - cur(b)) - (a.target - cur(a))));
+    const cells = s => { const c = cur(s); return [0,1,2,3,4,5].map(l =>
+      `<span class="ob-cell ${l <= c ? 'on' : ''} ${l === s.target ? 'tgt' : ''}"></span>`).join(''); };
+    html += `<details class="syllabus ownership" open><summary>לוח בעלות: מיומנות ברזומה = רמה 4 ומעלה</summary>
+      <p class="sy-note">0 מזהה · 1 שולף · 2 מסביר · 3 יישמת · 4 בעלות הנדסית · 5 בגרות תכנונית. אדום = claim ברזומה מתחת ל-4. הקש שורה לעדכון כן.</p>` +
+      rows.map(s => {
+        const c = cur(s), risk = s.resume_risk && c < 4;
+        return `<div class="ob-row ${risk ? 'risk' : ''}" data-sid="${esc(s.id)}">
+          <div class="ob-name" dir="ltr">${esc(s.name)}</div>
+          <div class="ob-bar">${cells(s)}</div>
+          <div class="ob-meta">${c}/${s.target}${s.arms && s.arms.length ? ` · ${s.arms.length} זרועות` : ''}${risk ? ' · בסיכון' : ''}</div>
+          <div class="ob-edit" hidden>${[0,1,2,3,4,5].map(l => `<button class="ob-set" data-l="${l}">${l}</button>`).join('')}
+            <button class="ob-ev">+הוכחה</button></div>
+        </div>`;
+      }).join('') + `</details>`;
+  }
   if (plan && plan.week_plan) {
     const start = new Date(plan.start_date);
     html += `<details class="syllabus"><summary>הסילבוס המלא: 10 שבועות, 70 ימים</summary>` +
@@ -1019,6 +1040,23 @@ function renderLadder() {
   });
   const nd = view.querySelector('.nc-done');
   if (nd) nd.onclick = () => { toggle(S.ladder, nd.dataset.id, true); toast('הבא בתור התקדם'); renderLadder(); };
+  view.querySelectorAll('.ob-row').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.ob-edit')) return;
+      const ed = row.querySelector('.ob-edit'); ed.hidden = !ed.hidden;
+    });
+    row.querySelectorAll('.ob-set').forEach(b => b.onclick = () => {
+      S.skillLevels[row.dataset.sid] = +b.dataset.l; store.save(); renderLadder();
+    });
+    const ev = row.querySelector('.ob-ev');
+    if (ev) ev.onclick = () => {
+      const link = prompt('הוכחה (קישור ל-PR/פרויקט/סרטון או משפט):');
+      if (link && link.trim()) {
+        (S.skillEvidence[row.dataset.sid] = S.skillEvidence[row.dataset.sid] || []).push({ t: link.trim().slice(0, 300), d: iso(new Date()) });
+        store.save(); toast('הוכחה נרשמה');
+      }
+    };
+  });
   const sb = view.querySelector('#syncBtn');
   if (sb) sb.onclick = enableSync;
   window.scrollTo(0, 0);
@@ -1279,11 +1317,12 @@ addEventListener('scroll', () => {
   const j = u => fetch(u, { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; return r.json(); });
   const rs = await Promise.allSettled([
     j('posts/index.json'), j('judgment_map.json'), j('research_ladder.json'),
-    j('talents.json'), j('course_plan.json'), j('concepts.json'), j('discoveries.json')
+    j('talents.json'), j('course_plan.json'), j('concepts.json'), j('discoveries.json'),
+    j('skills.json')
   ]);
   const val = i => rs[i].status === 'fulfilled' ? rs[i].value : null;
   index = val(0) || []; jmap = val(1); ladder = val(2); talents = val(3);
-  plan = val(4); kodex = val(5); disco = val(6);
+  plan = val(4); kodex = val(5); disco = val(6); skills = val(7);
   if (!index.length) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
   paintFolio(); route();

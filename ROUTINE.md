@@ -59,6 +59,36 @@ Adaptation rules, applied every run:
    implements it, שיקול דעת decides with it when possible; AI-103 ends with one
    bridge line to the thread. Five unrelated sections = defect.
 
+## 1c. The mastery ledger (skills.json) drives targeting
+
+Canonical model: `docs/LEARNING-MODEL-2026-07.md` (0-5 ladder, 22-domain map,
+sourced principles). The live ledger is `skills.json`: per skill `current` vs
+`target` on the 0-5 ladder, `resume_risk` (a resume claim below level 4),
+`interview_bank`. Rules for every run:
+
+1. **Resume-risk drills ≥2x/week**: at least twice a week, תרגול (or a second
+   drill) targets a `resume_risk` skill, DataLemur-register for `sql` and
+   `pandas-da` (realistic table, business question, interview phrasing).
+   Rotate through the risk list, weakest (target - current) first.
+2. **Basics weave**: while `toml`, `yaml`, `makefile`, `iac`, `sdlc`, `cicd`,
+   `docker` are below level 3, weave ONE mini-section (150-300 words + one
+   `fillin`) into a fitting day: real file from his stack (pyproject.toml,
+   azure-pipelines.yml, Makefile for הסדנה), read-then-write, never theory-only.
+3. **Skill tag**: every quiz/fillin that exercises a ledger skill carries
+   `"skill":"<id from skills.json>"` in its JSON. Untagged blocks are fine for
+   pure course content.
+4. **Proof types by level** (the ladder's seam): levels 0-2 rise from unassisted
+   quiz/explanation evidence; levels 3-5 ONLY from artifacts (a repo, a PR, a
+   deployed thing). Never write content implying a quiz can certify level 4.
+5. **~85% difficulty**: calibrate against the learner state; if first-try
+   accuracy last 3 days > 90%, harden; < 70%, ease. Say nothing about it in the
+   page, just do it.
+6. Assisted work (chat transcripts, hint-revealed answers) never counts as
+   mastery evidence.
+
+Four daily anchors (recommended split, not a gate): 08:00 עיון, 12:00 תרגול,
+17:00 AI-103, 22:00 מעקב + שיקול דעת.
+
 ## 2. Page structure (exact)
 
 File `posts/YYYY-MM-DD.md`. Hebrew content, technical nouns English. Section
@@ -81,11 +111,11 @@ on them); `###` only inside sections:
 Two fenced-block kinds, each a SINGLE LINE of valid JSON inside the fence:
 
     ```quiz
-    {"id":"dN-...-qK","tree":"systems|craft|ops","q":"...","options":["...","...","...","..."],"answer":0,"explain":"..."}
+    {"id":"dN-...-qK","tree":"systems|craft|ops","skill":"<optional skills.json id>","q":"...","options":["...","...","...","..."],"answer":0,"explain":"..."}
     ```
 
     ```fillin
-    {"id":"dN-...","tree":"...","prompt":"...","answer":"...","alt":["..."],"explain":"..."}
+    {"id":"dN-...","tree":"...","skill":"<optional>","prompt":"...","answer":"...","alt":["..."],"explain":"..."}
     ```
 
 A third kind, `widget`, mounts an EXPLORABLE or MICRO-GAME from the app's
@@ -149,7 +179,9 @@ a prerequisite. "Compressed session notes" are a defect. Required structure
 5. **דוגמה שנייה או מקרה קצה**: a second worked case or the edge that breaks
    naive intuition.
 6. **טעויות נפוצות**: at least 3, each with why it is wrong.
-7. **חיבור**: to yesterday, to the week, and one line to his projects.
+7. **מתי לא**: when NOT to use today's concept and the trade-off against the
+   main alternative (one paragraph; interviews live here).
+8. **חיבור**: to yesterday, to the week, and one line to his projects.
 Embed the day's widget where it teaches best; PyTorch code in a fenced block
 with line-by-line explanation after it; end with ONE Hebrew `quiz`.
 

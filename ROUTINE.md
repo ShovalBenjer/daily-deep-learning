@@ -114,6 +114,17 @@ shape (an MDP loop, an architecture, a flow): small, viewBox 0 0 320 180,
 stroke="currentColor", theme-neutral, labels in Hebrew, wrapped in a plain
 paragraph. Raw inline SVG passes through markdown untouched.
 
+A fourth kind, `concepts`, feeds the codex (one per day, placed just before the
+closing line): 5-10 key concepts of the day, each with a STABLE kebab id:
+
+    ```concepts
+    {"items":[{"id":"baseline","t":"Baseline","he":"קו בסיס","d":"one-line meaning","rel":["variance"]}]}
+    ```
+
+ALSO append the same items to the top-level `concepts.json` -> concepts array
+(skip ids that already exist; rel[] may reference any existing id). The codex
+graph and search are built from that file.
+
 Rules: ids unique forever (prefix with the day, e.g. d14-az-q2). `tree` is the
 talent tree the points feed: systems | craft | ops (course/drill -> craft or
 systems by topic; AI-103 -> ops; judgment -> the domain's tree per

@@ -38,8 +38,14 @@
 <nav class="tabs">
   <a href="#/" id="tab-today">היום</a>
   <a href="#/map" id="tab-map">העץ</a>
+  <a href="#/kodex" id="tab-kodex">הקודקס</a>
   <a href="#/ladder" id="tab-ladder">המסלול</a>
 </nav>
+
+<div id="qplayer" hidden>
+  <div class="qp-head"><span id="qpProgress"></span><button class="iconbtn" id="qpClose" aria-label="סגור">✕</button></div>
+  <div id="qpBody"></div>
+</div>
 <div id="toast"><span id="toastMsg"></span></div>
 <canvas id="fx"></canvas>
 <div id="overlay" hidden><div class="ov-plate plate"><div id="ovBody"></div><button id="ovClose">המשך</button></div></div>
@@ -60,7 +66,8 @@
 const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
 const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
-let index = [], jmap = null, ladder = null, talents = null, plan = null;
+let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null;
+let pageBlocks = [];
 const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
 const syncKey = () => localStorage.getItem('sadna-sync-key') || '';
 const LEVELS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320];
@@ -76,6 +83,7 @@ const store = {
     st.ranks = st.ranks || {};                            // domainId -> rank
     st.daysDone = st.daysDone || [];                      // explicitly completed days
     st.lastLevel = st.lastLevel || 1;
+    st.notes = st.notes || [];                            // saved teacher answers
     return st;
   },
   save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
@@ -242,13 +250,60 @@ const isLtr = s => /^[\x00-\x7F]*$/.test(s.replace(/\s/g, ''));
 
 /* ---------- interactive blocks ---------- */
 function upgradeBlocks(root) {
-  root.querySelectorAll('pre code.language-quiz, pre code.language-fillin, pre code.language-widget').forEach(code => {
+  pageBlocks = [];
+  root.querySelectorAll('pre code.language-quiz, pre code.language-fillin, pre code.language-widget, pre code.language-concepts').forEach(code => {
     let d; try { d = JSON.parse(code.textContent); } catch (e) { return; }
-    const el = code.classList.contains('language-quiz') ? buildQuiz(d)
-      : code.classList.contains('language-fillin') ? buildFillin(d)
-      : buildWidget(d);
+    if (code.classList.contains('language-concepts')) {
+      const strip = document.createElement('p'); strip.className = 'concept-strip';
+      strip.innerHTML = 'מושגי היום: ' + (d.items || []).map(c =>
+        `<a href="#/kodex" class="chip2 c-chip" data-c="${c.id || ''}">${c.t}</a>`).join(' ');
+      code.closest('pre').replaceWith(strip);
+      return;
+    }
+    const kind = code.classList.contains('language-quiz') ? 'quiz'
+      : code.classList.contains('language-fillin') ? 'fillin' : 'widget';
+    if (kind !== 'widget') pageBlocks.push({ kind, d });
+    const el = kind === 'quiz' ? buildQuiz(d) : kind === 'fillin' ? buildFillin(d) : buildWidget(d);
     if (el) code.closest('pre').replaceWith(el);
   });
+}
+
+/* ---------- quiz player (one question at a time) ---------- */
+function openPlayer() {
+  const blocks = pageBlocks.slice();
+  if (!blocks.length) { toast('אין שאלות בדף הזה'); return; }
+  const qp = $('#qplayer'), body = $('#qpBody');
+  qp.hidden = false; document.body.style.overflow = 'hidden';
+  let i = 0; const startPts = totalEarned(); const results = [];
+  function step() {
+    $('#qpProgress').textContent = 'שאלה ' + (i + 1) + ' / ' + blocks.length;
+    body.innerHTML = '';
+    const b = blocks[i];
+    const el = b.kind === 'quiz'
+      ? buildQuiz(b.d, r => { results.push(r); next(); })
+      : buildFillin(b.d, r => { results.push(r); next(); });
+    body.appendChild(el);
+    typeset(body);
+  }
+  function next() { setTimeout(() => { i++; i < blocks.length ? step() : summary(); }, 1500); }
+  function summary() {
+    const ok = results.filter(r => r.ok).length;
+    const first = results.filter(r => r.ok && r.attempts === 1).length;
+    const confs = results.filter(r => r.conf != null);
+    const avgConf = confs.length ? Math.round(confs.reduce((a, r) => a + r.conf, 0) / confs.length) : null;
+    const acc = Math.round(100 * ok / results.length);
+    const gained = totalEarned() - startPts;
+    $('#qpProgress').textContent = 'סיכום';
+    body.innerHTML = `<div class="qp-summary plate">
+      <h2>${ok}/${results.length} נכונות</h2>
+      <p>${first} מהן בניסיון ראשון · ${gained > 0 ? '+' + gained + ' XP' : 'בלי נקודות חדשות'}</p>
+      ${avgConf !== null ? `<p class="qp-cal">כיול: ביטחון ממוצע ${avgConf}% מול דיוק ${acc}% ${Math.abs(avgConf - acc) <= 12 ? '· מכויל יפה' : avgConf > acc ? '· ביטחון יתר, האט' : '· אתה טוב ממה שאתה חושב'}</p>` : ''}
+      <button class="qp-done">חזרה לדף</button></div>`;
+    body.querySelector('.qp-done').onclick = closePlayer;
+  }
+  $('#qpClose').onclick = closePlayer;
+  function closePlayer() { qp.hidden = true; document.body.style.overflow = ''; route(); }
+  step();
 }
 
 /* ---- explorables and micro-games ---- */
@@ -469,7 +524,7 @@ function widgetGridworld(d) {
   return w;
 }
 
-function buildQuiz(d) {
+function buildQuiz(d, onDone) {
   const wrap = document.createElement('div'); wrap.className = 'qz'; wrap.dataset.qid = d.id;
   const dir = isLtr(d.q) ? 'ltr' : 'rtl';
   wrap.innerHTML = `<p class="qq" dir="${dir}">${d.q}</p><div class="opts"></div>
@@ -500,6 +555,7 @@ function buildQuiz(d) {
       const ex = document.createElement('p'); ex.className = 'qz-explain';
       ex.dir = isLtr(d.explain) ? 'ltr' : 'rtl'; ex.textContent = d.explain; wrap.appendChild(ex);
     }
+    if (onDone) onDone({ ok, attempts, conf: prior ? prior.conf : +confInp.value });
   };
   if (prior) { finish(prior.ok, prior.chosen ?? -1); return wrap; }
 
@@ -527,7 +583,7 @@ function buildQuiz(d) {
   return wrap;
 }
 
-function buildFillin(d) {
+function buildFillin(d, onDone) {
   const wrap = document.createElement('div'); wrap.className = 'qz'; wrap.dataset.qid = d.id;
   const dir = isLtr(d.prompt) ? 'ltr' : 'rtl';
   wrap.innerHTML = `<p class="qq" dir="${dir}">${d.prompt}</p>
@@ -552,6 +608,7 @@ function buildFillin(d) {
       const ex = document.createElement('p'); ex.className = 'qz-explain';
       ex.dir = isLtr(d.explain) ? 'ltr' : 'rtl'; ex.textContent = d.explain; wrap.appendChild(ex);
     }
+    if (onDone) onDone({ ok, attempts, conf: null });
   };
   if (prior) { inp.value = prior.val || d.answer; finish(prior.ok); return wrap; }
 
@@ -654,6 +711,12 @@ async function renderPost(i) {
   $('#status').textContent = '';
   upgradeBlocks(view);
   typeset(view);
+  if (pageBlocks.length) {
+    const qb = document.createElement('button'); qb.className = 'qbtn';
+    qb.textContent = 'בוחן היום · ' + pageBlocks.length + ' שאלות';
+    qb.onclick = openPlayer;
+    const h = view.querySelector('.head'); h && h.appendChild(qb);
+  }
   toggle(S.read, p.date, true);
   currentDay = p.day;
   const hint = view.querySelector('.finish-hint');
@@ -946,6 +1009,23 @@ const chat = {
 function paintChat() {
   const log = $('#cpLog');
   log.innerHTML = chat.hist.map(m => `<div class="msg ${m.role}">${m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>`).join('');
+  const last = chat.hist[chat.hist.length - 1];
+  if (last && last.role === 'bot' && last.text.length > 40) {
+    const row = document.createElement('div'); row.className = 'cp-actions';
+    row.innerHTML = `<button data-a="save">שמור לקודקס</button><button data-a="deep">העמק</button>
+      <button data-a="ex">דוגמה מחושבת</button><button data-a="mock">ראיין אותי על זה</button>`;
+    row.onclick = e => {
+      const a = e.target.dataset.a; if (!a) return;
+      if (a === 'save') {
+        S.notes.push({ t: last.text.slice(0, 800), d: iso(new Date()), ctx: location.hash });
+        store.save(); toast('נשמר לקודקס');
+      } else {
+        const map = { deep: 'העמק בתשובה האחרונה: שכבה אחת יותר פורמלית, כולל מקרה קצה.', ex: 'תן דוגמה מחושבת ביד, מספר-מספר, לתשובה האחרונה.', mock: 'ראיין אותי על הנושא של התשובה האחרונה: שאלה אחת, חכה לתשובתי, ואז דרג 1-10 עם מה שחסר.' };
+        sendChat(map[a]);
+      }
+    };
+    log.appendChild(row);
+  }
   log.scrollTop = log.scrollHeight;
 }
 function chatAvailable() { return !!(syncKey() && S.daemon_url); }
@@ -998,12 +1078,97 @@ $('#cpForm').onsubmit = e => {
   sendChat(v);
 };
 
+/* ---------- הקודקס: concepts, graph, saved notes ---------- */
+function renderKodex() {
+  setTab('tab-kodex');
+  paintFolio();
+  const view = $('#view');
+  const cs = (kodex && kodex.concepts) || [];
+  let html = `<div class="view-head"><h1>הקודקס</h1>
+    <p>המושגים שנלמדו, הקשרים ביניהם, והערות ששמרת מהמורה. גדל עם כל יום.</p></div>
+    <input id="kSearch" type="search" placeholder="חיפוש מושג..." autocomplete="off">
+    <canvas id="kGraph" height="300"></canvas>
+    <div id="kList" class="k-list"></div>`;
+  const notes = S.notes || [];
+  if (notes.length) {
+    html += `<div class="qhead" style="direction:rtl"><h2>הערות מהמורה</h2><span class="d">${notes.length}</span></div>` +
+      notes.slice().reverse().map((n, i) => `<div class="k-note plate"><p>${n.t.replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p>
+        <small>${n.d}${n.ctx ? ' · ' + n.ctx.replace('#/', '') : ''}</small></div>`).join('');
+  }
+  view.innerHTML = html;
+  $('#status').textContent = '';
+  const list = $('#kList');
+  function paintList(q) {
+    const f = q ? cs.filter(c => (c.t + ' ' + c.he + ' ' + c.d).toLowerCase().includes(q.toLowerCase())) : cs;
+    list.innerHTML = f.map(c => `<div class="k-card plate" id="k-${c.id}">
+      <div class="k-t"><b>${c.t}</b><span class="k-he">${c.he}</span><span class="chip2">יום ${c.day}</span></div>
+      <p>${c.d}</p>
+      ${(c.rel || []).length ? `<div class="k-rel">${c.rel.map(r => { const t = cs.find(x => x.id === r); return t ? `<a class="chip2" href="#k-${r}" onclick="document.getElementById('k-${r}').scrollIntoView({behavior:'smooth'});return false">${t.t}</a>` : ''; }).join(' ')}</div>` : ''}
+    </div>`).join('') || '<p class="finish-hint">אין תוצאות.</p>';
+  }
+  paintList('');
+  $('#kSearch').oninput = e => paintList(e.target.value);
+  drawKodexGraph(cs);
+  window.scrollTo(0, 0);
+}
+function drawKodexGraph(cs) {
+  const cv = $('#kGraph'); if (!cv || !cs.length) { if (cv) cv.style.display = 'none'; return; }
+  const W = cv.clientWidth || 380, H = 300, dpr = Math.min(devicePixelRatio, 2);
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const idmap = {}; cs.forEach((c, i) => idmap[c.id] = i);
+  const N = cs.length;
+  const nodes = cs.map((c, i) => ({
+    x: W / 2 + Math.cos(i / N * Math.PI * 2) * (W / 2 - 46),
+    y: H / 2 + Math.sin(i / N * Math.PI * 2) * (H / 2 - 34),
+    vx: 0, vy: 0, c
+  }));
+  const edges = [];
+  cs.forEach(c => (c.rel || []).forEach(r => { if (idmap[r] !== undefined) edges.push([idmap[c.id], idmap[r]]); }));
+  for (let it = 0; it < 90; it++) {
+    edges.forEach(([a, b]) => {
+      const dx = nodes[b].x - nodes[a].x, dy = nodes[b].y - nodes[a].y;
+      const d = Math.hypot(dx, dy) || 1, f = (d - 70) * 0.004;
+      nodes[a].vx += f * dx / d; nodes[a].vy += f * dy / d;
+      nodes[b].vx -= f * dx / d; nodes[b].vy -= f * dy / d;
+    });
+    for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+      const dx = nodes[j].x - nodes[i].x, dy = nodes[j].y - nodes[i].y;
+      const d2 = dx * dx + dy * dy || 1, f = 380 / d2;
+      nodes[i].vx -= f * dx; nodes[i].vy -= f * dy;
+      nodes[j].vx += f * dx; nodes[j].vy += f * dy;
+    }
+    nodes.forEach(n => {
+      n.x = Math.max(30, Math.min(W - 30, n.x + n.vx));
+      n.y = Math.max(20, Math.min(H - 20, n.y + n.vy));
+      n.vx *= 0.6; n.vy *= 0.6;
+    });
+  }
+  const gold = themeC('--gold'), line = themeC('--line'), ink = themeC('--ink');
+  x.strokeStyle = line; x.globalAlpha = 0.7;
+  edges.forEach(([a, b]) => { x.beginPath(); x.moveTo(nodes[a].x, nodes[a].y); x.lineTo(nodes[b].x, nodes[b].y); x.stroke(); });
+  x.globalAlpha = 1;
+  nodes.forEach(n => {
+    x.beginPath(); x.arc(n.x, n.y, 4.5, 0, Math.PI * 2);
+    x.fillStyle = n.c.day === (currentDay || 99) ? gold : ink; x.fill();
+    x.fillStyle = themeC('--faded'); x.font = '9.5px "Frank Ruhl Libre"'; x.textAlign = 'center';
+    x.fillText(n.c.t.length > 16 ? n.c.t.slice(0, 15) + '…' : n.c.t, n.x, n.y + 14);
+  });
+  cv.onclick = e => {
+    const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    let best = null, bd = 1e9;
+    nodes.forEach(n => { const d2 = (n.x - px) ** 2 + (n.y - py) ** 2; if (d2 < bd) { bd = d2; best = n; } });
+    if (best && bd < 900) { const el = document.getElementById('k-' + best.c.id); el && el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  };
+}
+
 /* ---------- routing ---------- */
 function route() {
   if (!index.length) return;
   const h = location.hash;
   if (h === '#/map') return renderTalents();
   if (h === '#/ladder') return renderLadder();
+  if (h === '#/kodex') return renderKodex();
   const m = h.match(/^#\/(\d{4}-\d{2}-\d{2})$/);
   if (m) { const i = index.findIndex(p => p.date === m[1]); return renderPost(i >= 0 ? i : 0); }
   // default: YOUR current day = oldest not-yet-completed page
@@ -1025,12 +1190,13 @@ addEventListener('scroll', () => {
 
 (async function boot() {
   try {
-    [index, jmap, ladder, talents, plan] = await Promise.all([
+    [index, jmap, ladder, talents, plan, kodex] = await Promise.all([
       fetch('posts/index.json', { cache: 'no-cache' }).then(r => r.json()),
       fetch('judgment_map.json', { cache: 'no-cache' }).then(r => r.json()),
       fetch('research_ladder.json', { cache: 'no-cache' }).then(r => r.json()),
       fetch('talents.json', { cache: 'no-cache' }).then(r => r.json()),
-      fetch('course_plan.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null)
+      fetch('course_plan.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null),
+      fetch('concepts.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => null)
     ]);
   } catch (e) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();

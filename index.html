@@ -38,6 +38,9 @@
   </svg></div>
   <span id="xpwrap"><span class="folio" id="folio"></span><span id="xpbar"><span id="xpfill"></span></span></span>
   <svg id="ring" viewBox="0 0 36 36" aria-label="התקדמות היום"><circle class="rbg" cx="18" cy="18" r="15.5"/><circle class="rfg" cx="18" cy="18" r="15.5"/><text x="18" y="21.5" text-anchor="middle">0</text></svg>
+  <button class="iconbtn" id="sndToggle" aria-label="צליל">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19Z"/><path class="snd-waves" d="M15 9.5a4 4 0 0 1 0 5M17.5 7a7.5 7.5 0 0 1 0 10"/></svg>
+  </button>
   <button class="iconbtn" id="themeToggle" aria-label="מצב תאורה">
     <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/></svg>
     <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" hidden><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -50,8 +53,8 @@
 </main>
 
 <nav class="tabs">
-  <a href="#/" id="tab-today"><svg class="tg" viewBox="0 0 24 24"><use href="#g-today"/></svg><span>היום</span></a>
-  <a href="#/map" id="tab-map"><svg class="tg" viewBox="0 0 24 24"><use href="#g-map"/></svg><span>העץ</span></a>
+  <a href="#/" id="tab-today"><svg class="tg" viewBox="0 0 24 24"><use href="#g-today"/></svg><span>היום</span><span class="tab-badge" id="bdgToday"></span></a>
+  <a href="#/map" id="tab-map"><svg class="tg" viewBox="0 0 24 24"><use href="#g-map"/></svg><span>העץ</span><span class="tab-badge" id="bdgMap"></span></a>
   <a href="#/kodex" id="tab-kodex"><svg class="tg" viewBox="0 0 24 24"><use href="#g-kodex"/></svg><span>האוצר</span></a>
   <a href="#/discover" id="tab-discover"><svg class="tg" viewBox="0 0 24 24"><use href="#g-discover"/></svg><span>תגליות</span></a>
   <a href="#/ladder" id="tab-ladder"><svg class="tg" viewBox="0 0 24 24"><use href="#g-ladder"/></svg><span>המסלול</span></a>
@@ -152,7 +155,7 @@ function award(tree, pts, el, firstTry) {
   // performed, not announced: number + burst on the object, scaled by magnitude
   if (el) { burst(el, 14 + pts * 8 + (firstTry ? 10 : 0)); ptsFloat(el, pts); }
   else toast('+' + pts + ' נקודות לעץ');
-  sparkState('glad');
+  sparkState('glad'); sfx.correct();
   const lv = level();
   if (lv > lv0) setTimeout(() => ritual({
     kicker: 'הסדנה', title: 'רמה ' + lv, xp: totalEarned(),
@@ -222,7 +225,7 @@ function countUp(el, to, { ms = 650, prefix = '', suffix = '' } = {}) {
 
 function shake(el, mag = 5) {
   if (!el) return;
-  sparkState('dim');
+  sparkState('dim'); sfx.wrong();
   anim(el, [
     { transform: 'translateX(0)' }, { transform: `translateX(${mag}px)` },
     { transform: `translateX(${-mag * 0.8}px)` }, { transform: `translateX(${mag * 0.5}px)` },
@@ -246,6 +249,34 @@ function ptsFloat(el, pts) {
     { transform: 'translate(-50%,-46px) scale(1)', opacity: 0 }
   ], { duration: 950, easing: 'ease-out' }).finished.then(() => f.remove());
 }
+
+/* bespoke UI sound: WebAudio synthesis in the fiction (no stock assets).
+   Default on; toggled in the header; unlocked by the first touch (iOS). */
+const sfx = (() => {
+  let ctx = null;
+  const on = () => localStorage.getItem('sadna-sound') !== 'off';
+  const ac = () => (ctx = ctx || new (window.AudioContext || window.webkitAudioContext)());
+  function tone(f, t0, dur, type = 'sine', g0 = .16) {
+    try {
+      const c = ac(), o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(g0, c.currentTime + t0);
+      g.gain.exponentialRampToValueAtTime(.001, c.currentTime + t0 + dur);
+      o.connect(g).connect(c.destination);
+      o.start(c.currentTime + t0); o.stop(c.currentTime + t0 + dur + .02);
+    } catch (e) { /* audio unavailable: stay silent */ }
+  }
+  return {
+    unlock() { if (on()) { try { ac().resume(); } catch (e) {} } },
+    correct() { if (on()) { tone(659, 0, .12); tone(880, .09, .2); } },
+    wrong() { if (on()) tone(150, 0, .22, 'triangle', .2); },
+    coin() { if (on()) { tone(988, 0, .09); tone(1319, .07, .22); } },
+    ritual() { if (on()) [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .11, .32)); },
+    isOn: on,
+    toggle() { localStorage.setItem('sadna-sound', on() ? 'off' : 'on'); return on(); }
+  };
+})();
+document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });
 
 /* ember motes: the workshop's ambient depth layer (idle-killed, motion-gated) */
 function mountMotes() {
@@ -297,8 +328,11 @@ function sparkState(s) {
 const streakTier = n => n >= 30 ? 4 : n >= 14 ? 3 : n >= 7 ? 2 : n >= 3 ? 1 : 0;
 
 function ritual({ kicker, title, sub, xp, tier = 0 }, onclose) {
-  celebrate(`<div class="ov-kicker">${kicker}</div><h2 class="rt-title">${title}</h2>
+  const sparkSvg = $('#spark') ? $('#spark').innerHTML : '';
+  celebrate(`<div class="rt-spark" aria-hidden="true">${sparkSvg}</div>
+    <div class="ov-kicker">${kicker}</div><h2 class="rt-title">${title}</h2>
     <p class="rt-xp"><b class="rt-num">0</b> XP</p><p class="rt-sub">${sub}</p>`, onclose);
+  sfx.ritual();
   const ov = $('#overlay'), card = ov.querySelector('.ov-card') || ov.firstElementChild || ov;
   ov.dataset.tier = tier;
   const t = ov.querySelector('.rt-title'), n = ov.querySelector('.rt-num'), s = ov.querySelector('.rt-sub');
@@ -346,6 +380,10 @@ function paintFolio(txt) {
   $('#folio').textContent = bits.join(' · ');
   const lo = LEVELS[lv - 1] || 0, hi = LEVELS[lv] || (lo + 80);
   $('#xpfill').style.width = Math.min(100, ((e - lo) / (hi - lo)) * 100) + '%';
+  // one-glance state on the nav: ripe recalls + spendable points
+  const bT = $('#bdgToday'), bM = $('#bdgMap');
+  if (bT) { const d = dueReviews().length; bT.textContent = d ? (d > 9 ? '9+' : d) : ''; }
+  if (bM) bM.textContent = p > 0 ? (p > 9 ? '9+' : p) : '';
   if (lv > (S.lastLevel || 1)) {
     S.lastLevel = lv; store.save();
     celebrate(`<div class="ov-kicker">עלית רמה</div><h2>רמה ${lv}</h2>
@@ -1220,7 +1258,7 @@ function renderNodeSheet(tree, n, gate) {
     if (fr) {
       fr.classList.add('pulse'); setTimeout(() => fr.classList.remove('pulse'), 500);
       burst(fr, 26 + (r + 1) * 8);
-      sparkState('glad');
+      sparkState('glad'); sfx.coin();
     }
   };
 }
@@ -1444,6 +1482,44 @@ async function renderDoc(slug) {
   window.scrollTo(0, 0);
 }
 
+/* relic sets: named collections; recalling members earns 2pc/4pc bonuses */
+let kOpen = null;
+const conceptRecalled = cid =>
+  Object.entries(S.answers).some(([k, a]) => a && a.ok && k.startsWith('c-' + cid + '@'));
+function kodexSets(cs) {
+  const sets = [];
+  const vocab = cs.filter(c => c.bonus).map(c => c.id);
+  if (vocab.length >= 4) sets.push({ id: 'set-vocab', name: 'לשון הסדנה', ids: vocab });
+  const byWeek = {};
+  cs.filter(c => !c.bonus && c.day).forEach(c => { const w = Math.ceil(c.day / 7); (byWeek[w] = byWeek[w] || []).push(c.id); });
+  Object.keys(byWeek).sort().forEach(w => { if (byWeek[w].length >= 4) sets.push({ id: 'set-w' + w, name: 'אוסף שבוע ' + w, ids: byWeek[w] }); });
+  return sets;
+}
+function paintSets(cs) {
+  const host = $('#setStrip'); if (!host) return;
+  S.setBonus = S.setBonus || {};
+  const sets = kodexSets(cs);
+  if (!sets.length) { host.hidden = true; return; }
+  host.innerHTML = sets.map(s => {
+    const done = s.ids.filter(conceptRecalled).length;
+    const tier = done >= 4 ? 2 : done >= 2 ? 1 : 0;
+    const had = S.setBonus[s.id] || 0;
+    if (tier > had) { // claim once, performed
+      const gained = (tier >= 1 && had < 1 ? 1 : 0) + (tier >= 2 && had < 2 ? 2 : 0);
+      S.points.craft = S.points.craft || { earned: 0, spent: 0 };
+      S.points.craft.earned += gained;
+      S.setBonus[s.id] = tier; store.save();
+      toast(`סט "${s.name}": בונוס +${gained} XP`);
+    }
+    const pips = s.ids.slice(0, 8).map(id => `<i class="${conceptRecalled(id) ? 'on' : ''}"></i>`).join('');
+    return `<div class="set-card ${tier ? 't' + tier : ''}">
+      <div class="st-name">${s.name}</div>
+      <div class="st-pips">${pips}</div>
+      <div class="st-bonus">${done}/${s.ids.length} נשלפו · בונוס 2: +1 · בונוס 4: +2</div>
+    </div>`;
+  }).join('');
+}
+
 /* Recall-lens: any concept is quizzable ON DEMAND (it + its neighbors) */
 function openConceptQuiz(cid) {
   const cs = (kodex && kodex.concepts) || [];
@@ -1481,6 +1557,7 @@ function renderKodex() {
   const cs = (kodex && kodex.concepts) || [];
   let html = `<div class="view-head"><h1>האוצר</h1>
     <p>המושגים שנלמדו, הקשרים ביניהם, והערות ששמרת מהמורה. גדל עם כל יום.</p></div>
+    <div class="set-strip" id="setStrip"></div>
     <input id="kSearch" type="search" placeholder="חיפוש מושג..." autocomplete="off">
     <canvas id="kGraph" height="300"></canvas>
     <div id="kList" class="k-list"></div>`;
@@ -1493,22 +1570,37 @@ function renderKodex() {
   view.innerHTML = html;
   $('#status').textContent = '';
   const list = $('#kList');
+  // ledger rows: compact list, ONE expanded card at a time (no clone wall)
+  const expanded = c => `<div class="k-card" data-x="${esc(c.id)}">
+      <p>${esc(c.d)}</p>
+      ${(c.rel || []).length ? `<div class="k-rel">${c.rel.map(r => { const t = cs.find(x => x.id === r); return t ? `<a class="chip2" href="#k-${r}" data-rel="${esc(r)}">${t.t}</a>` : ''; }).join(' ')}</div>` : ''}
+      <div class="k-act"><button class="k-quiz" data-c="${esc(c.id)}">בחן אותי</button><button class="k-ask" data-c="${esc(c.id)}">שאל את המורה</button></div>
+    </div>`;
   function paintList(q) {
     const f = q ? cs.filter(c => (c.t + ' ' + c.he + ' ' + c.d).toLowerCase().includes(q.toLowerCase())) : cs;
-    list.innerHTML = f.map(c => `<div class="k-card plate" id="k-${esc(c.id)}">
-      <div class="k-t"><b>${esc(c.t)}</b><span class="k-he">${esc(c.he)}</span><span class="chip2">יום ${esc(c.day)}</span></div>
-      <p>${esc(c.d)}</p>
-      ${(c.rel || []).length ? `<div class="k-rel">${c.rel.map(r => { const t = cs.find(x => x.id === r); return t ? `<a class="chip2" href="#k-${r}" onclick="document.getElementById('k-${r}').scrollIntoView({behavior:'smooth'});return false">${t.t}</a>` : ''; }).join(' ')}</div>` : ''}
-      <div class="k-act"><button class="k-quiz" data-c="${esc(c.id)}">בחן אותי</button><button class="k-ask" data-c="${esc(c.id)}">שאל את המורה</button></div>
-    </div>`).join('') || '<p class="finish-hint">אין תוצאות.</p>';
-    list.querySelectorAll('.k-quiz').forEach(b => b.onclick = () => openConceptQuiz(b.dataset.c));
-    list.querySelectorAll('.k-ask').forEach(b => b.onclick = () => {
+    list.innerHTML = f.map(c =>
+      `<div class="k-row ${kOpen === c.id ? 'open' : ''}" data-c="${esc(c.id)}" id="k-${esc(c.id)}">
+        <b>${esc(c.t)}</b><span class="k-he">${esc(c.he)}</span><span class="chip2">יום ${esc(c.day)}</span></div>` +
+      (kOpen === c.id ? expanded(c) : '')).join('') || '<p class="finish-hint">אין תוצאות.</p>';
+    list.querySelectorAll('.k-row').forEach(r => r.onclick = () => {
+      kOpen = kOpen === r.dataset.c ? null : r.dataset.c;
+      paintList($('#kSearch').value);
+    });
+    list.querySelectorAll('[data-rel]').forEach(a => a.onclick = e => {
+      e.preventDefault(); kOpen = a.dataset.rel; paintList($('#kSearch').value);
+      const el = document.getElementById('k-' + a.dataset.rel);
+      el && el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    list.querySelectorAll('.k-quiz').forEach(b => b.onclick = e => { e.stopPropagation(); openConceptQuiz(b.dataset.c); });
+    list.querySelectorAll('.k-ask').forEach(b => b.onclick = e => {
+      e.stopPropagation();
       const c = cs.find(x => x.id === b.dataset.c); if (!c) return;
       openChat(`בהקשר המושג "${c.t}" (${c.he}): ${c.d} — `);
     });
   }
   paintList('');
   $('#kSearch').oninput = e => paintList(e.target.value);
+  paintSets(cs);
   drawKodexGraph(cs);
   window.scrollTo(0, 0);
 }
@@ -1546,21 +1638,35 @@ function drawKodexGraph(csAll) {
       n.vx *= 0.6; n.vy *= 0.6;
     });
   }
-  const gold = themeC('--gold'), line = themeC('--line'), ink = themeC('--ink');
-  x.strokeStyle = line; x.globalAlpha = 0.7;
+  const gold = themeC('--gold'), goldHi = themeC('--gold-hi'), line = themeC('--line'), ink = themeC('--ink');
+  x.strokeStyle = line; x.globalAlpha = 0.55;
   edges.forEach(([a, b]) => { x.beginPath(); x.moveTo(nodes[a].x, nodes[a].y); x.lineTo(nodes[b].x, nodes[b].y); x.stroke(); });
   x.globalAlpha = 1;
-  nodes.forEach(n => {
-    x.beginPath(); x.arc(n.x, n.y, 4.5, 0, Math.PI * 2);
-    x.fillStyle = n.c.day === (currentDay || 99) ? gold : ink; x.fill();
-    x.fillStyle = themeC('--faded'); x.font = '9.5px "Frank Ruhl Libre"'; x.textAlign = 'center';
-    x.fillText(n.c.t.length > 16 ? n.c.t.slice(0, 15) + '…' : n.c.t, n.x, n.y + 14);
+  // star chart: node weight = connectivity; labels only where they earn space
+  const deg = nodes.map((_, i) => edges.reduce((a, [s, t]) => a + (s === i || t === i ? 1 : 0), 0));
+  nodes.forEach((n, i) => {
+    const hot = n.c.day === (currentDay || 99), hub = deg[i] >= 3;
+    const r = 3 + Math.min(deg[i], 6) * 1.15;
+    if (hot || hub) { x.shadowColor = gold; x.shadowBlur = hub ? 14 : 9; }
+    x.beginPath(); x.arc(n.x, n.y, r, 0, Math.PI * 2);
+    x.fillStyle = hot ? goldHi : hub ? gold : ink; x.fill();
+    x.shadowBlur = 0;
+    if (hub || hot || deg[i] >= 2) {
+      x.fillStyle = hub ? goldHi : themeC('--faded');
+      x.font = (hub ? '700 ' : '') + '9.5px "Frank Ruhl Libre"'; x.textAlign = 'center';
+      x.fillText(n.c.t.length > 16 ? n.c.t.slice(0, 15) + '…' : n.c.t, n.x, n.y + r + 10);
+    }
   });
   cv.onclick = e => {
     const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
     let best = null, bd = 1e9;
     nodes.forEach(n => { const d2 = (n.x - px) ** 2 + (n.y - py) ** 2; if (d2 < bd) { bd = d2; best = n; } });
-    if (best && bd < 900) { const el = document.getElementById('k-' + best.c.id); el && el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    if (best && bd < 900) {
+      kOpen = best.c.id;
+      const ks = $('#kSearch'); if (ks && ks.oninput) ks.oninput({ target: ks });
+      const el = document.getElementById('k-' + best.c.id);
+      el && el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 }
 
@@ -1669,8 +1775,14 @@ addEventListener('scroll', () => {
   plan = val(4); kodex = val(5); disco = val(6); skills = val(7);
   if (!index.length) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
+  seedReviews();                 // nav badge needs the queue on every tab
   paintFolio(); route();
   mountMotes();
+  const st = $('#sndToggle');
+  if (st) {
+    st.classList.toggle('off', !sfx.isOn());
+    st.onclick = () => { const on = sfx.toggle(); st.classList.toggle('off', !on); toast(on ? 'צליל פועל' : 'צליל כבוי'); if (on) sfx.coin(); };
+  }
 })();
 if ('serviceWorker' in navigator) {
   const hadController = !!navigator.serviceWorker.controller;

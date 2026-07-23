@@ -127,6 +127,7 @@ const poolAll = () => talents ? talents.trees.reduce((a, t) => a + pool(t.id), 0
 let combo = 0;
 function award(tree, pts, el, firstTry) {
   if (!tree) tree = 'craft';
+  const lv0 = level();
   S.points[tree] = S.points[tree] || { earned: 0, spent: 0 };
   S.points[tree].earned += pts;
   if (firstTry) {
@@ -134,19 +135,25 @@ function award(tree, pts, el, firstTry) {
     if (combo >= 3 && combo % 3 === 0) { S.points[tree].earned += 1; toast('קומבו x' + combo + '! בונוס +1'); }
   } else if (firstTry === false) combo = 0;
   store.save();
-  if (el) burst(el);
-  toast('+' + pts + ' נקודות לעץ');
+  // performed, not announced: number + burst on the object, scaled by magnitude
+  if (el) { burst(el, 14 + pts * 8 + (firstTry ? 10 : 0)); ptsFloat(el, pts); }
+  else toast('+' + pts + ' נקודות לעץ');
+  const lv = level();
+  if (lv > lv0) setTimeout(() => ritual({
+    kicker: 'הסדנה', title: 'רמה ' + lv, xp: totalEarned(),
+    sub: 'סה"כ נקודות בכל העצים', tier: Math.min(4, Math.max(1, Math.floor(lv / 3)))
+  }), 700);
   paintFolio(); paintRing();
 }
 
 /* gold burst */
-function burst(el) {
+function burst(el, count = 26) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
   const cv = $('#fx'), dpr = Math.min(devicePixelRatio, 2);
   cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
   const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const P = Array.from({ length: 26 }, () => {
+  const P = Array.from({ length: Math.min(count, 80) }, () => {
     const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 4;
     return { x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, life: 1, s: 2 + Math.random() * 3 };
   });
@@ -174,6 +181,69 @@ function celebrate(html, onclose) {
   $('#ovBody').innerHTML = html;
   $('#overlay').hidden = false;
   $('#ovClose').onclick = () => { $('#overlay').hidden = true; if (onclose) onclose(); };
+}
+
+/* ---------- the performed interface: ONE spring family, events are performed
+   (motion + numbers + particles together, scaled by magnitude), the
+   celebration is a fixed ritual with streak-tier tells. Design contract in
+   docs/DESIGN-RESEARCH-NEXTGEN-2026-07.md track 3. ---------- */
+const SPRING = 'linear(0, 0.062, 0.226, 0.451, 0.693, 0.916, 1.096, 1.219, 1.281, 1.289, 1.254, 1.19, 1.112, 1.033, 0.965, 0.915, 0.885, 0.875, 0.882, 0.902, 0.929, 0.958, 0.984, 1.004, 1.017, 1.021, 1.02, 1.014, 1.007, 1.001, 0.998, 1)';
+const REDUCED = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim = (el, kf, opt) => (REDUCED() || !el || !el.animate)
+  ? { finished: Promise.resolve() }
+  : el.animate(kf, { easing: SPRING, fill: 'both', ...opt });
+
+function countUp(el, to, { ms = 650, prefix = '', suffix = '' } = {}) {
+  if (!el) return;
+  if (REDUCED()) { el.textContent = prefix + to + suffix; return; }
+  const t0 = performance.now();
+  (function fr(now) {
+    const t = Math.min(1, (now - t0) / ms);
+    const v = Math.round(to * (1 - Math.pow(2, -10 * t)) / (1 - Math.pow(2, -10)));
+    el.textContent = prefix + v + suffix;
+    if (t < 1) requestAnimationFrame(fr); else el.textContent = prefix + to + suffix;
+  })(t0);
+}
+
+function shake(el, mag = 5) {
+  if (!el) return;
+  anim(el, [
+    { transform: 'translateX(0)' }, { transform: `translateX(${mag}px)` },
+    { transform: `translateX(${-mag * 0.8}px)` }, { transform: `translateX(${mag * 0.5}px)` },
+    { transform: `translateX(${-mag * 0.25}px)` }, { transform: 'translateX(0)' }
+  ], { duration: 280, easing: 'ease-out' });
+}
+
+/* floating performed number: rises from the answered element with the burst */
+function ptsFloat(el, pts) {
+  if (!el || REDUCED()) return;
+  const r = el.getBoundingClientRect();
+  const f = document.createElement('span');
+  f.className = 'pts-float';
+  document.body.appendChild(f);
+  f.style.left = (r.left + r.width / 2) + 'px';
+  f.style.top = (r.top + 24) + 'px';
+  countUp(f, pts, { ms: 420, prefix: '+' });
+  anim(f, [
+    { transform: 'translate(-50%,0) scale(.6)', opacity: 0 },
+    { transform: 'translate(-50%,-18px) scale(1.15)', opacity: 1, offset: .35 },
+    { transform: 'translate(-50%,-46px) scale(1)', opacity: 0 }
+  ], { duration: 950, easing: 'ease-out' }).finished.then(() => f.remove());
+}
+
+/* streak tier tells: the ritual is FIXED, its magnitude is read from the frame */
+const streakTier = n => n >= 30 ? 4 : n >= 14 ? 3 : n >= 7 ? 2 : n >= 3 ? 1 : 0;
+
+function ritual({ kicker, title, sub, xp, tier = 0 }, onclose) {
+  celebrate(`<div class="ov-kicker">${kicker}</div><h2 class="rt-title">${title}</h2>
+    <p class="rt-xp"><b class="rt-num">0</b> XP</p><p class="rt-sub">${sub}</p>`, onclose);
+  const ov = $('#overlay'), card = ov.querySelector('.ov-card') || ov.firstElementChild || ov;
+  ov.dataset.tier = tier;
+  const t = ov.querySelector('.rt-title'), n = ov.querySelector('.rt-num'), s = ov.querySelector('.rt-sub');
+  anim(t, [{ transform: 'scale(.7) translateY(10px)', opacity: 0 }, { transform: 'scale(1) translateY(0)', opacity: 1 }], { duration: 520 });
+  anim(s, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 650, easing: 'ease-out' });
+  setTimeout(() => { countUp(n, xp, { ms: 700 }); }, 380);
+  setTimeout(() => { burst(t, 30 + tier * 16); }, 900);
 }
 function currentPost() { const m = location.hash.match(/^#\/(\d{4}-\d{2}-\d{2})$/); return index.find(p => p.date === (m ? m[1] : null)) || index.find(p => !S.daysDone.includes(p.date) && true) || index[0]; }
 function paintRing() {
@@ -710,11 +780,11 @@ function buildQuiz(d, onDone) {
     } else if (attempts >= 2) {
       S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
       combo = 0;
-      finish(false, selected); paintRing();
+      finish(false, selected); shake(wrap); paintRing();
     } else {
       msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no';
       btns[selected].classList.add('wrong'); btns[selected].disabled = true;
-      selected = -1; check.disabled = true;
+      selected = -1; check.disabled = true; shake(wrap, 3);
     }
   };
   return wrap;
@@ -757,9 +827,9 @@ function buildFillin(d, onDone) {
       finish(true); award(d.tree, attempts <= 1 ? 2 : 1, wrap, attempts <= 1);
     } else if (attempts >= 2) {
       S.answers[d.id] = { ok: false, attempts, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
-      combo = 0; finish(false); paintRing();
+      combo = 0; finish(false); shake(wrap); paintRing();
     } else {
-      msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no';
+      msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no'; shake(wrap, 3);
     }
   };
   return wrap;
@@ -833,11 +903,12 @@ async function renderPost(i) {
     fin.innerHTML = `<button class="finish-day">סיים את יום ${p.day}</button><span class="finish-hint"></span>`;
     fin.querySelector('button').onclick = e => {
       toggle(S.daysDone, p.date, true);
-      burst(e.target);
-      const pts = totalEarned();
-      celebrate(`<div class="ov-kicker">הסדנה</div><h2>יום ${p.day} הושלם</h2>
-        <p>סה"כ ${pts} XP · רצף ${runLength()} ימים · הנקודות מחכות בעץ</p>`,
-        () => { location.hash = ''; route(); });
+      burst(e.target, 40);
+      const run = runLength();
+      ritual({
+        kicker: 'הסדנה', title: `יום ${p.day} הושלם`, xp: totalEarned(),
+        sub: `רצף ${run} ימים · הנקודות מחכות בעץ`, tier: streakTier(run)
+      }, () => { location.hash = ''; route(); });
     };
     art.appendChild(fin);
   } else {
@@ -1117,7 +1188,7 @@ function renderLadder() {
       <p class="sy-note">0 מזהה · 1 שולף · 2 מסביר · 3 יישמת · 4 בעלות הנדסית · 5 בגרות תכנונית. אדום = claim ברזומה מתחת ל-4. הקש שורה לעדכון כן.</p>` +
       rows.map(s => {
         const c = cur(s), risk = s.resume_risk && c < 4;
-        return `<div class="ob-row ${risk ? 'risk' : ''}" data-sid="${esc(s.id)}" data-lv="${c}">
+        return `<div class="ob-row ${risk ? 'risk' : ''} ${c >= s.target ? 'own' : ''}" data-sid="${esc(s.id)}" data-lv="${c}">
           <div class="ob-name" dir="ltr">${esc(s.name)}</div>
           <div class="ob-bar">${cells(s)}</div>
           <div class="ob-meta">${c}/${s.target}${s.arms && s.arms.length ? ` · ${s.arms.length} זרועות` : ''}${risk ? ' · בסיכון' : ''}</div>
@@ -1442,6 +1513,8 @@ function renderDiscover() {
 function route() {
   if (!index.length) return;
   const h = location.hash;
+  const vw = $('#view');
+  if (vw && !REDUCED()) { vw.classList.remove('stage'); void vw.offsetWidth; vw.classList.add('stage'); }
   if (h === '#/map') return renderTalents();
   if (h === '#/ladder') return renderLadder();
   if (h === '#/kodex') return renderKodex();

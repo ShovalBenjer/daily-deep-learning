@@ -640,3 +640,61 @@ header.bar::after {
 @media (prefers-reduced-motion: reduce) {
   .opt.sel, header.bar::after { animation: none !important; }
 }
+
+/* ============ PERFORMED INTERFACE (direction B, approved 2026-07-23) ============
+   One spring family. Events are performed (motion+numbers+particles together).
+   The celebration is a fixed ritual whose FRAME encodes streak magnitude. */
+:root { --ease-spring: linear(0, 0.062, 0.226, 0.451, 0.693, 0.916, 1.096, 1.219, 1.281, 1.289, 1.254, 1.19, 1.112, 1.033, 0.965, 0.915, 0.885, 0.875, 0.882, 0.902, 0.929, 0.958, 0.984, 1.004, 1.017, 1.021, 1.02, 1.014, 1.007, 1.001, 0.998, 1); }
+
+/* view entrance: anticipate low, spring to rest */
+#view.stage { animation: view-in .46s var(--ease-spring); }
+@keyframes view-in { from { transform: translateY(12px); opacity: .25; } to { transform: none; opacity: 1; } }
+
+/* squash-stretch press on everything tappable (release rides the spring) */
+.qbtn, .finish-day, .qz-check, .rv-go, .qp-done, .rv-again, .opt, .ob-set, .ob-ev,
+.tabs a, .nc-done, .nc-open, .iconbtn, .dismiss, .w-btn {
+  transition: transform .34s var(--ease-spring);
+}
+.qbtn:active, .finish-day:active, .qz-check:active, .rv-go:active, .qp-done:active,
+.rv-again:active, .opt:active, .ob-set:active, .ob-ev:active, .nc-done:active, .iconbtn:active {
+  transform: scale(.94, .9);
+  transition: transform .06s ease-out;
+}
+.tabs a:active { transform: translateY(2px) scale(.96); transition: transform .06s ease-out; }
+
+/* floating performed number */
+.pts-float {
+  position: fixed; z-index: 95; pointer-events: none;
+  font-weight: 900; font-size: 1.15rem; color: var(--gold-hi);
+  text-shadow: 0 1px 0 var(--engrave-lo), 0 0 14px color-mix(in oklab, var(--gold) 60%, transparent);
+  font-variant-numeric: tabular-nums; transform: translate(-50%, 0);
+}
+
+/* the ritual: fixed sequence, tier read from the frame */
+.rt-title { margin: .3rem 0 .2rem; font-size: 1.6rem; font-weight: 900; }
+.rt-xp { margin: .2rem 0; font-size: 1.05rem; color: var(--gold-hi); font-variant-numeric: tabular-nums; }
+.rt-num { font-size: 1.5rem; font-weight: 900; }
+.rt-sub { color: var(--faded); margin: .3rem 0 0; }
+#overlay .ov-plate { transition: box-shadow .4s ease; }
+#overlay[data-tier="1"] .ov-plate { border-color: var(--gold); }
+#overlay[data-tier="2"] .ov-plate { border-color: var(--gold);
+  box-shadow: 0 0 26px -6px color-mix(in oklab, var(--gold) 55%, transparent); }
+#overlay[data-tier="3"] .ov-plate { border-color: var(--gold-hi);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--gold) 30%, transparent), 0 0 34px -4px color-mix(in oklab, var(--gold) 65%, transparent); }
+#overlay[data-tier="4"] .ov-plate { border-color: var(--gold-hi);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--gold) 45%, transparent), 0 0 44px -2px color-mix(in oklab, var(--gold) 80%, transparent), 0 0 80px -10px color-mix(in oklab, var(--red) 50%, transparent); }
+
+/* earned-object depth: a skill that reached target carries a live glint */
+.ob-row.own .ob-bar { position: relative; overflow: hidden; }
+.ob-row.own .ob-bar::after {
+  content: ""; position: absolute; inset: -4px auto -4px -30%; width: 26%;
+  background: linear-gradient(105deg, transparent, color-mix(in oklab, var(--gold-hi) 55%, transparent) 50%, transparent);
+  animation: sheen 4.2s ease-in-out infinite;
+}
+@keyframes sheen { 0%, 62% { transform: translateX(0); } 88%, 100% { transform: translateX(560%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #view.stage { animation: none; }
+  .ob-row.own .ob-bar::after { animation: none; display: none; }
+  .qbtn, .finish-day, .qz-check, .rv-go, .qp-done, .rv-again, .opt, .ob-set, .ob-ev, .tabs a { transition: none; }
+}

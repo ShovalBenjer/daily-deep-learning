@@ -903,3 +903,26 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
 }
 /* gate seals read over wood */
 .gb-seal { background: rgba(8,7,13,.85); }
+
+/* ============ MOTIVATION ENGINE (arm focus, quests, evolution) ============ */
+.arm-strip { display: flex; gap: .4rem; overflow-x: auto; padding: .2rem 0 .7rem; scrollbar-width: none; }
+.arm-strip::-webkit-scrollbar { display: none; }
+.arm-chip { flex: none; min-height: 42px; padding: 0 .8rem; font-size: .78rem; font-weight: 700;
+  background: var(--panel); border: 1px solid var(--line); color: var(--faded);
+  border-radius: 999px; cursor: pointer; font-family: inherit; }
+.arm-chip.on { color: #14101a; border-color: var(--gold);
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold)); }
+
+/* focused-arm nodes: the build for the job you are hunting */
+.tnode.focus .frame { outline: 2px dashed color-mix(in oklab, var(--gold-hi) 75%, transparent); outline-offset: 5px; }
+.tnode.focus .nm { color: var(--gold-hi); }
+
+/* medallion evolution: bronze -> silver (r3+) -> maxed burns gold */
+.tnode[data-r="3"] .frame, .tnode[data-r="4"] .frame { border-color: #b9c0cf;
+  box-shadow: 0 3px 10px -3px rgba(0,0,0,.8), 0 0 10px -3px rgba(185,192,207,.6); }
+
+/* rank quests inside the node sheet */
+.ns-quest { font-size: .85rem; line-height: 1.6; padding: .5rem .7rem;
+  border-inline-start: 2px solid var(--gold); background: rgba(8,7,13,.35); }
+.ns-quest.locked { opacity: .6; border-inline-start-style: dashed; }
+.ns-quest .q-veil { color: var(--faded); font-style: italic; }

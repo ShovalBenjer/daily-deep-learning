@@ -79,6 +79,13 @@ sourced principles). The live ledger is `skills.json`: per skill `current` vs
    drill) targets a `resume_risk` skill, DataLemur-register for `sql` and
    `pandas-da` (realistic table, business question, interview phrasing).
    Rotate through the risk list, weakest (target - current) first.
+   ARM FOCUS: if the learner state carries `armFocus` (1-7), bias these
+   drills and the basics-weave toward THAT arm's below-target skills
+   (skills.json arms field), and name the arm in the breadcrumb line.
+   NODE-RANK DEPTH: read state `ranks` — when a talents.json node linked to
+   today's topic has rank>=2, include a proof-sketch layer for it; rank>=4,
+   paper-grade treatment + a harder drill variant. The learner's build
+   shapes the page's depth.
 2. **Basics weave**: while `toml`, `yaml`, `makefile`, `iac`, `sdlc`, `cicd`,
    `docker` are below level 3, weave ONE mini-section (150-300 words + one
    `fillin`) into a fitting day: real file from his stack (pyproject.toml,

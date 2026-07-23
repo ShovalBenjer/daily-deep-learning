@@ -107,6 +107,9 @@ const store = {
     st.skillLevels = st.skillLevels || {};                // ownership ledger overrides
     st.skillEvidence = st.skillEvidence || {};            // skillId -> [links/notes]
     st.reviews = st.reviews || {};                        // recall engine: id -> {iv,due,lapses,last}
+    st.armFocus = st.armFocus || null;                    // targeted resume arm (1-7)
+    st.shieldsUsed = st.shieldsUsed || 0;                 // streak shields consumed
+    st.shieldDays = st.shieldDays || [];                  // dates covered by a shield
     return st;
   },
   save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
@@ -142,9 +145,32 @@ const pool = t => { const p = S.points[t] || { earned: 0, spent: 0 }; return p.e
 const poolAll = () => talents ? talents.trees.reduce((a, t) => a + pool(t.id), 0) : 0;
 
 let combo = 0;
-function award(tree, pts, el, firstTry) {
+/* the motivation engine: resonance (build amplifies income) + arm focus */
+const ARMS = { 1: 'AI Engineer', 2: 'Forward Deployed', 3: 'GTM/RevOps AI', 4: 'Internal AI Builder', 5: 'FullStack SE', 6: 'Data Scientist', 7: 'Data Analyst' };
+const skillOf = sid => (skills && skills.skills || []).find(s => s.id === sid);
+const nodesForSkill = sid => {
+  const out = [];
+  if (talents) talents.trees.forEach(t => t.tiers.forEach(tier => tier.nodes.forEach(n => {
+    if (n.skills && n.skills.includes(sid)) out.push(n);
+  })));
+  return out;
+};
+function resonance(skillTag) {
+  if (!skillTag) return 0;
+  const ranks = nodesForSkill(skillTag).reduce((a, n) => a + nodeRank(n.id), 0);
+  let bonus = Math.min(5, ranks) * 0.1;                       // +10%/rank, cap +50%
+  const sk = skillOf(skillTag);
+  if (S.armFocus && sk && (sk.arms || []).includes(S.armFocus)) bonus *= 2;  // focused arm pays double
+  return bonus;
+}
+const totalSpent = () => Object.values(S.points).reduce((a, p) => a + (p.spent || 0), 0);
+const shieldsAvail = () => Math.floor(totalSpent() / 10) - (S.shieldsUsed || 0);
+
+function award(tree, pts, el, firstTry, skillTag) {
   if (!tree) tree = 'craft';
   const lv0 = level();
+  const bonus = Math.round(pts * resonance(skillTag));
+  pts += bonus;
   S.points[tree] = S.points[tree] || { earned: 0, spent: 0 };
   S.points[tree].earned += pts;
   if (firstTry) {
@@ -401,12 +427,23 @@ function toast(msg) {
   clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 1800);
 }
 function runLength() {
-  // Streak counts COMPLETED days only (opening a page proves nothing).
-  const done = new Set(S.daysDone);
+  // Streak counts COMPLETED days only; shield-covered days count as honorary.
+  const done = new Set([...S.daysDone, ...(S.shieldDays || [])]);
   let n = 0, d = new Date();
   if (!done.has(iso(d))) d.setDate(d.getDate() - 1);
   while (done.has(iso(d))) { n++; d.setDate(d.getDate() - 1); }
   return n;
+}
+/* a shield auto-shatters to save a streak the morning after a missed day */
+function shieldWatch() {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const b = new Date(); b.setDate(b.getDate() - 2);
+  const done = new Set([...S.daysDone, ...(S.shieldDays || [])]);
+  if (!done.has(iso(y)) && done.has(iso(b)) && shieldsAvail() > 0) {
+    S.shieldDays.push(iso(y)); S.shieldsUsed = (S.shieldsUsed || 0) + 1; store.save();
+    ritual({ kicker: 'מגן רצף', title: 'המגן נשבר במקומך', xp: runLength(),
+      sub: 'יום ' + iso(y) + ' כוסה. הרצף שרד. נותרו ' + shieldsAvail() + ' מגנים.', tier: 1 });
+  }
 }
 const totalEarned = () => Object.values(S.points).reduce((a, p) => a + (p.earned || 0), 0);
 const level = () => { let l = 1; LEVELS.forEach((t, i) => { if (totalEarned() >= t) l = i + 1; }); return l; }
@@ -419,6 +456,8 @@ function paintFolio(txt) {
   if (combo >= 2) bits.push('קומבו x' + combo);
   if (p > 0) bits.push(p + ' להשקעה');
   if (n >= 2) bits.push('רצף ' + n);
+  if (shieldsAvail() > 0) bits.push('מגן ×' + shieldsAvail());
+  if (S.armFocus && ARMS[S.armFocus]) bits.push('מוקד: ' + ARMS[S.armFocus]);
   $('#folio').textContent = bits.join(' · ');
   const lo = LEVELS[lv - 1] || 0, hi = LEVELS[lv] || (lo + 80);
   $('#xpfill').style.width = Math.min(100, ((e - lo) / (hi - lo)) * 100) + '%';
@@ -918,7 +957,7 @@ function buildQuiz(d, onDone) {
     const conf = +confInp.value;
     if (selected === d.answer) {
       S.answers[d.id] = { ok: true, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
-      finish(true, selected); award(d.tree, attempts === 1 ? 2 : 1, wrap, attempts === 1);
+      finish(true, selected); award(d.tree, attempts === 1 ? 2 : 1, wrap, attempts === 1, d.skill);
     } else if (attempts >= 2) {
       S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
       combo = 0;
@@ -966,7 +1005,7 @@ function buildFillin(d, onDone) {
     attempts++;
     if (good.includes(norm(inp.value))) {
       S.answers[d.id] = { ok: true, attempts, val: inp.value, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
-      finish(true); award(d.tree, attempts <= 1 ? 2 : 1, wrap, attempts <= 1);
+      finish(true); award(d.tree, attempts <= 1 ? 2 : 1, wrap, attempts <= 1, d.skill);
     } else if (attempts >= 2) {
       S.answers[d.id] = { ok: false, attempts, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
       combo = 0; finish(false); shake(wrap); paintRing();
@@ -1223,8 +1262,11 @@ function renderPanel() {
         const d = domainOf(n.id), st = nodeState(tree, ti, n);
         const pips = Array.from({ length: talents.max_rank }, (_, i) =>
           `<i class="${i < st.r ? 'on' : ''}"></i>`).join('');
-        return `<button class="tnode ${st.cls} ${n.kind === 'capstone' ? 'capstone' : ''} ${selNode === n.id ? 'sel' : ''}"
-          data-id="${n.id}" data-kind="${n.kind || 'passive'}">
+        const focus = S.armFocus && (n.skills || []).some(sid => {
+          const sk = skillOf(sid); return sk && (sk.arms || []).includes(S.armFocus);
+        });
+        return `<button class="tnode ${st.cls} ${n.kind === 'capstone' ? 'capstone' : ''} ${focus ? 'focus' : ''} ${selNode === n.id ? 'sel' : ''}"
+          data-id="${n.id}" data-kind="${n.kind || 'passive'}" data-r="${st.r}">
           <span class="frame"><svg viewBox="0 0 24 24">${ICON[n.id] || ICON_DEFAULT}</svg></span>
           <span class="pips" role="img" aria-label="דרגה ${st.r} מתוך ${talents.max_rank}">${pips}</span>
           <span class="nm">${(d && d.name) || n.id}</span></button>`;
@@ -1332,6 +1374,8 @@ function renderNodeSheet(tree, n, gate) {
       ${dayList.length ? `<div class="ns-row">נלמד בימים: ${dayList.map(x => `<span class="chip2">יום ${x}</span>`).join(' ')}</div>` : ''}
       ${syn.length ? `<div class="ns-row">סינרגיות: ${syn.map(s => `<span class="chip2">${s.from === n.id ? '→ ' + ((domainOf(s.to) || {}).name || s.to) : '← ' + ((domainOf(s.from) || {}).name || s.from)}</span>`).join(' ')}</div>` : ''}
       ${nodeConcepts.length ? `<button class="ns-quiz">בחן אותי על הצומת (${nodeConcepts.length})</button>` : ''}
+      ${n.quests && r > 0 ? `<div class="ns-quest"><b>המשימה שקנית (דרגה ${r}):</b> ${esc(n.quests[r - 1])}</div>` : ''}
+      ${n.quests && r < talents.max_rank ? `<div class="ns-quest locked">דרגה ${r + 1} פותחת משימה: ${r === 0 ? esc(n.quests[0]) : '<span class="q-veil">נחשפת בהשקעה</span>'}</div>` : ''}
     </div>
     <p class="rank-flavor">${r > 0 ? `<b>דרגת השקעה ${r}</b> · ${RANK_MEANING[r]}` : 'טרם הושקעה נקודה.'}
       ${r < talents.max_rank ? `<br><span class="next">${RANK_MEANING[r + 1]}</span>` : ''}
@@ -1386,9 +1430,15 @@ function renderLadder() {
       <div class="hb-body"><b>ימים עד היעד: חוזה חתום, 30/09</b>
       <span>${weeks} שבועות · ${ladder.hire_goal.line}</span></div></div>`;
   }
+  // arm focus: choosing a resume variation is choosing your build
+  html += `<div class="arm-strip">` + Object.entries(ARMS).map(([k, v]) =>
+    `<button class="arm-chip ${S.armFocus === +k ? 'on' : ''}" data-arm="${k}" dir="ltr">${v}</button>`).join('') +
+    `<button class="arm-chip ${!S.armFocus ? 'on' : ''}" data-arm="0">בלי מוקד</button></div>`;
   if (skills && skills.skills) {
     const cur = s => S.skillLevels[s.id] ?? s.current;
+    const F = S.armFocus;
     const rows = skills.skills.slice().sort((a, b) =>
+      (F ? ((b.arms || []).includes(F) - (a.arms || []).includes(F)) : 0) ||
       (b.resume_risk - a.resume_risk) || ((b.target - cur(b)) - (a.target - cur(a))));
     const cells = s => { const c = cur(s); return [0,1,2,3,4,5].map(l =>
       `<span class="ob-cell ${l <= c ? 'on' : ''} ${l === s.target ? 'tgt' : ''}"></span>`).join(''); };
@@ -1469,6 +1519,11 @@ function renderLadder() {
   });
   const nd = view.querySelector('.nc-done');
   if (nd) nd.onclick = () => { toggle(S.ladder, nd.dataset.id, true); toast('הבא בתור התקדם'); renderLadder(); };
+  view.querySelectorAll('.arm-chip').forEach(b => b.onclick = () => {
+    S.armFocus = +b.dataset.arm || null; store.save();
+    toast(S.armFocus ? 'מוקד: ' + ARMS[S.armFocus] + ' · העץ והדרילים מכוונים אליו' : 'המוקד הוסר');
+    paintFolio(); renderLadder();
+  });
   view.querySelectorAll('.ob-row').forEach(row => {
     row.addEventListener('click', e => {
       if (e.target.closest('.ob-edit')) return;
@@ -1892,6 +1947,7 @@ addEventListener('scroll', () => {
   if (!index.length) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
   seedReviews();                 // nav badge needs the queue on every tab
+  shieldWatch();                 // a shield may shatter to save the streak
   paintFolio(); route();
   mountMotes();
   mountExplainLens();

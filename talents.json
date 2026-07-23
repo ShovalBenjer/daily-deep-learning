@@ -1,22 +1,766 @@
 {
-  "note": "Three talent trees over the 17 curriculum domains. Points are EARNED automatically from answered content (first try +2, second +1) and SPENT by choice. Rank cost = next rank. Tier t unlocks after 3*(t-1) points spent in that tree. A dependent node needs rank 1 in its prerequisite.",
-  "max_rank": 5,
-  "tier_gate": 3,
-  "trees": [
-    { "id": "systems", "name": "מערכות", "tiers": [
-      { "nodes": [ { "id": "os" }, { "id": "storage" } ] },
-      { "nodes": [ { "id": "net", "req": "os" }, { "id": "search", "req": "storage" } ] },
-      { "nodes": [ { "id": "lang", "req": "net" }, { "id": "build" } ] }
-    ] },
-    { "id": "craft", "name": "מלאכה", "tiers": [
-      { "nodes": [ { "id": "api" }, { "id": "frontend" } ] },
-      { "nodes": [ { "id": "arch", "req": "api" }, { "id": "aiux", "req": "frontend" } ] },
-      { "nodes": [ { "id": "product" }, { "id": "research", "req": "arch" } ] }
-    ] },
-    { "id": "ops", "name": "תפעול", "tiers": [
-      { "nodes": [ { "id": "sre" }, { "id": "edge" } ] },
-      { "nodes": [ { "id": "finops", "req": "sre" }, { "id": "platform" } ] },
-      { "nodes": [ { "id": "org", "req": "platform" }, { "id": "company", "req": "finops" } ] }
-    ] }
-  ]
+ "note": "v2 (2026-07-25): 42 nodes over 5 named tiers per tree, per MASTER-PLAN. Points EARNED from answers, SPENT by choice. Tier t opens at 3*t spent in tree AND learner level >= tier_levels[t]. Ranks 4-5 on skill-linked nodes are EVIDENCE-GATED by the ledger. Old node ids preserved (S.ranks survive).",
+ "max_rank": 5,
+ "tier_gate": 3,
+ "tier_levels": [
+  1,
+  2,
+  3,
+  5,
+  7
+ ],
+ "synergies": [
+  {
+   "from": "sql-core",
+   "to": "data-pipelines",
+   "note": "שאילתות חזקות הן חצי מכל pipeline"
+  },
+  {
+   "from": "math-la",
+   "to": "optimization",
+   "note": "בלי אלגברה אין גרדיאנטים"
+  },
+  {
+   "from": "dsa",
+   "to": "sysdesign",
+   "note": "סיבוכיות היא שפת התכנון"
+  },
+  {
+   "from": "llm-core",
+   "to": "rag-search",
+   "note": "הבנת הטוקנים קובעת את ה-chunking"
+  },
+  {
+   "from": "rag-search",
+   "to": "agents-loop",
+   "note": "סוכן טוב הוא retrieval טוב עם ידיים"
+  },
+  {
+   "from": "evals-obs",
+   "to": "agents-loop",
+   "note": "בלי evals אין שיפור מבוקר"
+  },
+  {
+   "from": "containers",
+   "to": "iac-infra",
+   "note": "קונטיינר הוא היחידה שה-IaC מסדר"
+  },
+  {
+   "from": "cicd-pipe",
+   "to": "mlops",
+   "note": "MLOps הוא CI/CD עם דאטה"
+  },
+  {
+   "from": "secrets-auth",
+   "to": "sec-gov",
+   "note": "least privilege מתחיל בסודות"
+  }
+ ],
+ "trees": [
+  {
+   "id": "systems",
+   "name": "מערכות",
+   "tiers": [
+    {
+     "name": "יסודות",
+     "nodes": [
+      {
+       "id": "os",
+       "name": "מערכות הפעלה",
+       "en": "Operating Systems",
+       "line": "תהליכים, זיכרון, מה קורה בין שתי שורות פייתון",
+       "kind": "passive",
+       "domains": [
+        "cs"
+       ]
+      },
+      {
+       "id": "storage",
+       "name": "אחסון",
+       "en": "Storage",
+       "line": "קבצים, אינדקסים, איפה הדאטה באמת גר",
+       "kind": "passive",
+       "domains": [
+        "cs",
+        "db"
+       ]
+      },
+      {
+       "id": "dsa",
+       "name": "מבני נתונים ואלגוריתמים",
+       "en": "DS&A",
+       "line": "המחיר בזמן ובזיכרון של כל בחירה; שפת הראיונות",
+       "kind": "active",
+       "domains": [
+        "cs",
+        "interview"
+       ],
+       "skills": [
+        "python"
+       ]
+      },
+      {
+       "id": "math-la",
+       "name": "אלגברה לינארית",
+       "en": "Linear Algebra",
+       "line": "וקטורים, מטריצות, eigen/SVD: הגיאומטריה של הלמידה",
+       "kind": "passive",
+       "domains": [
+        "math"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "רשתות",
+     "nodes": [
+      {
+       "id": "net",
+       "name": "רשתות",
+       "en": "Networking",
+       "line": "HTTP/TCP/DNS: איך ביטים חוצים את העולם",
+       "kind": "passive",
+       "domains": [
+        "cs"
+       ],
+       "req": "os"
+      },
+      {
+       "id": "search",
+       "name": "חיפוש",
+       "en": "Search & Retrieval",
+       "line": "אינדקסים הפוכים, BM25, וקטורים",
+       "kind": "active",
+       "domains": [
+        "rag"
+       ],
+       "skills": [
+        "rag"
+       ],
+       "req": "storage"
+      },
+      {
+       "id": "sql-core",
+       "name": "ליבת SQL",
+       "en": "SQL Mastery",
+       "line": "joins, windows, CTEs, query plans: לקרוא דאטה כמו שפה",
+       "kind": "active",
+       "domains": [
+        "db",
+        "interview"
+       ],
+       "skills": [
+        "sql"
+       ],
+       "req": "storage"
+      },
+      {
+       "id": "concurrency",
+       "name": "מקביליות",
+       "en": "Concurrency & Async",
+       "line": "threads, async, races: לרוץ מהר בלי להתנגש",
+       "kind": "passive",
+       "domains": [
+        "cs"
+       ],
+       "req": "os"
+      }
+     ]
+    },
+    {
+     "name": "מנועים",
+     "nodes": [
+      {
+       "id": "lang",
+       "name": "שפות",
+       "en": "Languages & Compilers",
+       "line": "מה המהדר עושה למה שכתבת",
+       "kind": "passive",
+       "domains": [
+        "cs"
+       ],
+       "req": "net"
+      },
+      {
+       "id": "build",
+       "name": "בנייה",
+       "en": "Build Systems",
+       "line": "מה-Makefile ועד artifact: איך קוד הופך למוצר",
+       "kind": "active",
+       "domains": [
+        "swe",
+        "devops"
+       ],
+       "skills": [
+        "makefile",
+        "toml",
+        "yaml"
+       ]
+      },
+      {
+       "id": "data-pipelines",
+       "name": "צינורות דאטה",
+       "en": "Data Engineering",
+       "line": "ETL/ELT, batch/stream, medallion: דאטה בתנועה",
+       "kind": "active",
+       "domains": [
+        "de"
+       ],
+       "skills": [
+        "spark",
+        "pandas-da"
+       ],
+       "req": "sql-core"
+      },
+      {
+       "id": "prob-stats",
+       "name": "הסתברות וסטטיסטיקה",
+       "en": "Probability & Statistics",
+       "line": "בייס, CLT, מבחנים: לחשוב באי-ודאות",
+       "kind": "passive",
+       "domains": [
+        "math"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "הנדסת-מערכת",
+     "nodes": [
+      {
+       "id": "distributed",
+       "name": "מערכות מבוזרות",
+       "en": "Distributed Systems",
+       "line": "CAP, תורים, idempotency, המיתוס של exactly-once",
+       "kind": "passive",
+       "domains": [
+        "dist"
+       ]
+      },
+      {
+       "id": "db-prod",
+       "name": "בסיסי נתונים בפרודקשן",
+       "en": "Databases in Production",
+       "line": "מיגרציות, רפליקציה, pooling, RLS",
+       "kind": "active",
+       "domains": [
+        "db"
+       ],
+       "skills": [
+        "postgresql"
+       ],
+       "req": "sql-core"
+      },
+      {
+       "id": "optimization",
+       "name": "אופטימיזציה",
+       "en": "Optimization",
+       "line": "קמירות, GD/SGD/Adam, למה זה מתכנס",
+       "kind": "passive",
+       "domains": [
+        "math",
+        "ml"
+       ],
+       "req": "math-la"
+      }
+     ]
+    },
+    {
+     "name": "אדריכלות",
+     "nodes": [
+      {
+       "id": "sysdesign",
+       "name": "תכנון מערכות",
+       "en": "System Design Mastery",
+       "line": "קיבולת, trade-offs, איפה זה יישבר: הקאפסטון",
+       "kind": "capstone",
+       "domains": [
+        "sysdes",
+        "interview"
+       ],
+       "skills": [
+        "system-design"
+       ],
+       "req": "distributed"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "craft",
+   "name": "מלאכה",
+   "tiers": [
+    {
+     "name": "סדנה",
+     "nodes": [
+      {
+       "id": "api",
+       "name": "ממשקים",
+       "en": "APIs",
+       "line": "REST/GraphQL/gRPC: חוזים בין מערכות",
+       "kind": "active",
+       "domains": [
+        "backend"
+       ],
+       "skills": [
+        "fastapi"
+       ]
+      },
+      {
+       "id": "frontend",
+       "name": "חזית",
+       "en": "Frontend Craft",
+       "line": "ה-DOM, ה-render loop, וה-juice",
+       "kind": "active",
+       "domains": [
+        "swe"
+       ],
+       "skills": [
+        "react-next",
+        "typescript"
+       ]
+      },
+      {
+       "id": "clean-code",
+       "name": "קוד נקי",
+       "en": "Software Craft",
+       "line": "SOLID, refactoring, testing pyramid: קוד שחיים איתו",
+       "kind": "active",
+       "domains": [
+        "swe"
+       ],
+       "skills": [
+        "python"
+       ]
+      },
+      {
+       "id": "py-prod",
+       "name": "פייתון לפרודקשן",
+       "en": "Production Python",
+       "line": "packaging, typing, profiling: מעבר לסקריפט",
+       "kind": "active",
+       "domains": [
+        "swe",
+        "backend"
+       ],
+       "skills": [
+        "python"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "מכונות-חשיבה",
+     "nodes": [
+      {
+       "id": "arch",
+       "name": "ארכיטקטורה",
+       "en": "Architecture",
+       "line": "גבולות, שכבות, חוזים: הצורה של המערכת",
+       "kind": "passive",
+       "domains": [
+        "sysdes"
+       ],
+       "req": "api"
+      },
+      {
+       "id": "aiux",
+       "name": "חוויית AI",
+       "en": "AI Experience",
+       "line": "ממשקים שמסבירים את עצמם, streaming, אמון",
+       "kind": "active",
+       "domains": [
+        "fde",
+        "swe"
+       ],
+       "req": "frontend"
+      },
+      {
+       "id": "llm-core",
+       "name": "ליבת LLM",
+       "en": "LLM Internals",
+       "line": "טוקנים, attention, KV cache, מתי LLM ומתי לא",
+       "kind": "passive",
+       "domains": [
+        "llm"
+       ]
+      },
+      {
+       "id": "ts-web",
+       "name": "TypeScript",
+       "en": "TypeScript & the Web Platform",
+       "line": "טיפוסים כתיעוד חי; הפלטפורמה כ-framework",
+       "kind": "active",
+       "domains": [
+        "swe"
+       ],
+       "skills": [
+        "typescript"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "אומנות",
+     "nodes": [
+      {
+       "id": "product",
+       "name": "מוצר",
+       "en": "Product Sense",
+       "line": "מי המשתמש, מה הכאב, מה המדד",
+       "kind": "passive",
+       "domains": [
+        "fde"
+       ]
+      },
+      {
+       "id": "research",
+       "name": "מחקר",
+       "en": "Research Literacy",
+       "line": "לקרוא paper: baselines, ablations, מה אמיתי",
+       "kind": "passive",
+       "domains": [
+        "research"
+       ],
+       "req": "arch"
+      },
+      {
+       "id": "rag-search",
+       "name": "RAG וחיפוש",
+       "en": "RAG & Search",
+       "line": "chunking, hybrid, reranking, faithfulness",
+       "kind": "active",
+       "domains": [
+        "rag"
+       ],
+       "skills": [
+        "rag"
+       ],
+       "req": "llm-core"
+      },
+      {
+       "id": "agents-loop",
+       "name": "לולאת הסוכן",
+       "en": "Agent Harness",
+       "line": "tools, planning, memory, MCP: intent אל action מאומת",
+       "kind": "active",
+       "domains": [
+        "agents",
+        "harness"
+       ],
+       "skills": [
+        "agents-orch",
+        "mcp"
+       ],
+       "req": "llm-core"
+      }
+     ]
+    },
+    {
+     "name": "הנדסת-דעת",
+     "nodes": [
+      {
+       "id": "evals-obs",
+       "name": "הערכה ותצפית",
+       "en": "Evals & Observability",
+       "line": "golden sets, judges, traces: בלי זה אין שיפור",
+       "kind": "active",
+       "domains": [
+        "evals"
+       ],
+       "skills": [
+        "evals"
+       ],
+       "req": "agents-loop"
+      },
+      {
+       "id": "ml-applied",
+       "name": "ML יישומי",
+       "en": "Applied ML",
+       "line": "baselines, leakage, calibration: המלאכה של המודלים",
+       "kind": "active",
+       "domains": [
+        "ml"
+       ],
+       "skills": [
+        "ml-classic",
+        "pytorch"
+       ]
+      },
+      {
+       "id": "fde",
+       "name": "הנדסה קדמית",
+       "en": "Forward-Deployed Craft",
+       "line": "מעמימות עסקית למערכת עובדת אצל לקוח",
+       "kind": "passive",
+       "domains": [
+        "fde"
+       ],
+       "req": "product"
+      }
+     ]
+    },
+    {
+     "name": "יצירת-מופת",
+     "nodes": [
+      {
+       "id": "craft-master",
+       "name": "AI כמוצר",
+       "en": "Productized AI Mastery",
+       "line": "מערכת AI בטוחה, מדידה, שמישהו משלם עליה: הקאפסטון",
+       "kind": "capstone",
+       "domains": [
+        "fde",
+        "agents",
+        "harness"
+       ],
+       "skills": [
+        "agents-orch",
+        "evals"
+       ],
+       "req": "evals-obs"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ops",
+   "name": "תפעול",
+   "tiers": [
+    {
+     "name": "משמרת",
+     "nodes": [
+      {
+       "id": "sre",
+       "name": "אמינות",
+       "en": "SRE Basics",
+       "line": "SLI/SLO, on-call, מה נשבר קודם",
+       "kind": "passive",
+       "domains": [
+        "devops"
+       ]
+      },
+      {
+       "id": "edge",
+       "name": "קצה וענן",
+       "en": "Cloud & Edge",
+       "line": "IaaS/PaaS/FaaS: סולם השליטה-מול-מהירות",
+       "kind": "passive",
+       "domains": [
+        "cloud"
+       ]
+      },
+      {
+       "id": "git-flow",
+       "name": "זרימת גיט",
+       "en": "Git Internals & Flow",
+       "line": "branches, rebase, מה באמת קורה ב-.git",
+       "kind": "active",
+       "domains": [
+        "devops"
+       ],
+       "skills": [
+        "git"
+       ]
+      },
+      {
+       "id": "containers",
+       "name": "קונטיינרים",
+       "en": "Containers",
+       "line": "images, layers, compose: היחידה הניידת",
+       "kind": "active",
+       "domains": [
+        "devops"
+       ],
+       "skills": [
+        "docker"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "מסילות",
+     "nodes": [
+      {
+       "id": "finops",
+       "name": "כלכלת ענן",
+       "en": "FinOps",
+       "line": "cost attribution, מי שורף מה",
+       "kind": "passive",
+       "domains": [
+        "cloud"
+       ],
+       "req": "sre"
+      },
+      {
+       "id": "platform",
+       "name": "פלטפורמה",
+       "en": "Platform Engineering",
+       "line": "golden paths: להפוך תשתית למוצר פנימי",
+       "kind": "passive",
+       "domains": [
+        "devops"
+       ]
+      },
+      {
+       "id": "cicd-pipe",
+       "name": "מסועי CI/CD",
+       "en": "CI/CD Pipelines",
+       "line": "build-test-deploy: הדרך מהקומיט לפרוד",
+       "kind": "active",
+       "domains": [
+        "devops"
+       ],
+       "skills": [
+        "cicd"
+       ],
+       "req": "git-flow"
+      },
+      {
+       "id": "config-lang",
+       "name": "שפות תצורה",
+       "en": "Config Languages",
+       "line": "TOML/YAML/Make: הדקדוק של התשתית",
+       "kind": "active",
+       "domains": [
+        "devops"
+       ],
+       "skills": [
+        "toml",
+        "yaml",
+        "makefile"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "מצודה",
+     "nodes": [
+      {
+       "id": "org",
+       "name": "ארגון",
+       "en": "Org Dynamics",
+       "line": "Conway, ownership, איך החלטות באמת מתקבלות",
+       "kind": "passive",
+       "domains": [
+        "fde"
+       ],
+       "req": "platform"
+      },
+      {
+       "id": "company",
+       "name": "חברה",
+       "en": "Company Building",
+       "line": "מהפרויקט למוצר לעסק",
+       "kind": "passive",
+       "domains": [
+        "fde"
+       ],
+       "req": "finops"
+      },
+      {
+       "id": "azure-core",
+       "name": "ליבת Azure",
+       "en": "Azure Core",
+       "line": "Functions, Foundry, identities, KV: הבית שלך",
+       "kind": "active",
+       "domains": [
+        "cloud"
+       ],
+       "skills": [
+        "azure-functions",
+        "azure-foundry"
+       ]
+      },
+      {
+       "id": "secrets-auth",
+       "name": "סודות והזדהות",
+       "en": "Secrets & Auth",
+       "line": "OAuth, Entra, least privilege",
+       "kind": "active",
+       "domains": [
+        "sec"
+       ],
+       "skills": [
+        "security-auth"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "הנדסת-מבצעים",
+     "nodes": [
+      {
+       "id": "iac-infra",
+       "name": "תשתית כקוד",
+       "en": "Infrastructure as Code",
+       "line": "Terraform/Bicep: הסביבה כקובץ מבוקר",
+       "kind": "active",
+       "domains": [
+        "devops",
+        "cloud"
+       ],
+       "skills": [
+        "iac"
+       ],
+       "req": "containers"
+      },
+      {
+       "id": "mlops",
+       "name": "MLOps",
+       "en": "MLOps",
+       "line": "registry, drift, canary: מודלים בפרודקשן",
+       "kind": "active",
+       "domains": [
+        "mlops"
+       ],
+       "skills": [
+        "cicd"
+       ],
+       "req": "cicd-pipe"
+      },
+      {
+       "id": "sec-gov",
+       "name": "אבטחה וממשל",
+       "en": "Security & Governance",
+       "line": "threat model, OWASP, prompt injection",
+       "kind": "active",
+       "domains": [
+        "sec"
+       ],
+       "skills": [
+        "pii",
+        "security-auth"
+       ],
+       "req": "secrets-auth"
+      }
+     ]
+    },
+    {
+     "name": "פיקוד",
+     "nodes": [
+      {
+       "id": "prod-own",
+       "name": "בעלות על פרודקשן",
+       "en": "Production Ownership",
+       "line": "merged+deployed+smoked: הקאפסטון של האמת",
+       "kind": "capstone",
+       "domains": [
+        "devops",
+        "cloud",
+        "sec"
+       ],
+       "skills": [
+        "cicd",
+        "docker"
+       ],
+       "req": "iac-infra"
+      }
+     ]
+    }
+   ]
+  }
+ ]
 }

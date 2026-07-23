@@ -831,3 +831,43 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
   filter: drop-shadow(0 0 14px color-mix(in oklab, var(--gold) 80%, transparent));
   animation: sp-glad 1.1s var(--ease-spring); transform-origin: 50% 80%; }
 @media (prefers-reduced-motion: reduce) { .rt-spark img { animation: none; } }
+
+/* ============ TREE v2 (48 nodes, kinds, capstones, synergies) ============ */
+/* passive nodes: parchment ground; active: brass; capstone: throne */
+.tnode[data-kind="passive"] .frame {
+  background: radial-gradient(circle at 36% 28%, color-mix(in oklab, var(--ink) 10%, var(--panel-2)), var(--panel-2) 62%, #0d0b12 100%);
+}
+.tnode.capstone { width: 110px; }
+.tnode.capstone .frame {
+  width: 86px; height: 86px;
+  border-width: 3px;
+  outline: 1px solid color-mix(in oklab, var(--gold) 45%, transparent); outline-offset: 4px;
+  background: radial-gradient(circle at 36% 28%, color-mix(in oklab, var(--gold) 22%, var(--panel-2)), var(--panel-2) 60%, #0d0b12 100%);
+}
+.tnode.capstone .frame svg { width: 44px; height: 44px; }
+.tnode.capstone .nm { font-weight: 700; color: var(--gold-hi); }
+.tp-edges .edge-syn { stroke-width: 1.6; stroke-dasharray: 3 6; opacity: .5; }
+.tp-edges .edge-syn.lit { opacity: .85; filter: drop-shadow(0 0 3px var(--gold-hi)); }
+.ns-conn { margin: .7rem 0 .2rem; padding-top: .6rem; border-top: 1px dashed var(--line); display: grid; gap: .4rem; }
+.ns-row { font-size: .8rem; color: var(--faded); display: flex; gap: .3rem; flex-wrap: wrap; align-items: baseline; }
+.ns-quiz { justify-self: start; min-height: 42px; padding: 0 1rem; background: var(--panel-2);
+  border: 1px solid var(--gold); color: var(--gold); border-radius: 3px; cursor: pointer;
+  font-family: inherit; font-weight: 700; font-size: .85rem; }
+/* tiers can hold 4 nodes on 390px: tighten node width */
+.tnode { width: 84px; }
+.tnode .nm { font-size: .7rem; }
+
+/* ============ SYLLABUS SPINE (P2) ============ */
+.syl-week { border: 1px solid var(--line); border-radius: 3px; margin: 0 0 .6rem; padding: .5rem .8rem; }
+.syl-week summary { font-weight: 700; }
+.syl-day { display: flex; gap: .6rem; align-items: baseline; padding: .45rem .2rem; border-top: 1px solid var(--line-soft); }
+.syl-day:first-of-type { border-top: none; }
+.syl-d { min-width: 2.6rem; font-variant-numeric: tabular-nums; color: var(--faded); font-size: .78rem; }
+.syl-day.today .syl-d { color: var(--gold-hi); font-weight: 900; }
+.syl-body { flex: 1; min-width: 0; }
+.syl-t { font-size: .88rem; font-weight: 700; }
+.syl-t a { text-decoration: none; color: var(--ink); }
+.syl-day.today .syl-t a { color: var(--gold-hi); }
+.syl-day.planned .syl-t { color: var(--faded); font-weight: 400; }
+.syl-why { font-size: .76rem; color: var(--faded); margin-top: .1rem; }
+.syl-chips { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .2rem; }

@@ -1,0 +1,150 @@
+{
+ "note": "The explainable content spine (MASTER-PLAN W2). Generator APPENDS a day entry with every post (ROUTINE 4); council backfills planned days from course_plan.week_plan.",
+ "hire_goal": "2026-09-30",
+ "seasons": [
+  {
+   "id": 1,
+   "name": "עונה 1: שוליה",
+   "weeks": [
+    {
+     "w": 1,
+     "theme": "יסודות RL: מ-MDP ועד חיקוי",
+     "days": [
+      {
+       "day": 1,
+       "date": "2026-07-21",
+       "title": "MDP: העולם כמשחק מוגדר היטב",
+       "source": "CS224R הרצאה 1 חלק 1",
+       "topics": [
+        "MDP",
+        "reward",
+        "return",
+        "discount"
+       ],
+       "nodes": [
+        "optimization",
+        "prob-stats"
+       ],
+       "skills": [
+        "rl"
+       ],
+       "status": "done",
+       "why": "אי אפשר לדבר על למידה מחיזוקים בלי השפה: מצבים, פעולות, תגמול."
+      },
+      {
+       "day": 2,
+       "date": "2026-07-22",
+       "title": "REINFORCE: הגרדיאנט של המדיניות",
+       "source": "CS224R הרצאה 1 חלק 2",
+       "topics": [
+        "policy gradient",
+        "REINFORCE",
+        "baseline",
+        "variance"
+       ],
+       "nodes": [
+        "optimization",
+        "ml-applied"
+       ],
+       "skills": [
+        "rl",
+        "pytorch"
+       ],
+       "status": "done",
+       "why": "הצעד הראשון מלתאר עולם ללשפר בו התנהגות: לגזור את התוחלת."
+      },
+      {
+       "day": 3,
+       "date": "2026-07-23",
+       "title": "Behavior Cloning: החיקוי שנשבר בריבוע",
+       "source": "CS224R הרצאה 1 חלק 3",
+       "topics": [
+        "imitation",
+        "BC",
+        "DAgger",
+        "distribution shift",
+        "i.i.d"
+       ],
+       "nodes": [
+        "ml-applied"
+       ],
+       "skills": [
+        "rl",
+        "sql",
+        "makefile"
+       ],
+       "status": "done",
+       "why": "הדרך שנראית הכי קלה ללמד סוכן, והחשבון המדויק של למה היא קורסת."
+      },
+      {
+       "day": 4,
+       "date": "2026-07-24",
+       "title": "מתוכנן: ערכי מצב ו-Advantage",
+       "source": "CS224R הרצאה 2 חלק 1",
+       "topics": [
+        "value functions",
+        "advantage",
+        "bias-variance"
+       ],
+       "nodes": [
+        "optimization"
+       ],
+       "skills": [
+        "rl"
+       ],
+       "status": "planned",
+       "why": "כדי להוריד שונות מ-REINFORCE צריך קנה מידה: כמה טוב המצב בכלל."
+      },
+      {
+       "day": 5,
+       "date": "2026-07-25",
+       "title": "מתוכנן: Actor-Critic",
+       "source": "CS224R הרצאה 2 חלק 2",
+       "topics": [
+        "actor-critic",
+        "bootstrapping"
+       ],
+       "nodes": [
+        "optimization",
+        "ml-applied"
+       ],
+       "skills": [
+        "rl",
+        "pytorch"
+       ],
+       "status": "planned",
+       "why": "המבקר לומד ערכים, השחקן לומד מדיניות: הארכיטקטורה שממנה הכל נבנה."
+      },
+      {
+       "day": 6,
+       "date": "2026-07-26",
+       "title": "שבת: פשיטת שליפה",
+       "source": "raid",
+       "topics": [
+        "spaced retrieval"
+       ],
+       "nodes": [],
+       "skills": [],
+       "status": "planned",
+       "why": "שליפה מרווחת על כל השבוע: זה מה שהופך קריאה לזיכרון."
+      },
+      {
+       "day": 7,
+       "date": "2026-07-27",
+       "title": "ראשון: תיקון וסינתזה",
+       "source": "repair",
+       "topics": [
+        "Feynman",
+        "synthesis"
+       ],
+       "nodes": [],
+       "skills": [],
+       "status": "planned",
+       "why": "ללמד מחדש את המושג החלש של השבוע, ולגשר לשבוע הבא."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

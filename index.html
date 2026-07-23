@@ -85,7 +85,7 @@
 const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
 const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
-let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null, disco = null, skills = null;
+let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null, disco = null, skills = null, syl = null;
 let pageBlocks = [];
 const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
 const syncKey = () => localStorage.getItem('sadna-sync-key') || '';
@@ -1149,7 +1149,15 @@ async function mount3d() {
     host.hidden = true; const f = $('#flat2d'); if (f) f.hidden = false; renderPanel();
   }
 }
-const domainOf = id => jmap.domains.find(d => d.id === id);
+const talentNode = id => {
+  if (!talents) return null;
+  for (const t of talents.trees) for (const tier of t.tiers) for (const n of tier.nodes)
+    if (n.id === id) return n;
+  return null;
+};
+// judgment_map still describes the original 17 domains; v2 nodes are self-contained
+const domainOf = id => (jmap && jmap.domains.find(d => d.id === id)) ||
+  (n => n && ({ name: n.name, en: n.en || '', line: n.line || '', rule: n.rule || '' }))(talentNode(id));
 const spentIn = tid => (S.points[tid] || { spent: 0 }).spent;
 function nodeRank(id) { return S.ranks[id] || 0; }
 
@@ -1176,11 +1184,46 @@ const ICON = {
   org: '<g fill="currentColor"><path d="M5 3h14l-2 4 2 4H7v10H5V3Z"/><path d="M9 6.5h6v1.8H9z" opacity=".45"/></g>',
   company: '<g fill="currentColor"><path fill-rule="evenodd" d="M3 21v-8l3-2V6h3v3l3-2 3 2V6h3v5l3 2v8h-7v-4h-4v4H3Z"/><path d="M6 3h2v2H6zM16 3h2v2h-2z" opacity=".7"/></g>'
 };
+const ICON_DEFAULT = '<g fill="currentColor"><path d="M12 3 20 12 12 21 4 12Z"/><path d="M12 8 16 12 12 16 8 12Z" opacity=".4" fill="#000"/></g>';
+Object.assign(ICON, {
+  dsa: '<g fill="currentColor"><path d="M11 7.5 6.5 13.5h2v-1h7v1h2L13 7.5Z" opacity="0"/><path d="m11.2 8.4-4 4.6 1.5 1.3 4-4.6zM12.8 8.4l4 4.6-1.5 1.3-4-4.6z"/><circle cx="12" cy="6.5" r="3"/><circle cx="6" cy="16.5" r="2.7"/><circle cx="18" cy="16.5" r="2.7"/></g>',
+  'math-la': '<g fill="currentColor"><path d="M4 3h3v2H6v14h1v2H4V3ZM20 3h-3v2h1v14h-1v2h3V3Z"/><path d="M8.5 7h3v3h-3zM12.7 7h3v3h-3zM8.5 12h3v3h-3zM12.7 12h3v3h-3z"/></g>',
+  'sql-core': '<g fill="currentColor"><path fill-rule="evenodd" d="M3 5h18v14H3V5Zm2 2v2.5h6.5V7H5Zm8.5 0v2.5H19V7h-5.5ZM5 11.5V14h6.5v-2.5H5Zm8.5 0V14H19v-2.5h-5.5ZM5 16v1h6.5v-1H5Zm8.5 0v1H19v-1h-5.5Z"/></g>',
+  concurrency: '<g fill="currentColor"><path d="M3 7h12l-2.2-2.2L14.2 3 19 8l-4.8 5-1.4-1.8L15 9H3V7Z"/><path d="M21 17H9l2.2 2.2L9.8 21 5 16l4.8-5 1.4 1.8L9 15h12v2Z"/></g>',
+  'data-pipelines': '<g fill="currentColor"><path d="M3 4h18l-7 7v6l-4 3v-9L3 4Z"/><path d="M14 17h7v2h-7z" opacity=".7"/></g>',
+  'prob-stats': '<g fill="currentColor"><path d="M2 19c4 0 4.5-11 10-11s6 11 10 11v1H2v-1Z"/><path d="M11 4h2v3h-2z" opacity=".55"/></g>',
+  distributed: '<g fill="currentColor"><path d="m11 6.6-4.5 8 1.7 1 4.5-8zM13 6.6l4.5 8-1.7 1-4.5-8zM7.5 17h9v2h-9z"/><circle cx="12" cy="5.5" r="2.6"/><circle cx="5.5" cy="17.5" r="2.6"/><circle cx="18.5" cy="17.5" r="2.6"/></g>',
+  'db-prod': '<g fill="currentColor"><ellipse cx="10" cy="5.5" rx="6.5" ry="2.4"/><path d="M3.5 8c1.4 1 3.8 1.6 6.5 1.6S15.1 9 16.5 8v3.4c-.5-.2-1-.3-1.5-.3-1 0-2 .3-2.8.9-1 .1-1.5.4-2.2.4-2.7 0-5.1-.7-6.5-1.6V8Z"/><path d="M3.5 13.6c1.4 1 3.8 1.6 6.5 1.6h.6a5 5 0 0 0 .4 2l-.9.1c-2.7 0-5.2-.7-6.6-1.7v-2ZM15 12.5l4 1.6v2.4c0 2.5-1.6 4.4-4 5.5-2.4-1.1-4-3-4-5.5v-2.4l4-1.6Z"/></g>',
+  optimization: '<g fill="currentColor"><path d="M3 4c1 8 5 13 10 14.4l-.8 1.9C6.3 18.5 2 12.7 1 4.2L3 4Z"/><circle cx="17" cy="17.5" r="3.4"/><path d="M18 4h4v2h-4z" opacity="0"/></g>',
+  sysdesign: '<g fill="currentColor"><path fill-rule="evenodd" d="M12 2.5 21 8v2H3V8l9-5.5ZM4 12h4v6H4v-6Zm6 0h4v6h-4v-6Zm6 0h4v6h-4v-6ZM3 20h18v1.8H3V20Z"/></g>',
+  'clean-code': '<g fill="currentColor"><path d="M8.5 4 3 12l5.5 8 1.8-1.2L5.5 12l4.8-6.8L8.5 4ZM15.5 4 21 12l-5.5 8-1.8-1.2L18.5 12l-4.8-6.8L15.5 4Z"/><path d="m12 8 1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z"/></g>',
+  'py-prod': '<g fill="currentColor"><path fill-rule="evenodd" d="M12 2.8 14 6l3.7.6-1.1 3.5 2.6 2.7-3.2 1.9.2 3.7-3.7-.8-2.9 2.3-1.5-3.4-3.6-.9 1.7-3.3-2-3.1 3.6-1.1L8.6 4 12 5.5l.1-2.7Zm0 5.7A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5Z"/></g>',
+  'llm-core': '<g fill="currentColor"><path fill-rule="evenodd" d="M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Zm1.5 11.5h2L12 9l1.5 6.5h2L13.3 7h-2.6l-2.2 8.5Z"/><path d="M9 1.5h1.5V4H9zM13.5 1.5H15V4h-1.5zM9 20h1.5v2.5H9zM13.5 20H15v2.5h-1.5zM1.5 9H4v1.5H1.5zM1.5 13.5H4V15H1.5zM20 9h2.5v1.5H20zM20 13.5h2.5V15H20z" opacity=".6"/></g>',
+  'ts-web': '<g fill="currentColor"><path fill-rule="evenodd" d="M3 3h18v18H3V3Zm5 7.5H10v6h2v-6h2V8.5H8v2Zm10.2-1.4c-.7-.5-1.6-.7-2.5-.7-1.8 0-3.2 1-3.2 2.6 0 1.4 1 2.1 2.4 2.6 1.1.4 1.5.7 1.5 1.2 0 .5-.5.8-1.2.8-.8 0-1.6-.3-2.2-.8v2.2c.6.4 1.5.6 2.3.6 1.9 0 3.3-1 3.3-2.7 0-1.5-1-2.1-2.4-2.6-1-.4-1.5-.6-1.5-1.1 0-.4.4-.7 1-.7.7 0 1.7.3 2.5.9V9.1Z"/></g>',
+  'rag-search': '<g fill="currentColor"><path fill-rule="evenodd" d="M5 2h9l4 4v7.3a6 6 0 0 0-8.5 7.7H5V2Zm2 6h8v1.6H7V8Zm0 3.5h5v1.6H7v-1.6Z"/><path fill-rule="evenodd" d="M16.5 14a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Zm2.8 5.9 2.5 2.5-1.4 1.4-2.5-2.5 1.4-1.4Z"/></g>',
+  'agents-loop': '<g fill="currentColor"><path d="M12 3a9 9 0 0 1 8.5 6h-2.6A6.6 6.6 0 0 0 5.4 11H8l-4 4.6L0 11h3A9 9 0 0 1 12 3ZM12 21a9 9 0 0 1-8.5-6h2.6a6.6 6.6 0 0 0 12.5 0H16l4-4.6 4 4.6h-3a9 9 0 0 1-9 6Z"/></g>',
+  'evals-obs': '<g fill="currentColor"><path fill-rule="evenodd" d="M12 4a9 9 0 0 1 9 9h-3.2A5.8 5.8 0 0 0 12 7.2 5.8 5.8 0 0 0 6.2 13H3a9 9 0 0 1 9-9Z"/><path d="m11 13 5-4.5 1.3 1.4L13 14.5a1.6 1.6 0 1 1-2-1.5Z"/><path d="M3 17h18v2H3z" opacity=".6"/></g>',
+  'ml-applied': '<g fill="currentColor"><path d="M3 3h2v16h16v2H3V3Z"/><circle cx="8.5" cy="14" r="1.7"/><circle cx="12.5" cy="9.5" r="1.7"/><circle cx="17" cy="12.5" r="1.7"/><path d="m7.9 13-1.4-1.5 5-4.7 4 2.9 3.6-3 1.3 1.6-4.8 4-4-2.9z" opacity=".55"/></g>',
+  fde: '<g fill="currentColor"><path fill-rule="evenodd" d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6h5v14H4V6h5Zm2-1v1h2V5h-2Z"/><path d="m13.5 9-3.5 5h2.4l-1 4 3.6-5.4h-2.4z" fill="#000" opacity=".5"/></g>',
+  'craft-master': '<g fill="currentColor"><path d="m4 8 4 3 4-6 4 6 4-3-1.5 8h-13L4 8Z"/><path d="M5.5 18h13v2.5h-13z"/></g>',
+  'git-flow': '<g fill="currentColor"><circle cx="6" cy="5.5" r="2.8"/><circle cx="6" cy="18.5" r="2.8"/><circle cx="18" cy="9" r="2.8"/><path d="M7 8h2v8H7z" transform="rotate(0)"/><path d="M7 8.2h2V16H7z"/><path d="M18 11.8c0 3.4-2.6 4.6-5.2 5l-.3-2c2.3-.3 3.5-1 3.5-3h2Z"/></g>',
+  containers: '<g fill="currentColor"><path fill-rule="evenodd" d="m12 2 5 2.9v5.7l-5 2.9-5-2.9V4.9L12 2ZM5.5 12.4l5 2.9v5.7l-5-2.9v-5.7ZM18.5 12.4v5.7l-5 2.9v-5.7l5-2.9Z"/></g>',
+  'cicd-pipe': '<g fill="currentColor"><path fill-rule="evenodd" d="M7 7.5A4.5 4.5 0 0 0 7 16.5c1.8 0 3-1 4.2-2.5-.8-1-1.5-2-2.3-2.9C8.2 10.2 7.8 10 7 10a2 2 0 1 0 0 4c.5 0 .9-.2 1.4-.6l1.6 2C9.1 16.2 8.2 16.5 7 16.5ZM17 7.5c-1.8 0-3 1-4.2 2.5.8 1 1.5 2 2.3 2.9.7.9 1.1 1.1 1.9 1.1a2 2 0 1 0 0-4c-.5 0-.9.2-1.4.6l-1.6-2c.9-.8 1.8-1.1 3-1.1a4.5 4.5 0 0 1 0 9c-1.8 0-3-1-4.2-2.5C11.7 12.5 13.2 7.5 17 7.5Z"/></g>',
+  'config-lang': '<g fill="currentColor"><path fill-rule="evenodd" d="M5 2h9l5 5v15H5V2Zm3 9.5h2.2l1.3 2.2 1.3-2.2H15l-2.3 3.4 2.5 3.6h-2.3L11.5 16l-1.4 2.5H7.8l2.5-3.6L8 11.5Z"/></g>',
+  'azure-core': '<g fill="currentColor"><path d="M17.5 18.5h-11A4.5 4.5 0 0 1 6 9.6 6 6 0 0 1 17.7 8.5a5 5 0 0 1-.2 10Z"/><path d="m12.8 9.5-3.3 5h2.2l-.9 4 3.5-5.3h-2.3z" fill="#000" opacity=".5"/></g>',
+  'secrets-auth': '<g fill="currentColor"><path fill-rule="evenodd" d="M8 6.5a4.5 4.5 0 0 1 8.7 1.6c0 .9-.2 1.7-.7 2.4l5 5-1.4 1.4-1.4-1.4-1.4 1.4-1.4-1.5-1.5 1.5-1.4-1.5-1.3 1.2a4.5 4.5 0 0 1-6.2-6A4.5 4.5 0 0 1 8 6.5Zm1.5 2.6a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z" transform="rotate(-40 12 12)"/></g>',
+  'iac-infra': '<g fill="currentColor"><path d="M3 4h8v4H3zM13 4h8v4h-8zM3 10h4v4H3zM9 10h8v4H9zM19 10h2v4h-2z"/><path d="m9 17 2 1.5L9 20l.7 1.6L14 19v-1l-4.3-2.6L9 17ZM20 17l-2 1.5 2 1.5-.7 1.6L15 19v-1l4.3-2.6L20 17Z" opacity=".85"/></g>',
+  mlops: '<g fill="currentColor"><path d="M12 2.5A7.5 7.5 0 0 1 19.5 10h-2.2A5.3 5.3 0 0 0 12 4.7V7L8 3.8 12 .5v2ZM12 21.5A7.5 7.5 0 0 1 4.5 14h2.2a5.3 5.3 0 0 0 5.3 5.3V17l4 3.2-4 3.3v-2Z"/><path d="M10 9h4l1.8 5.5h-7.6L10 9Z" opacity=".85"/></g>',
+  'sec-gov': '<g fill="currentColor"><path fill-rule="evenodd" d="M12 2 20 5.5V11c0 5.3-3.4 9.2-8 11-4.6-1.8-8-5.7-8-11V5.5L12 2Zm0 5a2.6 2.6 0 0 0-2.6 2.6v1.2H8.5v5h7v-5h-.9V9.6A2.6 2.6 0 0 0 12 7Zm1.1 3.8v-1.2a1.1 1.1 0 1 0-2.2 0v1.2h2.2Z"/></g>',
+  'prod-own': '<g fill="currentColor"><path d="M5 3h14v10.5L12 18 5 13.5V3Z"/><path d="m12 5.5 1.2 2.4 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z" fill="#000" opacity=".5"/><path d="M5 19h14v2.2H5z"/></g>'
+});
 function nodeState(tree, ti, n) {
-  const open = spentIn(tree.id) >= talents.tier_gate * ti;
+  // D2 rule: tiers gate on points spent AND on the learner's level
+  const lvlNeed = (talents.tier_levels || [])[ti] || 1;
+  const open = spentIn(tree.id) >= talents.tier_gate * ti && level() >= lvlNeed;
   const reqOk = !n.req || nodeRank(n.req) >= 1;
   const r = nodeRank(n.id);
-  return { open, reqOk, r,
+  return { open, reqOk, r, lvlNeed,
     cls: r >= talents.max_rank ? 'maxed' : r > 0 ? 'ranked' : (open && reqOk) ? 'avail' : 'locked' };
 }
 function renderPanel() {
@@ -1198,20 +1241,23 @@ function renderPanel() {
     <span class="tp-pts">${spentIn(tree.id)} הושקעו · ${pool(tree.id)} להשקעה</span></div>`;
   tree.tiers.forEach((tier, ti) => {
     const need = talents.tier_gate * ti;
-    const open = spentIn(tree.id) >= need;
-    if (ti > 0) html += `<div class="tp-gatebar ${open ? 'open' : ''}">
+    const lvlNeed = (talents.tier_levels || [])[ti] || 1;
+    const open = spentIn(tree.id) >= need && level() >= lvlNeed;
+    html += `<div class="tp-gatebar ${open ? 'open' : ''}">
       <span class="gb-line"></span>
-      <span class="gb-seal">${open ? 'שכבה ' + (ti + 1) : need + ' נק׳ בעץ לפתיחה'}</span>
+      <span class="gb-seal">${open ? (tier.name || 'שכבה ' + (ti + 1))
+        : `${tier.name || ''} · ${need} נק׳${lvlNeed > 1 ? ' + רמה ' + lvlNeed : ''}`}</span>
       <span class="gb-line"></span></div>`;
-    html += `<div class="tp-tier ${open ? '' : 'locked'}" data-tier="${['I', 'II', 'III', 'IV'][ti] || ti + 1}">` +
+    html += `<div class="tp-tier ${open ? '' : 'locked'}" data-tier="${['I', 'II', 'III', 'IV', 'V'][ti] || ti + 1}">` +
       tier.nodes.map(n => {
         const d = domainOf(n.id), st = nodeState(tree, ti, n);
         const pips = Array.from({ length: talents.max_rank }, (_, i) =>
           `<i class="${i < st.r ? 'on' : ''}"></i>`).join('');
-        return `<button class="tnode ${st.cls} ${selNode === n.id ? 'sel' : ''}" data-id="${n.id}">
-          <span class="frame"><svg viewBox="0 0 24 24">${ICON[n.id] || ''}</svg></span>
+        return `<button class="tnode ${st.cls} ${n.kind === 'capstone' ? 'capstone' : ''} ${selNode === n.id ? 'sel' : ''}"
+          data-id="${n.id}" data-kind="${n.kind || 'passive'}">
+          <span class="frame"><svg viewBox="0 0 24 24">${ICON[n.id] || ICON_DEFAULT}</svg></span>
           <span class="pips" role="img" aria-label="דרגה ${st.r} מתוך ${talents.max_rank}">${pips}</span>
-          <span class="nm">${d.name}</span></button>`;
+          <span class="nm">${(d && d.name) || n.id}</span></button>`;
       }).join('') + `</div>`;
   });
   html += `</div>`;
@@ -1260,6 +1306,19 @@ function drawPanelEdges() {
       : `<path d="${d}" fill="none" class="edge-dark" stroke="${dim}" stroke-linejoin="round"
            marker-end="url(#arrd)"/>`;
   });
+  // D2 synergies: dashed side-channels between empowering nodes (same tree)
+  const goldHi = getComputedStyle(document.documentElement).getPropertyValue('--gold-hi').trim();
+  (talents.synergies || []).forEach(s => {
+    const a = $(`.tnode[data-id="${s.from}"] .frame`), b = $(`.tnode[data-id="${s.to}"] .frame`);
+    if (!a || !b) return;
+    const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+    const x1 = ar.left + ar.width / 2 - pr.left, y1 = ar.top + ar.height / 2 - pr.top;
+    const x2 = br.left + br.width / 2 - pr.left, y2 = br.top + br.height / 2 - pr.top;
+    const bend = (x1 + x2) / 2 + (x1 < pr.width / 2 ? -46 : 46);
+    const lit = nodeRank(s.from) >= 1;
+    paths += `<path d="M${x1},${y1} Q${bend},${(y1 + y2) / 2} ${x2},${y2}" fill="none"
+      class="edge-syn ${lit ? 'lit' : ''}" stroke="${lit ? goldHi : dim}"/>`;
+  });
   svg.innerHTML = defs + paths;
 }
 const RANK_MEANING = ['',
@@ -1271,16 +1330,39 @@ const RANK_MEANING = ['',
 function renderNodeSheet(tree, n, gate) {
   const d = domainOf(n.id); const r = nodeRank(n.id);
   const cost = r + 1, p = pool(tree.id);
-  const can = gate.open && gate.reqOk && r < talents.max_rank && p >= cost;
+  // evidence gate (LEARNING-MODEL seam): ranks 4-5 need the LEDGER, not points
+  let ledgerCap = 99;
+  if (n.skills && n.skills.length && skills && skills.skills) {
+    ledgerCap = Math.max(0, ...n.skills.map(sid => {
+      const sk = skills.skills.find(s => s.id === sid);
+      return sk ? (S.skillLevels[sk.id] ?? sk.current) : 0;
+    }));
+  }
+  const evOk = (r + 1) <= 3 || ledgerCap >= (r + 1);
+  const can = gate.open && gate.reqOk && r < talents.max_rank && p >= cost && evOk;
   let why = '';
   if (r >= talents.max_rank) why = 'הצומת במלואו: מאתגר.';
   else if (!gate.open) why = 'השכבה עוד נעולה.';
   else if (!gate.reqOk) why = 'דרושה דרגה 1 בצומת הקודם.';
+  else if (!evOk) why = `דרגה ${r + 1} דורשת ראיה: רמה ${r + 1} בלוח הבעלות (כרגע ${ledgerCap}). נקודות לא קונות שליטה.`;
   else if (p < cost) why = 'אין מספיק נקודות (עלות ' + cost + ').';
+  const nodeConcepts = ((kodex && kodex.concepts) || []).filter(c => c.node === n.id);
+  const dayList = [...new Set(nodeConcepts.map(c => c.day).filter(Boolean))].sort((a, b) => a - b);
+  const skillNames = (n.skills || []).map(sid => {
+    const sk = skills && skills.skills && skills.skills.find(s => s.id === sid);
+    return sk ? `${sk.name.split(' (')[0]} (${S.skillLevels[sk.id] ?? sk.current}/${sk.target})` : sid;
+  });
+  const syn = (talents.synergies || []).filter(s => s.from === n.id || s.to === n.id);
   $('#sheet').innerHTML = `<div class="domain-sheet">
     <div class="dhead"><h2>${d.name}</h2><span class="en">${d.en}</span></div>
     <p class="line">${d.line}</p>
-    <p class="rule-q"><b>הכלל:</b> ${d.rule}</p>
+    ${d.rule ? `<p class="rule-q"><b>הכלל:</b> ${d.rule}</p>` : ''}
+    <div class="ns-conn">
+      ${skillNames.length ? `<div class="ns-row">לדג'ר: ${skillNames.map(s => `<span class="chip2" dir="ltr">${s}</span>`).join(' ')}</div>` : ''}
+      ${dayList.length ? `<div class="ns-row">נלמד בימים: ${dayList.map(x => `<span class="chip2">יום ${x}</span>`).join(' ')}</div>` : ''}
+      ${syn.length ? `<div class="ns-row">סינרגיות: ${syn.map(s => `<span class="chip2">${s.from === n.id ? '→ ' + ((domainOf(s.to) || {}).name || s.to) : '← ' + ((domainOf(s.from) || {}).name || s.from)}</span>`).join(' ')}</div>` : ''}
+      ${nodeConcepts.length ? `<button class="ns-quiz">בחן אותי על הצומת (${nodeConcepts.length})</button>` : ''}
+    </div>
     <p class="rank-flavor">${r > 0 ? `<b>דרגת השקעה ${r}</b> · ${RANK_MEANING[r]}` : 'טרם הושקעה נקודה.'}
       ${r < talents.max_rank ? `<br><span class="next">${RANK_MEANING[r + 1]}</span>` : ''}
       <br><span class="next">דרגה = השקעת נקודות; הוכחת שליטה נמדדת בנפרד, בתשובות ובאוצר.</span></p>
@@ -1288,6 +1370,8 @@ function renderNodeSheet(tree, n, gate) {
       <button class="invest" ${can ? '' : 'disabled'}>השקע ${cost} ${cost === 1 ? 'נקודה' : 'נקודות'} → ${RANK_MEANING[Math.min(r + 1, 5)].split(':')[0]}</button>
       <span class="invest-why">${can ? 'דרגה ' + r + ' מתוך ' + talents.max_rank : why}</span>
     </div></div>`;
+  const nq = $('#sheet .ns-quiz');
+  if (nq) nq.onclick = () => openConceptQuiz(nodeConcepts.map(c => c.id));
   const btn = $('#sheet .invest');
   if (btn && can) btn.onclick = () => {
     S.points[tree.id] = S.points[tree.id] || { earned: 0, spent: 0 };
@@ -1350,6 +1434,23 @@ function renderLadder() {
             <button class="ob-ev">+הוכחה</button></div>
         </div>`;
       }).join('') + `</details>`;
+  }
+  if (syl && syl.seasons) {
+    const season = syl.seasons[0];
+    const today = iso(new Date());
+    html += `<details class="syllabus" open><summary>הסילבוס: ${esc(season.name)}</summary>` +
+      season.weeks.map(w => `<details class="syl-week" ${w.days.some(x => x.status !== 'done') ? 'open' : ''}>
+        <summary>שבוע ${w.w}: ${esc(w.theme)}</summary>` +
+        w.days.map(dd => {
+          const st = dd.date === today ? 'today' : dd.status;
+          const title = dd.status === 'done' ? `<a href="#/${esc(dd.date)}">${esc(dd.title)}</a>` : esc(dd.title);
+          const nodeChips = (dd.nodes || []).map(nid => { const nn = talentNode(nid); return nn ? `<a class="chip2" href="#/map">${esc(nn.name)}</a>` : ''; }).join('');
+          return `<div class="syl-day ${st}"><span class="syl-d">יום ${dd.day}</span>
+            <div class="syl-body"><div class="syl-t">${title}</div>
+            ${dd.why ? `<div class="syl-why">${esc(dd.why)}</div>` : ''}
+            <div class="syl-chips">${(dd.topics || []).slice(0, 4).map(t => `<span class="chip2" dir="auto">${esc(t)}</span>`).join('')}${nodeChips}</div>
+            </div></div>`;
+        }).join('') + `</details>`).join('') + `</details>`;
   }
   if (plan && plan.week_plan) {
     const start = new Date(plan.start_date);
@@ -1565,8 +1666,9 @@ function paintSets(cs) {
 /* Recall-lens: any concept is quizzable ON DEMAND (it + its neighbors) */
 function openConceptQuiz(cid) {
   const cs = (kodex && kodex.concepts) || [];
-  const ids = [cid, ...(((cs.find(c => c.id === cid) || {}).rel) || [])]
-    .filter(id => cs.some(c => c.id === id && c.d)).slice(0, 4);
+  const base = Array.isArray(cid) ? cid
+    : [cid, ...(((cs.find(c => c.id === cid) || {}).rel) || [])];
+  const ids = base.filter(id => cs.some(c => c.id === id && c.d)).slice(0, 6);
   const items = ids.map(id => conceptCard(id)).filter(Boolean);
   if (!items.length) { toast('אין מספיק מושגים לבוחן'); return; }
   const qp = $('#qplayer'), body = $('#qpBody');
@@ -1810,11 +1912,11 @@ addEventListener('scroll', () => {
   const rs = await Promise.allSettled([
     j('posts/index.json'), j('judgment_map.json'), j('research_ladder.json'),
     j('talents.json'), j('course_plan.json'), j('concepts.json'), j('discoveries.json'),
-    j('skills.json')
+    j('skills.json'), j('syllabus.json')
   ]);
   const val = i => rs[i].status === 'fulfilled' ? rs[i].value : null;
   index = val(0) || []; jmap = val(1); ladder = val(2); talents = val(3);
-  plan = val(4); kodex = val(5); disco = val(6); skills = val(7);
+  plan = val(4); kodex = val(5); disco = val(6); skills = val(7); syl = val(8);
   if (!index.length) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
   seedReviews();                 // nav badge needs the queue on every tab

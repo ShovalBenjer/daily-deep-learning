@@ -11,7 +11,8 @@
         "markov-property",
         "policy",
         "return"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "markov-property",
@@ -21,7 +22,8 @@
       "day": 1,
       "rel": [
         "mdp"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "policy",
@@ -33,7 +35,8 @@
         "mdp",
         "softmax-policy",
         "reinforce"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "trajectory",
@@ -44,7 +47,8 @@
       "rel": [
         "policy",
         "return"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "return",
@@ -55,7 +59,8 @@
       "rel": [
         "discounting",
         "trajectory"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "discounting",
@@ -65,7 +70,8 @@
       "day": 1,
       "rel": [
         "return"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "credit-assignment",
@@ -76,7 +82,8 @@
       "rel": [
         "return",
         "reward-to-go"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "log-derivative",
@@ -87,7 +94,8 @@
       "rel": [
         "reinforce",
         "score-function"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "score-function",
@@ -98,7 +106,8 @@
       "rel": [
         "log-derivative",
         "baseline"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "reinforce",
@@ -111,7 +120,8 @@
         "log-derivative",
         "baseline",
         "variance"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "baseline",
@@ -123,7 +133,8 @@
         "score-function",
         "variance",
         "advantage"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "variance",
@@ -134,7 +145,8 @@
       "rel": [
         "baseline",
         "reinforce"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "advantage",
@@ -144,7 +156,8 @@
       "day": 2,
       "rel": [
         "baseline"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "reward-to-go",
@@ -155,7 +168,8 @@
       "rel": [
         "credit-assignment",
         "reinforce"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "softmax-policy",
@@ -166,7 +180,8 @@
       "rel": [
         "policy",
         "reinforce"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "foundry",
@@ -177,7 +192,8 @@
       "rel": [
         "managed-identity",
         "deployment-types"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "managed-identity",
@@ -187,7 +203,8 @@
       "day": 1,
       "rel": [
         "foundry"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "deployment-types",
@@ -198,7 +215,8 @@
       "rel": [
         "foundry",
         "ptu"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "ptu",
@@ -208,7 +226,8 @@
       "day": 2,
       "rel": [
         "deployment-types"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "fit-engine-rule",
@@ -218,7 +237,8 @@
       "day": 1,
       "rel": [
         "lsm-btree"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "lsm-btree",
@@ -228,7 +248,8 @@
       "day": 2,
       "rel": [
         "fit-engine-rule"
-      ]
+      ],
+      "node": "optimization"
     },
     {
       "id": "particle-system",
@@ -240,7 +261,8 @@
         "easing-curve",
         "game-juice"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "frontend"
     },
     {
       "id": "easing-curve",
@@ -252,7 +274,8 @@
         "spring-animation",
         "particle-system"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "frontend"
     },
     {
       "id": "spring-animation",
@@ -263,7 +286,8 @@
       "rel": [
         "easing-curve"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "frontend"
     },
     {
       "id": "nine-slice",
@@ -274,7 +298,8 @@
       "rel": [
         "sprite-sheet"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "frontend"
     },
     {
       "id": "sprite-sheet",
@@ -286,7 +311,8 @@
         "nine-slice",
         "particle-system"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "frontend"
     },
     {
       "id": "shader",
@@ -297,7 +323,8 @@
       "rel": [
         "particle-system"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "frontend"
     },
     {
       "id": "game-juice",
@@ -310,7 +337,8 @@
         "easing-curve",
         "spring-animation"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "aiux"
     },
     {
       "id": "imitation-learning",
@@ -321,7 +349,8 @@
       "rel": [
         "behavior-cloning",
         "dagger"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "behavior-cloning",
@@ -334,7 +363,8 @@
         "distribution-shift",
         "sft-as-bc",
         "policy"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "distribution-shift",
@@ -345,7 +375,8 @@
       "rel": [
         "compounding-errors",
         "behavior-cloning"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "compounding-errors",
@@ -356,7 +387,8 @@
       "rel": [
         "distribution-shift",
         "dagger"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "dagger",
@@ -367,7 +399,8 @@
       "rel": [
         "behavior-cloning",
         "human-on-the-loop"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "mode-averaging",
@@ -377,7 +410,8 @@
       "day": 3,
       "rel": [
         "behavior-cloning"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "sft-as-bc",
@@ -388,7 +422,8 @@
       "rel": [
         "behavior-cloning",
         "reinforce"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "rbac-data-plane",
@@ -398,7 +433,8 @@
       "day": 3,
       "rel": [
         "managed-identity"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "private-endpoint",
@@ -409,7 +445,8 @@
       "rel": [
         "rbac-data-plane",
         "managed-identity"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "human-on-the-loop",
@@ -419,7 +456,8 @@
       "day": 3,
       "rel": [
         "dagger"
-      ]
+      ],
+      "node": "ml-applied"
     },
     {
       "id": "iaas",
@@ -432,7 +470,8 @@
         "faas",
         "managed-k8s"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "edge"
     },
     {
       "id": "paas",
@@ -444,7 +483,8 @@
         "iaas",
         "faas"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "edge"
     },
     {
       "id": "faas",
@@ -456,7 +496,8 @@
         "paas",
         "iaas"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "azure-core"
     },
     {
       "id": "managed-k8s",
@@ -468,7 +509,8 @@
         "iaas",
         "paas"
       ],
-      "bonus": true
+      "bonus": true,
+      "node": "containers"
     }
   ]
 }

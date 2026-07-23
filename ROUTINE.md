@@ -247,8 +247,19 @@ point of the whole curriculum.
 - Habits to embody: predict-then-peek, build-first-diff-second, Feynman, spaced
   retrieval (docs/fundamentals-mastery-plan.md in new-recruit).
 
-## 4. Index + commit
+## 4. Index + syllabus + commit
 
-Prepend `{ "date", "week", "day", "title" }` to `posts/index.json` (valid JSON,
-newest first). Never edit past posts. One commit on main:
-`post: YYYY-MM-DD (wW dD)`, push. Touch nothing else.
+1. Prepend `{ "date", "week", "day", "title" }` to `posts/index.json` (valid
+   JSON, newest first). Never edit past posts.
+2. SYLLABUS SPINE: update `syllabus.json` — set today's entry to
+   status:"done" with the real title/topics/nodes/skills (nodes = talents.json
+   ids the page taught; skills = ledger ids drilled). If the entry does not
+   exist, append it to the current week. The `why` field is one Hebrew
+   sentence: why this day exists in the arc.
+3. BREADCRUMB (page top, after the opening line): one line
+   `שבוע W · <source> · צמתים: <node names>` followed by the `why` sentence.
+   The page must explain its own place in the road every morning.
+4. One commit on main: `post: YYYY-MM-DD (wW dD)`, push. Touch nothing else
+   except posts/, posts/index.json, syllabus.json, concepts.json.
+5. New concepts MUST carry `"node": "<talents.json id>"`. The council runs
+   `py tools/validate_links.py` weekly; orphan links are defects.

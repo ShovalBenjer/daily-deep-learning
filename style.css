@@ -871,3 +871,35 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
 .syl-day.planned .syl-t { color: var(--faded); font-weight: 400; }
 .syl-why { font-size: .76rem; color: var(--faded); margin-top: .1rem; }
 .syl-chips { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .2rem; }
+
+/* ============ TREE READABILITY FIX (phone report 2026-07-26) ============ */
+/* crests: centered watermark inside the banner, not a side overlay that clips */
+.tree-tab::before {
+  inset: 0; width: auto; height: auto; transform: none;
+  background-position: center 34%; background-size: 38px 38px;
+  opacity: .16;
+}
+.tree-tab.active::before { opacity: .34; }
+.tree-tab { min-width: 0; }
+.tree-tab small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+/* medallions get a dark strip so they never drown in the wood grain */
+.tp-tier {
+  padding: .9rem 0;
+  background: linear-gradient(180deg, transparent, rgba(8,7,13,.42) 18%, rgba(8,7,13,.42) 82%, transparent);
+}
+.tp-tier.locked { opacity: .68; }
+.tnode .nm {
+  background: rgba(8,7,13,.62); padding: .06rem .45rem; border-radius: 2px;
+  max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tnode.locked .nm { color: color-mix(in oklab, var(--ink) 55%, var(--faded)); }
+
+/* the head bar clears the painting's engraved band and reads over art */
+.tp-head {
+  margin-top: 1.1rem;
+  background: linear-gradient(180deg, rgba(13,11,19,.92), rgba(13,11,19,.78));
+  border-color: color-mix(in oklab, var(--gold) 45%, var(--line));
+}
+/* gate seals read over wood */
+.gb-seal { background: rgba(8,7,13,.85); }

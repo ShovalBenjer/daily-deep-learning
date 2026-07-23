@@ -1104,50 +1104,20 @@ function renderTalents() {
   if (!talents || !jmap) { $('#view').innerHTML = '<p class="finish-hint">העץ לא זמין כרגע.</p>'; $('#status').textContent = ''; return; }
   if (!activeTree) activeTree = talents.trees[0].id;
   const view = $('#view');
-  const want3d = localStorage.getItem('sadna-3d') === 'on' && !!window.WebGLRenderingContext;
   view.innerHTML = `<div class="view-head"><h1>העץ</h1>
     <p>נקודות נצברות מתשובות נכונות בדפים; אתה בוחר איפה להשקיע. שכבה נפתחת אחרי ${talents.tier_gate} נקודות בעץ, וצומת תלוי דורש דרגה 1 בקודמו.</p></div>
-    <button class="t3-toggle" id="t3toggle">${want3d ? 'תצוגה שטוחה' : 'תצוגה תלת-ממדית'}</button>
-    <div id="tree3dhost" ${want3d ? '' : 'hidden'}></div>
-    <div ${want3d ? 'hidden' : ''} id="flat2d"></div>
+    <div id="flat2d"></div>
     <div id="sheet"></div>`;
   $('#status').textContent = '';
-  $('#t3toggle').onclick = () => {
-    localStorage.setItem('sadna-3d', want3d ? 'off' : 'on');
-    if (scene3d) { scene3d.dispose(); scene3d = null; }
-    renderTalents();
-  };
-  if (want3d) mount3d(); else renderPanel();
+  renderPanel();
   paintFolio();
   window.scrollTo(0, 0);
 }
-let scene3d = null;
 function gateFor(tree, nodeId) {
   let ti = 0, node = null;
   tree.tiers.forEach((tier, i) => tier.nodes.forEach(n => { if (n.id === nodeId) { ti = i; node = n; } }));
   const st = nodeState(tree, ti, node);
   return { open: st.open, reqOk: st.reqOk, node };
-}
-async function mount3d() {
-  const host = $('#tree3dhost');
-  host.innerHTML = '<div id="status">טוען את העץ...</div>';
-  try {
-    const mod = await import('./tree3d.js');
-    host.innerHTML = '';
-    scene3d = await mod.mountTree3D(host, {
-      talents, domainOf, rank: nodeRank,
-      onSelect: (treeId, n) => {
-        const tree = talents.trees.find(t => t.id === treeId);
-        activeTree = treeId; selNode = n.id;
-        const g = gateFor(tree, n.id);
-        renderNodeSheet(tree, n, g);
-        $('#sheet').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    });
-  } catch (e) {
-    localStorage.setItem('sadna-3d', 'off');
-    host.hidden = true; const f = $('#flat2d'); if (f) f.hidden = false; renderPanel();
-  }
 }
 const talentNode = id => {
   if (!talents) return null;
@@ -1378,7 +1348,7 @@ function renderNodeSheet(tree, n, gate) {
     S.points[tree.id].spent += cost;
     S.ranks[n.id] = r + 1; store.save();
     toast(d.name + ' דרגה ' + (r + 1));
-    if (scene3d) scene3d.refresh(); else renderPanel();
+    renderPanel();
     renderNodeSheet(tree, n, gate); paintFolio();
     const fr = $(`.tnode[data-id="${n.id}"] .frame`);
     if (fr) {
@@ -1751,7 +1721,7 @@ function renderKodex() {
 function drawKodexGraph(csAll) {
   const cs = csAll.slice(0, 60); // main-thread O(n^2) layout: cap; worker + clustering when the treasury grows
   const cv = $('#kGraph'); if (!cv || !cs.length) { if (cv) cv.style.display = 'none'; return; }
-  const W = cv.clientWidth || 380, H = 300, dpr = Math.min(devicePixelRatio, 2);
+  const W = cv.clientWidth || 380, H = Math.max(300, Math.round(cs.length * 9)), dpr = Math.min(devicePixelRatio, 2);
   cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
   const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
   const idmap = {}; cs.forEach((c, i) => idmap[c.id] = i);
@@ -1777,8 +1747,10 @@ function drawKodexGraph(csAll) {
       nodes[j].vx += f * dx; nodes[j].vy += f * dy;
     }
     nodes.forEach(n => {
-      n.x = Math.max(30, Math.min(W - 30, n.x + n.vx));
-      n.y = Math.max(20, Math.min(H - 20, n.y + n.vy));
+      // center gravity keeps the constellation off the walls
+      n.vx += (W / 2 - n.x) * 0.0035; n.vy += (H / 2 - n.y) * 0.0035;
+      n.x = Math.max(42, Math.min(W - 42, n.x + n.vx));
+      n.y = Math.max(30, Math.min(H - 30, n.y + n.vy));
       n.vx *= 0.6; n.vy *= 0.6;
     });
   }

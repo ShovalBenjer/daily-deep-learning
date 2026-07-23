@@ -20,8 +20,22 @@
 </head>
 <body>
 <div id="progress" role="presentation"></div>
+<svg hidden aria-hidden="true"><defs>
+  <g id="g-today"><path d="M12 6 a3 3 0 0 0 -3 -2 H4 v15 h6 a2.5 2.5 0 0 1 2 1 a2.5 2.5 0 0 1 2 -1 h6 V4 h-5 a3 3 0 0 0 -3 2 Z M12 6 v13"/></g>
+  <g id="g-map"><path d="M12 21 V8 M12 8 L6.5 3.5 M12 8 L17.5 3.5 M12 14.5 L7.5 10.5 M12 14.5 L16.5 10.5"/><circle cx="6.5" cy="3.5" r="1.6"/><circle cx="17.5" cy="3.5" r="1.6"/><circle cx="7.5" cy="10.5" r="1.4"/><circle cx="16.5" cy="10.5" r="1.4"/><circle cx="12" cy="21" r="1.7"/></g>
+  <g id="g-kodex"><path d="M4 11 h16 v8 a1.5 1.5 0 0 1 -1.5 1.5 h-13 A1.5 1.5 0 0 1 4 19 Z M4 11 v-2 a8 8 0 0 1 16 0 v2"/><path d="M12 14 v3 M10.6 14.5 h2.8"/></g>
+  <g id="g-discover"><circle cx="10" cy="10" r="6.2"/><path d="M14.5 14.5 L20.5 20.5 M7.5 9.5 a3 3 0 0 1 2.5 -2.4"/></g>
+  <g id="g-ladder"><path d="M6.5 3 h11 v17 l-5.5 -3.6 L6.5 20 Z M9.5 7.5 h5"/></g>
+</defs></svg>
 <header class="bar">
   <a class="wordmark" href="#/"><b>ה</b>סדנה <span class="alpha-chip">אלפא</span></a>
+  <div id="spark" aria-hidden="true"><svg viewBox="0 0 32 40">
+    <path class="sp-lantern" d="M7 13 L16 5 L25 13 V33 a2.5 2.5 0 0 1 -2.5 2.5 h-13 A2.5 2.5 0 0 1 7 33 Z"/>
+    <circle class="sp-ring" cx="16" cy="4.5" r="2"/>
+    <g class="sp-fl"><path class="sp-flame" d="M16 14.5 C20 19.5 21 22 21 25 a5 5 0 1 1 -10 0 C11 22 12 19.5 16 14.5 Z"/>
+    <path class="sp-flame-in" d="M16 20.5 C18 23 18.4 24.3 18.4 25.7 a2.4 2.4 0 1 1 -4.8 0 C13.6 24.3 14 23 16 20.5 Z"/>
+    <circle class="sp-eye" cx="14.5" cy="25" r=".95"/><circle class="sp-eye" cx="17.5" cy="25" r=".95"/></g>
+  </svg></div>
   <span id="xpwrap"><span class="folio" id="folio"></span><span id="xpbar"><span id="xpfill"></span></span></span>
   <svg id="ring" viewBox="0 0 36 36" aria-label="התקדמות היום"><circle class="rbg" cx="18" cy="18" r="15.5"/><circle class="rfg" cx="18" cy="18" r="15.5"/><text x="18" y="21.5" text-anchor="middle">0</text></svg>
   <button class="iconbtn" id="themeToggle" aria-label="מצב תאורה">
@@ -36,11 +50,11 @@
 </main>
 
 <nav class="tabs">
-  <a href="#/" id="tab-today">היום</a>
-  <a href="#/map" id="tab-map">העץ</a>
-  <a href="#/kodex" id="tab-kodex">האוצר</a>
-  <a href="#/discover" id="tab-discover">תגליות</a>
-  <a href="#/ladder" id="tab-ladder">המסלול</a>
+  <a href="#/" id="tab-today"><svg class="tg" viewBox="0 0 24 24"><use href="#g-today"/></svg><span>היום</span></a>
+  <a href="#/map" id="tab-map"><svg class="tg" viewBox="0 0 24 24"><use href="#g-map"/></svg><span>העץ</span></a>
+  <a href="#/kodex" id="tab-kodex"><svg class="tg" viewBox="0 0 24 24"><use href="#g-kodex"/></svg><span>האוצר</span></a>
+  <a href="#/discover" id="tab-discover"><svg class="tg" viewBox="0 0 24 24"><use href="#g-discover"/></svg><span>תגליות</span></a>
+  <a href="#/ladder" id="tab-ladder"><svg class="tg" viewBox="0 0 24 24"><use href="#g-ladder"/></svg><span>המסלול</span></a>
 </nav>
 
 <div id="qplayer" role="dialog" aria-modal="true" aria-label="בוחן" hidden>
@@ -138,6 +152,7 @@ function award(tree, pts, el, firstTry) {
   // performed, not announced: number + burst on the object, scaled by magnitude
   if (el) { burst(el, 14 + pts * 8 + (firstTry ? 10 : 0)); ptsFloat(el, pts); }
   else toast('+' + pts + ' נקודות לעץ');
+  sparkState('glad');
   const lv = level();
   if (lv > lv0) setTimeout(() => ritual({
     kicker: 'הסדנה', title: 'רמה ' + lv, xp: totalEarned(),
@@ -207,6 +222,7 @@ function countUp(el, to, { ms = 650, prefix = '', suffix = '' } = {}) {
 
 function shake(el, mag = 5) {
   if (!el) return;
+  sparkState('dim');
   anim(el, [
     { transform: 'translateX(0)' }, { transform: `translateX(${mag}px)` },
     { transform: `translateX(${-mag * 0.8}px)` }, { transform: `translateX(${mag * 0.5}px)` },
@@ -229,6 +245,18 @@ function ptsFloat(el, pts) {
     { transform: 'translate(-50%,-18px) scale(1.15)', opacity: 1, offset: .35 },
     { transform: 'translate(-50%,-46px) scale(1)', opacity: 0 }
   ], { duration: 950, easing: 'ease-out' }).finished.then(() => f.remove());
+}
+
+/* הניצוץ: the workshop spark reacts to the learner (ZZZ mascot principle) */
+let sparkT = null;
+function sparkState(s) {
+  const el = $('#spark'); if (!el) return;
+  el.classList.remove('glad', 'dim');
+  if (!s || REDUCED()) return;
+  void el.offsetWidth;
+  el.classList.add(s);
+  clearTimeout(sparkT);
+  sparkT = setTimeout(() => el.classList.remove('glad', 'dim'), 1700);
 }
 
 /* streak tier tells: the ritual is FIXED, its magnitude is read from the frame */

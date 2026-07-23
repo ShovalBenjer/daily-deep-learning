@@ -1,26 +1,316 @@
 {
   "note": "The codex registry: every day's key concepts, appended by the generator (and the council). rel[] edges draw the knowledge graph.",
   "concepts": [
-    { "id": "mdp", "t": "Markov Decision Process", "he": "תהליך החלטה מרקובי", "d": "החבילה הפורמלית של RL: מצבים, פעולות, דינמיקה, reward, הנחתה והתפלגות התחלתית.", "day": 1, "rel": ["markov-property", "policy", "return"] },
-    { "id": "markov-property", "t": "Markov Property", "he": "תכונת מרקוב", "d": "המצב הנוכחי הוא statistic מספיק של ההיסטוריה: העתיד תלוי רק בהווה.", "day": 1, "rel": ["mdp"] },
-    { "id": "policy", "t": "Policy", "he": "מדיניות", "d": "התפלגות על פעולות בהינתן מצב; המודל הגנרטיבי שאנחנו מאמנים.", "day": 1, "rel": ["mdp", "softmax-policy", "reinforce"] },
-    { "id": "trajectory", "t": "Trajectory", "he": "מסלול", "d": "רצף שלם של מצבים, פעולות ותגמולים ממשחק אחד.", "day": 1, "rel": ["policy", "return"] },
-    { "id": "return", "t": "Return", "he": "תשואה", "d": "סכום ה-rewards המונחת לאורך מסלול; המספר שממקסמים.", "day": 1, "rel": ["discounting", "trajectory"] },
-    { "id": "discounting", "t": "Discounting", "he": "הנחתה", "d": "מקדם גמא שהופך סכום אינסופי לסופי ומקודד העדפת זמן; אופק אפקטיבי בערך 1/(1-גמא).", "day": 1, "rel": ["return"] },
-    { "id": "credit-assignment", "t": "Credit Assignment", "he": "ייחוס תרומה", "d": "מי מהפעולות אחראית ל-reward שהגיע באיחור; הבעיה שכל אלגוריתמי ה-RL פותרים.", "day": 1, "rel": ["return", "reward-to-go"] },
-    { "id": "log-derivative", "t": "Log-Derivative Trick", "he": "טריק נגזרת הלוג", "d": "הופך גרדיאנט של תוחלת לתוחלת של גרדיאנט-לוג; מאפשר אמידה בדגימות.", "day": 2, "rel": ["reinforce", "score-function"] },
-    { "id": "score-function", "t": "Score Function", "he": "פונקציית הציון", "d": "נגזרת הלוג של ההסתברות; התוחלת שלה אפס, וזו הסיבה ש-baseline לא מטה.", "day": 2, "rel": ["log-derivative", "baseline"] },
-    { "id": "reinforce", "t": "REINFORCE", "he": "ריאינפורס", "d": "policy gradient בסיסי: העלה הסתברות של פעולות במסלולים טובים, פרופורציונלית לתשואה.", "day": 2, "rel": ["policy", "log-derivative", "baseline", "variance"] },
-    { "id": "baseline", "t": "Baseline", "he": "קו בסיס", "d": "ערך שמחסרים מהתשואה להקטנת שונות בלי הטיה; ההוכחה: תוחלת ה-score היא אפס.", "day": 2, "rel": ["score-function", "variance", "advantage"] },
-    { "id": "variance", "t": "Variance (of the estimator)", "he": "שונות האומדן", "d": "כמה האומדן קופץ בין דגימות; האויב המרכזי של policy gradient.", "day": 2, "rel": ["baseline", "reinforce"] },
-    { "id": "advantage", "t": "Advantage", "he": "יתרון", "d": "התשואה פחות ה-baseline: כמה הפעולה טובה יחסית לצפוי.", "day": 2, "rel": ["baseline"] },
-    { "id": "reward-to-go", "t": "Reward-to-Go", "he": "תשואה מכאן והלאה", "d": "G_t: רק התגמולים שאחרי הפעולה; סיבתיות שמקטינה שונות.", "day": 2, "rel": ["credit-assignment", "reinforce"] },
-    { "id": "softmax-policy", "t": "Softmax Policy", "he": "מדיניות סופטמקס", "d": "פרמטרים לכל פעולה, הסתברות דרך אקספוננט מנורמל; הנגזרת: one-hot פחות ההסתברויות.", "day": 2, "rel": ["policy", "reinforce"] },
-    { "id": "foundry", "t": "Azure AI Foundry", "he": "פאונדרי", "d": "המטריה של Azure ל-GenAI: קטלוג מודלים, deployments, agents ו-evals תחת project אחד.", "day": 1, "rel": ["managed-identity", "deployment-types"] },
-    { "id": "managed-identity", "t": "Managed Identity", "he": "זהות מנוהלת", "d": "אימות ללא מפתחות בין שירותי Azure דרך RBAC; התשובה לכל שאלת keyless במבחן.", "day": 1, "rel": ["foundry"] },
-    { "id": "deployment-types", "t": "Deployment Types", "he": "סוגי פריסה", "d": "Standard/Global/DataZone לפי טוקן, GlobalBatch זול ואסינכרוני, PTU קיבולת שמורה לפי שעה.", "day": 2, "rel": ["foundry", "ptu"] },
-    { "id": "ptu", "t": "ProvisionedManaged (PTU)", "he": "קיבולת שמורה", "d": "throughput מובטח בחיוב שעתי גם בחוסר שימוש; PTU יתום שורף כסף.", "day": 2, "rel": ["deployment-types"] },
-    { "id": "fit-engine-rule", "t": "Right-size the Engine", "he": "מתאימים מנוע לעומס", "d": "כלל שיקול הדעת: Typesense לאפליקציות, Elasticsearch ללוגים, PG FTS כשוויתור מודע; לא יוקרה.", "day": 1, "rel": ["lsm-btree"] },
-    { "id": "lsm-btree", "t": "LSM vs B-Tree", "he": "עצי LSM מול B-Tree", "d": "B-tree לקריאות ו-ACID; LSM לכתיבה רציפה מעל ~50K/s עם compaction ברקע.", "day": 2, "rel": ["fit-engine-rule"] }
+    {
+      "id": "mdp",
+      "t": "Markov Decision Process",
+      "he": "תהליך החלטה מרקובי",
+      "d": "החבילה הפורמלית של RL: מצבים, פעולות, דינמיקה, reward, הנחתה והתפלגות התחלתית.",
+      "day": 1,
+      "rel": [
+        "markov-property",
+        "policy",
+        "return"
+      ]
+    },
+    {
+      "id": "markov-property",
+      "t": "Markov Property",
+      "he": "תכונת מרקוב",
+      "d": "המצב הנוכחי הוא statistic מספיק של ההיסטוריה: העתיד תלוי רק בהווה.",
+      "day": 1,
+      "rel": [
+        "mdp"
+      ]
+    },
+    {
+      "id": "policy",
+      "t": "Policy",
+      "he": "מדיניות",
+      "d": "התפלגות על פעולות בהינתן מצב; המודל הגנרטיבי שאנחנו מאמנים.",
+      "day": 1,
+      "rel": [
+        "mdp",
+        "softmax-policy",
+        "reinforce"
+      ]
+    },
+    {
+      "id": "trajectory",
+      "t": "Trajectory",
+      "he": "מסלול",
+      "d": "רצף שלם של מצבים, פעולות ותגמולים ממשחק אחד.",
+      "day": 1,
+      "rel": [
+        "policy",
+        "return"
+      ]
+    },
+    {
+      "id": "return",
+      "t": "Return",
+      "he": "תשואה",
+      "d": "סכום ה-rewards המונחת לאורך מסלול; המספר שממקסמים.",
+      "day": 1,
+      "rel": [
+        "discounting",
+        "trajectory"
+      ]
+    },
+    {
+      "id": "discounting",
+      "t": "Discounting",
+      "he": "הנחתה",
+      "d": "מקדם גמא שהופך סכום אינסופי לסופי ומקודד העדפת זמן; אופק אפקטיבי בערך 1/(1-גמא).",
+      "day": 1,
+      "rel": [
+        "return"
+      ]
+    },
+    {
+      "id": "credit-assignment",
+      "t": "Credit Assignment",
+      "he": "ייחוס תרומה",
+      "d": "מי מהפעולות אחראית ל-reward שהגיע באיחור; הבעיה שכל אלגוריתמי ה-RL פותרים.",
+      "day": 1,
+      "rel": [
+        "return",
+        "reward-to-go"
+      ]
+    },
+    {
+      "id": "log-derivative",
+      "t": "Log-Derivative Trick",
+      "he": "טריק נגזרת הלוג",
+      "d": "הופך גרדיאנט של תוחלת לתוחלת של גרדיאנט-לוג; מאפשר אמידה בדגימות.",
+      "day": 2,
+      "rel": [
+        "reinforce",
+        "score-function"
+      ]
+    },
+    {
+      "id": "score-function",
+      "t": "Score Function",
+      "he": "פונקציית הציון",
+      "d": "נגזרת הלוג של ההסתברות; התוחלת שלה אפס, וזו הסיבה ש-baseline לא מטה.",
+      "day": 2,
+      "rel": [
+        "log-derivative",
+        "baseline"
+      ]
+    },
+    {
+      "id": "reinforce",
+      "t": "REINFORCE",
+      "he": "ריאינפורס",
+      "d": "policy gradient בסיסי: העלה הסתברות של פעולות במסלולים טובים, פרופורציונלית לתשואה.",
+      "day": 2,
+      "rel": [
+        "policy",
+        "log-derivative",
+        "baseline",
+        "variance"
+      ]
+    },
+    {
+      "id": "baseline",
+      "t": "Baseline",
+      "he": "קו בסיס",
+      "d": "ערך שמחסרים מהתשואה להקטנת שונות בלי הטיה; ההוכחה: תוחלת ה-score היא אפס.",
+      "day": 2,
+      "rel": [
+        "score-function",
+        "variance",
+        "advantage"
+      ]
+    },
+    {
+      "id": "variance",
+      "t": "Variance (of the estimator)",
+      "he": "שונות האומדן",
+      "d": "כמה האומדן קופץ בין דגימות; האויב המרכזי של policy gradient.",
+      "day": 2,
+      "rel": [
+        "baseline",
+        "reinforce"
+      ]
+    },
+    {
+      "id": "advantage",
+      "t": "Advantage",
+      "he": "יתרון",
+      "d": "התשואה פחות ה-baseline: כמה הפעולה טובה יחסית לצפוי.",
+      "day": 2,
+      "rel": [
+        "baseline"
+      ]
+    },
+    {
+      "id": "reward-to-go",
+      "t": "Reward-to-Go",
+      "he": "תשואה מכאן והלאה",
+      "d": "G_t: רק התגמולים שאחרי הפעולה; סיבתיות שמקטינה שונות.",
+      "day": 2,
+      "rel": [
+        "credit-assignment",
+        "reinforce"
+      ]
+    },
+    {
+      "id": "softmax-policy",
+      "t": "Softmax Policy",
+      "he": "מדיניות סופטמקס",
+      "d": "פרמטרים לכל פעולה, הסתברות דרך אקספוננט מנורמל; הנגזרת: one-hot פחות ההסתברויות.",
+      "day": 2,
+      "rel": [
+        "policy",
+        "reinforce"
+      ]
+    },
+    {
+      "id": "foundry",
+      "t": "Azure AI Foundry",
+      "he": "פאונדרי",
+      "d": "המטריה של Azure ל-GenAI: קטלוג מודלים, deployments, agents ו-evals תחת project אחד.",
+      "day": 1,
+      "rel": [
+        "managed-identity",
+        "deployment-types"
+      ]
+    },
+    {
+      "id": "managed-identity",
+      "t": "Managed Identity",
+      "he": "זהות מנוהלת",
+      "d": "אימות ללא מפתחות בין שירותי Azure דרך RBAC; התשובה לכל שאלת keyless במבחן.",
+      "day": 1,
+      "rel": [
+        "foundry"
+      ]
+    },
+    {
+      "id": "deployment-types",
+      "t": "Deployment Types",
+      "he": "סוגי פריסה",
+      "d": "Standard/Global/DataZone לפי טוקן, GlobalBatch זול ואסינכרוני, PTU קיבולת שמורה לפי שעה.",
+      "day": 2,
+      "rel": [
+        "foundry",
+        "ptu"
+      ]
+    },
+    {
+      "id": "ptu",
+      "t": "ProvisionedManaged (PTU)",
+      "he": "קיבולת שמורה",
+      "d": "throughput מובטח בחיוב שעתי גם בחוסר שימוש; PTU יתום שורף כסף.",
+      "day": 2,
+      "rel": [
+        "deployment-types"
+      ]
+    },
+    {
+      "id": "fit-engine-rule",
+      "t": "Right-size the Engine",
+      "he": "מתאימים מנוע לעומס",
+      "d": "כלל שיקול הדעת: Typesense לאפליקציות, Elasticsearch ללוגים, PG FTS כשוויתור מודע; לא יוקרה.",
+      "day": 1,
+      "rel": [
+        "lsm-btree"
+      ]
+    },
+    {
+      "id": "lsm-btree",
+      "t": "LSM vs B-Tree",
+      "he": "עצי LSM מול B-Tree",
+      "d": "B-tree לקריאות ו-ACID; LSM לכתיבה רציפה מעל ~50K/s עם compaction ברקע.",
+      "day": 2,
+      "rel": [
+        "fit-engine-rule"
+      ]
+    },
+    {
+      "id": "particle-system",
+      "t": "Particle System",
+      "he": "מערכת חלקיקים",
+      "d": "טכניקת גרפיקה: הרבה נקודות קטנות (חלקיקים) שכל אחת עם מיקום, מהירות וזמן-חיים, מדומות יחד ליצירת אפקט כמו ניצוצות, עשן או קונפטי. בהסדנה: פרץ הזהב אחרי תשובה נכונה.",
+      "day": 3,
+      "rel": [
+        "easing-curve",
+        "game-juice"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "easing-curve",
+      "t": "Easing Curve",
+      "he": "עקומת האטה",
+      "d": "פונקציה שממפה זמן (0..1) לקצב תנועה: linear זז קבוע, ease-out מתחיל מהר ונרגע. קובעת את האופי של כל אנימציה.",
+      "day": 3,
+      "rel": [
+        "spring-animation",
+        "particle-system"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "spring-animation",
+      "t": "Spring Animation",
+      "he": "אנימציית קפיץ",
+      "d": "תנועה שמדמה פיזיקת קפיץ: חריגה קלה מעבר ליעד (overshoot) ואז התייצבות. ב-CSS מודרני: linear() עם נקודות דגימה. זו החתימה המוטורית של הסדנה.",
+      "day": 3,
+      "rel": [
+        "easing-curve"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "nine-slice",
+      "t": "9-Slice Scaling",
+      "he": "חלוקה לתשעה",
+      "d": "טכניקת מסגרות ממשחקים: תמונה נחתכת ל-9 אזורים, הפינות נשארות קבועות והשוליים נמתחים, כך מסגרת מעוטרת מתאימה לכל גודל. ב-CSS: border-image.",
+      "day": 3,
+      "rel": [
+        "sprite-sheet"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "sprite-sheet",
+      "t": "Sprite Sheet",
+      "he": "גיליון ספרייטים",
+      "d": "תמונה אחת שמכילה רצף פריימים של אנימציה; מציגים חלון אחד בכל רגע וקופצים ביניהם (ב-CSS: steps()). זול וחד, הבסיס לאנימציית דמויות.",
+      "day": 3,
+      "rel": [
+        "nine-slice",
+        "particle-system"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "shader",
+      "t": "Shader",
+      "he": "שיידר",
+      "d": "תוכנית קטנה שרצה על ה-GPU עבור כל פיקסל או קודקוד, וקובעת צבע וצורה. הבסיס לאפקטים כמו CRT, עיוות וגלים. בווב: WebGL/WebGPU.",
+      "day": 3,
+      "rel": [
+        "particle-system"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "game-juice",
+      "t": "Game Juice",
+      "he": "מיץ משחקי",
+      "d": "עקרון עיצוב: כל אירוע מבוצע בכמה ערוצים יחד (תנועה, מספרים, חלקיקים, סאונד) בעוצמה יחסית לחשיבות. ההבדל בין ממשק שמודיע לממשק שמרגישים.",
+      "day": 3,
+      "rel": [
+        "particle-system",
+        "easing-curve",
+        "spring-animation"
+      ],
+      "bonus": true
+    }
   ]
 }

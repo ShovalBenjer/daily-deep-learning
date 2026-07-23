@@ -698,3 +698,90 @@ header.bar::after {
   .ob-row.own .ob-bar::after { animation: none; display: none; }
   .qbtn, .finish-day, .qz-check, .rv-go, .qp-done, .rv-again, .opt, .ob-set, .ob-ev, .tabs a { transition: none; }
 }
+
+/* ============ ILLUSTRATED ACADEMY (direction A on top of B, approved) ============
+   Bespoke 9-slice drawn frames (assets/ui/frame-*.svg, authored in-identity),
+   baked parchment noise on surfaces, seal-stamp section marks, ledger head,
+   one custom glyph language in the nav, and הניצוץ, the workshop spark. */
+
+/* drawn frames replace flat borders; corner-tick pseudo retires */
+.plate::after { display: none; }
+section.part, .intro-plate, .review-call, .qz, .widget, .qp-summary {
+  border: 11px solid transparent;
+  border-image: url("assets/ui/frame-plate.svg") 24 / 11px stretch;
+  border-radius: 0;
+  box-shadow: 0 16px 34px -24px var(--shadow);
+}
+.next-card, #overlay .ov-plate {
+  border: 14px solid transparent;
+  border-image: url("assets/ui/frame-hero.svg") 28 / 14px stretch;
+  border-radius: 0;
+}
+[data-theme="light"] section.part, [data-theme="light"] .intro-plate,
+[data-theme="light"] .review-call, [data-theme="light"] .qz,
+[data-theme="light"] .widget, [data-theme="light"] .qp-summary {
+  border-image-source: url("assets/ui/frame-plate-light.svg");
+}
+[data-theme="light"] .next-card, [data-theme="light"] #overlay .ov-plate {
+  border-image-source: url("assets/ui/frame-hero-light.svg");
+}
+
+/* baked parchment noise on framed surfaces (static feTurbulence tile) */
+section.part, .intro-plate, .review-call, .next-card, #overlay .ov-plate, .qp-summary {
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.79 0 0 0 0 0.66 0 0 0 0 0.42 0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>"),
+    linear-gradient(180deg, color-mix(in oklab, var(--gold) 5%, transparent), transparent 26%);
+}
+
+/* the ledger head: stitched binding + a stamped day chip */
+article header.head { position: relative; padding-top: .9rem; }
+article header.head::before {
+  content: ""; position: absolute; top: 0; inset-inline: 6%;
+  border-top: 1px dashed color-mix(in oklab, var(--gold) 55%, transparent);
+}
+.head .folio-line {
+  display: inline-block; width: max-content; max-width: 100%;
+  border: 1px dashed color-mix(in oklab, var(--gold) 45%, transparent);
+  padding: .14rem .6rem; transform: rotate(-1.2deg);
+}
+
+/* seal-stamp section marks (the rubricated letter becomes a wax seal) */
+.part-head .mark {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; min-width: 34px; border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  outline: 1px dashed color-mix(in oklab, var(--gold) 45%, transparent);
+  outline-offset: -5px;
+  background: radial-gradient(circle at 38% 30%, color-mix(in oklab, var(--gold) 16%, var(--panel-2)), var(--panel-2) 72%);
+  font-size: 1.05rem; transform: rotate(-6deg);
+}
+
+/* one glyph language in the nav */
+nav.tabs { padding-top: .2rem; }
+.tabs a { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: .62rem; letter-spacing: .02em; }
+.tg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.tabs a.active .tg { filter: drop-shadow(0 0 6px color-mix(in oklab, var(--gold) 70%, transparent)); }
+
+/* הניצוץ, the workshop spark: idle flicker, glad flare, dim on a miss */
+#spark { width: 26px; height: 33px; flex: none; align-self: center; }
+#spark svg { width: 100%; height: 100%; overflow: visible; }
+.sp-lantern { fill: color-mix(in oklab, var(--panel) 60%, transparent); stroke: var(--gold); stroke-width: 1.6; }
+.sp-ring { fill: none; stroke: var(--gold); stroke-width: 1.4; }
+.sp-flame { fill: var(--gold); }
+.sp-flame-in { fill: var(--gold-hi); }
+.sp-eye { fill: #14101a; }
+.sp-fl { transform-origin: 16px 30px; animation: sp-idle 2.8s ease-in-out infinite; }
+@keyframes sp-idle {
+  0%, 100% { transform: scale(1, 1) rotate(0deg); }
+  30% { transform: scale(1.03, 1.05) rotate(-1.6deg); }
+  62% { transform: scale(.98, .97) rotate(1.2deg); }
+}
+#spark.glad .sp-fl { animation: sp-glad .9s var(--ease-spring); }
+#spark.glad svg { filter: drop-shadow(0 0 9px color-mix(in oklab, var(--gold) 85%, transparent)); }
+@keyframes sp-glad { 0% { transform: scale(.9); } 45% { transform: scale(1.28, 1.34); } 100% { transform: scale(1); } }
+#spark.dim .sp-fl { transform: scale(.82, .7); animation: none; transition: transform .3s ease-out; }
+#spark.dim svg { filter: grayscale(.55) brightness(.8); transform: rotate(-7deg); transition: transform .3s ease-out, filter .3s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-fl, #spark.glad .sp-fl { animation: none; }
+}

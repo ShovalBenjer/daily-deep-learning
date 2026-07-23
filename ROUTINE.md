@@ -76,6 +76,11 @@ sourced principles). The live ledger is `skills.json`: per skill `current` vs
    `docker` are below level 3, weave ONE mini-section (150-300 words + one
    `fillin`) into a fitting day: real file from his stack (pyproject.toml,
    azure-pipelines.yml, Makefile for הסדנה), read-then-write, never theory-only.
+   BONUS lane (low priority, ~1x/week max): the workshop's own build vocabulary
+   (particle systems, easing/springs, 9-slice, sprite sheets, shaders, game
+   juice; seeded in concepts.json with "bonus":true). One short מיני-section
+   explaining a term THE APP ITSELF uses, pointed at the live example on the
+   page ("הפרץ אחרי תשובה נכונה הוא particle system"). tree: craft.
 3. **Skill tag**: every quiz/fillin that exercises a ledger skill carries
    `"skill":"<id from skills.json>"` in its JSON. Untagged blocks are fine for
    pure course content.

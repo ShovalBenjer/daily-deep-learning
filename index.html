@@ -247,6 +247,40 @@ function ptsFloat(el, pts) {
   ], { duration: 950, easing: 'ease-out' }).finished.then(() => f.remove());
 }
 
+/* ember motes: the workshop's ambient depth layer (idle-killed, motion-gated) */
+function mountMotes() {
+  if (REDUCED()) return;
+  const cv = document.createElement('canvas');
+  cv.id = 'motes'; cv.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(cv);
+  const x = cv.getContext('2d');
+  let W, H, run = true;
+  const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; };
+  size(); addEventListener('resize', size);
+  const N = 14;
+  const P = Array.from({ length: N }, () => ({
+    x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+    r: .8 + Math.random() * 1.7, s: .12 + Math.random() * .3,
+    ph: Math.random() * Math.PI * 2, dx: (Math.random() - .5) * .12
+  }));
+  document.addEventListener('visibilitychange', () => { run = !document.hidden; if (run) requestAnimationFrame(fr); });
+  let t = 0;
+  function fr() {
+    if (!run) return;
+    t += .016;
+    x.clearRect(0, 0, W, H);
+    P.forEach(p => {
+      p.y -= p.s; p.x += p.dx + Math.sin(t + p.ph) * .08;
+      if (p.y < -6) { p.y = H + 6; p.x = Math.random() * W; }
+      const a = .12 + .14 * (Math.sin(t * 1.7 + p.ph) * .5 + .5);
+      x.beginPath(); x.arc(p.x, p.y, p.r, 0, 7);
+      x.fillStyle = `rgba(212,176,110,${a})`; x.fill();
+    });
+    requestAnimationFrame(fr);
+  }
+  requestAnimationFrame(fr);
+}
+
 /* הניצוץ: the workshop spark reacts to the learner (ZZZ mascot principle) */
 let sparkT = null;
 function sparkState(s) {
@@ -1085,13 +1119,18 @@ function renderPanel() {
   tree.tiers.forEach((tier, ti) => {
     const need = talents.tier_gate * ti;
     const open = spentIn(tree.id) >= need;
+    if (ti > 0) html += `<div class="tp-gatebar ${open ? 'open' : ''}">
+      <span class="gb-line"></span>
+      <span class="gb-seal">${open ? 'שכבה ' + (ti + 1) : need + ' נק׳ בעץ לפתיחה'}</span>
+      <span class="gb-line"></span></div>`;
     html += `<div class="tp-tier ${open ? '' : 'locked'}">` +
-      (ti > 0 ? `<span class="tp-gate">${open ? 'שכבה ' + (ti + 1) : need + ' נק׳ לפתיחה'}</span>` : '') +
       tier.nodes.map(n => {
         const d = domainOf(n.id), st = nodeState(tree, ti, n);
+        const pips = Array.from({ length: talents.max_rank }, (_, i) =>
+          `<i class="${i < st.r ? 'on' : ''}"></i>`).join('');
         return `<button class="tnode ${st.cls} ${selNode === n.id ? 'sel' : ''}" data-id="${n.id}">
-          <span class="frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICON[n.id] || ''}</svg>
-          <span class="pips">${st.r}/${talents.max_rank}</span></span>
+          <span class="frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICON[n.id] || ''}</svg></span>
+          <span class="pips" role="img" aria-label="דרגה ${st.r} מתוך ${talents.max_rank}">${pips}</span>
           <span class="nm">${d.name}</span></button>`;
       }).join('') + `</div>`;
   });
@@ -1133,10 +1172,13 @@ function drawPanelEdges() {
     const d = midx !== null
       ? `M${x1},${y1} L${x1},${y2}`
       : `M${x1},${y1} L${x1},${(y1 + y2) / 2} L${x2},${(y1 + y2) / 2} L${x2},${y2}`;
-    paths += `<path d="${d}"
-      fill="none" stroke="${on ? gold : dim}" stroke-width="${on ? 4 : 2.5}" stroke-linejoin="round"
-      ${on ? `style="filter:drop-shadow(0 0 5px ${gold})"` : 'stroke-dasharray="6 5"'}
-      marker-end="url(#${on ? 'arrw' : 'arrd'})"/>`;
+    // engraved groove + the ink that flows through it once the path is earned
+    paths += `<path d="${d}" fill="none" class="edge-groove" stroke-linejoin="round"/>`;
+    paths += on
+      ? `<path d="${d}" fill="none" class="edge-flow" stroke="${gold}" stroke-linejoin="round"
+           style="filter:drop-shadow(0 0 5px ${gold})" marker-end="url(#arrw)"/>`
+      : `<path d="${d}" fill="none" class="edge-dark" stroke="${dim}" stroke-linejoin="round"
+           marker-end="url(#arrd)"/>`;
   });
   svg.innerHTML = defs + paths;
 }
@@ -1175,7 +1217,11 @@ function renderNodeSheet(tree, n, gate) {
     if (scene3d) scene3d.refresh(); else renderPanel();
     renderNodeSheet(tree, n, gate); paintFolio();
     const fr = $(`.tnode[data-id="${n.id}"] .frame`);
-    if (fr) { fr.classList.add('pulse'); setTimeout(() => fr.classList.remove('pulse'), 500); }
+    if (fr) {
+      fr.classList.add('pulse'); setTimeout(() => fr.classList.remove('pulse'), 500);
+      burst(fr, 26 + (r + 1) * 8);
+      sparkState('glad');
+    }
   };
 }
 
@@ -1588,6 +1634,7 @@ addEventListener('scroll', () => {
   if (!index.length) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
   paintFolio(); route();
+  mountMotes();
 })();
 if ('serviceWorker' in navigator) {
   const hadController = !!navigator.serviceWorker.controller;

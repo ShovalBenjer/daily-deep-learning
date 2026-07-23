@@ -785,3 +785,134 @@ nav.tabs { padding-top: .2rem; }
 @media (prefers-reduced-motion: reduce) {
   .sp-fl, #spark.glad .sp-fl { animation: none; }
 }
+
+/* ============ THE GUILD BOARD (talent tree rebuild) + depth/scroll fixes ============
+   The tree is the signature element: a carved board in a recessed niche.
+   Nodes are seal medallions with physical rank pips; earned paths carry
+   flowing ink; tier gates are engraved crossbars; tree tabs are banners. */
+
+/* -- global depth separation: ground darker than panels, so surfaces lift -- */
+:root, [data-theme="dark"] { --bg: #0b0911; --shadow: rgba(0,0,0,.72); }
+
+/* -- scroll-jank fix: grain loses the blend-mode compositing cost -- */
+body::after { mix-blend-mode: normal; opacity: .03; }
+
+/* -- ember motes canvas sits between ground and content -- */
+#motes { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+/* -- bottom nav: safe-area respected, compositor-isolated -- */
+nav.tabs {
+  padding-bottom: max(.3rem, env(safe-area-inset-bottom));
+  transform: translateZ(0);
+}
+.tabs a { min-height: 48px; justify-content: center; }
+main { padding-bottom: calc(8.5rem + env(safe-area-inset-bottom)); }
+header.bar { -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); transform: translateZ(0); }
+
+/* -- the board: a recessed niche behind a hero frame -- */
+.talent-panel {
+  border: 14px solid transparent;
+  border-image: url("assets/ui/frame-hero.svg") 28 / 14px stretch;
+  border-radius: 0; overflow: visible;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.79 0 0 0 0 0.66 0 0 0 0 0.42 0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>"),
+    radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--tt, var(--gold)) 7%, transparent), transparent 60%),
+    linear-gradient(180deg, #08070d, #0d0b13 40%, #08070d);
+  box-shadow: inset 0 2px 18px rgba(0,0,0,.75), inset 0 0 0 1px rgba(0,0,0,.5);
+}
+[data-theme="light"] .talent-panel { border-image-source: url("assets/ui/frame-hero-light.svg"); }
+.tp-corner { display: none; } /* the hero frame owns the corners now */
+
+/* -- banner tabs (pennants) -- */
+.tree-tabs { gap: .55rem; align-items: stretch; }
+.tree-tab {
+  position: relative; border: 1px solid var(--line); border-bottom: none;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--tt, var(--gold)) 12%, var(--panel)), var(--panel) 70%);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), 50% 100%, 0 calc(100% - 9px));
+  padding-bottom: 12px; min-height: 58px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  transition: transform .34s var(--ease-spring);
+}
+.tree-tab.active {
+  transform: translateY(3px);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--tt, var(--gold)) 26%, var(--panel)), color-mix(in oklab, var(--tt, var(--gold)) 8%, var(--panel)) 75%);
+  border-color: var(--tt, var(--gold));
+  box-shadow: 0 6px 18px -8px var(--tt, var(--gold));
+}
+
+/* -- seal-medallion nodes -- */
+.tnode .frame {
+  width: 66px; height: 66px; border-radius: 50%;
+  border: 2px solid var(--line);
+  outline: 1px dashed color-mix(in oklab, var(--gold) 35%, transparent);
+  outline-offset: -7px;
+  background:
+    radial-gradient(circle at 36% 28%, color-mix(in oklab, var(--tt, var(--gold)) 14%, var(--panel-2)), var(--panel-2) 62%, #0d0b12 100%);
+  box-shadow: 0 3px 10px -3px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06);
+  transition: transform .34s var(--ease-spring), box-shadow .3s ease;
+}
+.tnode .frame svg { width: 30px; height: 30px; }
+.tnode .pips {
+  position: static; display: flex; gap: 4px; justify-content: center;
+  border: none; background: none; padding: 0; margin-top: .1rem;
+}
+.tnode .pips i {
+  width: 7px; height: 7px; border-radius: 50%;
+  border: 1px solid color-mix(in oklab, var(--gold) 45%, var(--line));
+  background: #0d0b12;
+}
+.tnode .pips i.on {
+  background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 75%);
+  border-color: var(--gold);
+  box-shadow: 0 0 5px color-mix(in oklab, var(--gold) 65%, transparent);
+}
+.tnode.locked .frame { filter: grayscale(.9) brightness(.55); outline-color: transparent; }
+.tnode.avail .frame {
+  border-color: var(--green); color: #cfe8d8;
+  animation: node-breathe 2.6s ease-in-out infinite;
+}
+@keyframes node-breathe {
+  0%, 100% { box-shadow: 0 3px 10px -3px rgba(0,0,0,.8), 0 0 0 0 color-mix(in oklab, var(--green) 45%, transparent); }
+  50% { box-shadow: 0 3px 10px -3px rgba(0,0,0,.8), 0 0 14px 2px color-mix(in oklab, var(--green) 40%, transparent); }
+}
+.tnode.ranked .frame {
+  border-color: var(--gold); color: var(--gold-hi);
+  box-shadow: 0 3px 10px -3px rgba(0,0,0,.8), 0 0 12px -2px color-mix(in oklab, var(--gold) 55%, transparent);
+}
+.tnode.maxed .frame {
+  border-color: var(--gold-hi); color: var(--gold-hi);
+  outline: 1px solid color-mix(in oklab, var(--gold-hi) 55%, transparent); outline-offset: 2px;
+  box-shadow: 0 0 18px -2px color-mix(in oklab, var(--gold) 75%, transparent), inset 0 0 10px color-mix(in oklab, var(--gold) 25%, transparent);
+}
+.tnode.sel .frame { outline: 2px solid var(--gold-hi); outline-offset: 3px; animation: rim-ping 1.3s ease-out infinite; }
+
+/* -- engraved gate crossbars between tiers -- */
+.tp-gatebar { display: flex; align-items: center; gap: .6rem; padding: .1rem 1rem; }
+.gb-line { flex: 1; height: 3px; border-block: 1px solid rgba(0,0,0,.65);
+  background: linear-gradient(180deg, rgba(0,0,0,.5), color-mix(in oklab, var(--line) 80%, transparent)); }
+.tp-gatebar.open .gb-line { background: linear-gradient(90deg, transparent, var(--gold)); border-block-color: transparent; height: 2px;
+  box-shadow: 0 0 8px -2px var(--gold); }
+.tp-gatebar.open .gb-line:last-child { background: linear-gradient(270deg, transparent, var(--gold)); }
+.gb-seal {
+  font-size: .68rem; font-weight: 700; letter-spacing: .05em; white-space: nowrap;
+  color: var(--faded); border: 1px solid var(--line); border-radius: 999px;
+  padding: .16rem .7rem; background: #0d0b12;
+}
+.tp-gatebar.open .gb-seal { color: var(--gold-hi); border-color: var(--gold);
+  text-shadow: 0 0 8px color-mix(in oklab, var(--gold) 45%, transparent); }
+.tp-tier { padding: 1.35rem 0; }
+.tp-tier.locked { opacity: .5; }
+
+/* -- the ink that flows through earned grooves -- */
+.tp-edges .edge-groove { stroke: rgba(0,0,0,.6); stroke-width: 7; }
+.tp-edges .edge-dark { stroke-width: 2; stroke-dasharray: 5 6; }
+.tp-edges .edge-flow {
+  stroke-width: 3; stroke-dasharray: 12 7;
+  animation: groove-flow 1.5s linear infinite;
+}
+@keyframes groove-flow { to { stroke-dashoffset: -19; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tnode.avail .frame, .tp-edges .edge-flow { animation: none; }
+  .tree-tab { transition: none; }
+}

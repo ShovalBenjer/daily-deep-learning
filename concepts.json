@@ -311,6 +311,115 @@
         "spring-animation"
       ],
       "bonus": true
+    },
+    {
+      "id": "imitation-learning",
+      "t": "Imitation Learning",
+      "he": "למידת חיקוי",
+      "d": "ללמוד policy מהדגמות מומחה במקום מ-reward",
+      "day": 3,
+      "rel": [
+        "behavior-cloning",
+        "dagger"
+      ]
+    },
+    {
+      "id": "behavior-cloning",
+      "t": "Behavior Cloning",
+      "he": "שיבוט התנהגות",
+      "d": "supervised learning על זוגות מצב-פעולה של המומחה",
+      "day": 3,
+      "rel": [
+        "imitation-learning",
+        "distribution-shift",
+        "sft-as-bc",
+        "policy"
+      ]
+    },
+    {
+      "id": "distribution-shift",
+      "t": "Distribution Shift",
+      "he": "הסחת התפלגות",
+      "d": "המדיניות נבחנת על מצבים שהיא עצמה יוצרת, לא על אלה שאומנה עליהם",
+      "day": 3,
+      "rel": [
+        "compounding-errors",
+        "behavior-cloning"
+      ]
+    },
+    {
+      "id": "compounding-errors",
+      "t": "Compounding Errors",
+      "he": "שגיאות מצטברות",
+      "d": "טעות מוציאה מהדאטה, שם טועים יותר; עלות בערך ריבועית באופק",
+      "day": 3,
+      "rel": [
+        "distribution-shift",
+        "dagger"
+      ]
+    },
+    {
+      "id": "dagger",
+      "t": "DAgger",
+      "he": "צבירת דאטה",
+      "d": "רולאוט של המדיניות, תיוג מומחה למצבים שביקרה בהם, איחוד ואימון מחדש; מריבועי ללינארי",
+      "day": 3,
+      "rel": [
+        "behavior-cloning",
+        "human-on-the-loop"
+      ]
+    },
+    {
+      "id": "mode-averaging",
+      "t": "Mode Averaging",
+      "he": "מיצוע אופנים",
+      "d": "MSE על הדגמות רב-אופנות מנבא את הממוצע, שיכול להיות הפעולה הגרועה מכולן",
+      "day": 3,
+      "rel": [
+        "behavior-cloning"
+      ]
+    },
+    {
+      "id": "sft-as-bc",
+      "t": "SFT as BC",
+      "he": "כוונון מפוקח כחיקוי",
+      "d": "SFT של LLM הוא behavior cloning על הדגמות טקסט; RLHF מוסיף RL אחריו",
+      "day": 3,
+      "rel": [
+        "behavior-cloning",
+        "reinforce"
+      ]
+    },
+    {
+      "id": "rbac-data-plane",
+      "t": "Control vs Data Plane RBAC",
+      "he": "מישור בקרה מול נתונים",
+      "d": "Contributor מנהל את המשאב אבל לא מקנה inference; לזה צריך תפקיד data-plane",
+      "day": 3,
+      "rel": [
+        "managed-identity"
+      ]
+    },
+    {
+      "id": "private-endpoint",
+      "t": "Private Endpoint",
+      "he": "נקודת קצה פרטית",
+      "d": "IP פרטי ב-VNet למשאב PaaS עם DNS פרטי וסגירת הגישה הציבורית",
+      "day": 3,
+      "rel": [
+        "rbac-data-plane",
+        "managed-identity"
+      ]
+    },
+    {
+      "id": "human-on-the-loop",
+      "t": "Human on the Loop",
+      "he": "אדם על הלולאה",
+      "d": "אישור חוסם רק לפעולות בלתי הפיכות; השאר אוטונומי ושקוף",
+      "day": 3,
+      "rel": [
+        "dagger"
+      ]
     }
   ]
 }

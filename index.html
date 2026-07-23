@@ -26,6 +26,11 @@
   <g id="g-kodex"><path d="M4 11 h16 v8 a1.5 1.5 0 0 1 -1.5 1.5 h-13 A1.5 1.5 0 0 1 4 19 Z M4 11 v-2 a8 8 0 0 1 16 0 v2"/><path d="M12 14 v3 M10.6 14.5 h2.8"/></g>
   <g id="g-discover"><circle cx="10" cy="10" r="6.2"/><path d="M14.5 14.5 L20.5 20.5 M7.5 9.5 a3 3 0 0 1 2.5 -2.4"/></g>
   <g id="g-ladder"><path d="M6.5 3 h11 v17 l-5.5 -3.6 L6.5 20 Z M9.5 7.5 h5"/></g>
+  <g id="a-flame"><path d="M12 3 C15 7.5 17 10 17 13.5 a5 5 0 1 1 -10 0 C7 10 9 7.5 12 3 Z M12 11 c1.4 1.8 2 3 2 4.2 a2 2 0 1 1 -4 0 C10 14 10.6 12.8 12 11 Z"/></g>
+  <g id="a-scales"><path d="M12 4 v15 M5 7 h14 M12 19 h-4 m4 0 h4 M5 7 l-2.5 5 a3 3 0 0 0 5 0 Z M19 7 l-2.5 5 a3 3 0 0 0 5 0 Z"/></g>
+  <g id="a-hourglass"><path d="M6 3 h12 M6 21 h12 M7 3 c0 4 3 5.5 3 9 s-3 5 -3 9 M17 3 c0 4 -3 5.5 -3 9 s3 5 3 9"/></g>
+  <g id="a-arrow"><path d="M4 20 L18 6 M18 6 h-6 M18 6 v6 M4 20 l3 -1 -2 -2 Z"/></g>
+  <g id="a-crown"><path d="M4 8 l4 3 4 -6 4 6 4 -3 -1.5 8 h-13 Z M5.5 18.5 h13"/></g>
 </defs></svg>
 <header class="bar">
   <a class="wordmark" href="#/"><b>ה</b>סדנה <span class="alpha-chip">אלפא</span></a>
@@ -182,6 +187,7 @@ function award(tree, pts, el, firstTry, skillTag) {
   if (el) { burst(el, 14 + pts * 8 + (firstTry ? 10 : 0)); ptsFloat(el, pts); }
   else toast('+' + pts + ' נקודות לעץ');
   sparkState('glad'); sfx.correct();
+  checkAchievements();
   const lv = level();
   if (lv > lv0) setTimeout(() => ritual({
     kicker: 'הסדנה', title: 'רמה ' + lv, xp: totalEarned(),
@@ -395,6 +401,50 @@ function sparkState(s) {
 
 /* streak tier tells: the ritual is FIXED, its magnitude is read from the frame */
 const streakTier = n => n >= 30 ? 4 : n >= 14 ? 3 : n >= 7 ? 2 : n >= 3 ? 1 : 0;
+
+/* ---------- חותמות: the achievement seals (derived from state, never tracked twice).
+   Earning seals UPGRADES THE GLYPHS: nav icons gain weight/glow by total seals,
+   each tree's medallions gain ornament rings by its ranks, the spark evolves. */
+const okAnswers = () => Object.values(S.answers).filter(a => a && a.ok);
+const ACHS = [
+  { id: 'streak3', name: 'מתמיד', icon: 'a-flame', t: 1, desc: 'רצף 3 ימים', cond: () => runLength() >= 3 },
+  { id: 'streak7', name: 'מתמיד כסף', icon: 'a-flame', t: 2, desc: 'רצף 7 ימים', cond: () => runLength() >= 7 },
+  { id: 'streak14', name: 'מתמיד זהב', icon: 'a-flame', t: 3, desc: 'רצף 14 ימים', cond: () => runLength() >= 14 },
+  { id: 'streak30', name: 'להבה נצחית', icon: 'a-flame', t: 4, desc: 'רצף 30 ימים', cond: () => runLength() >= 30 },
+  { id: 'ans50', name: 'לומד', icon: 'g-today', t: 1, desc: '50 תשובות נכונות', cond: () => okAnswers().length >= 50 },
+  { id: 'ans150', name: 'משנן', icon: 'g-today', t: 2, desc: '150 תשובות נכונות', cond: () => okAnswers().length >= 150 },
+  { id: 'first25', name: 'מדייק', icon: 'a-arrow', t: 2, desc: '25 נכונות בניסיון ראשון', cond: () => okAnswers().filter(a => a.attempts === 1).length >= 25 },
+  { id: 'calib', name: 'מכויל', icon: 'a-scales', t: 3, desc: 'פער ביטחון-דיוק עד 12 על 20+ שאלות', cond: () => {
+      const c = Object.values(S.answers).filter(a => a && a.conf != null);
+      if (c.length < 20) return false;
+      const avg = c.reduce((x, a) => x + a.conf, 0) / c.length;
+      const acc = 100 * c.filter(a => a.ok).length / c.length;
+      return Math.abs(avg - acc) <= 12;
+    } },
+  { id: 'recall50', name: 'זוכר', icon: 'a-hourglass', t: 2, desc: '50 שליפות מוצלחות', cond: () => Object.keys(S.answers).filter(k => k.includes('@r') && S.answers[k].ok).length >= 50 },
+  { id: 'iron', name: 'זיכרון ברזל', icon: 'a-hourglass', t: 3, desc: 'פריט שרד עד מרווח 60 יום', cond: () => Object.values(S.reviews).some(r => r.iv >= 4) },
+  { id: 'ranks10', name: 'בונה', icon: 'g-map', t: 1, desc: '10 דרגות בעץ', cond: () => Object.values(S.ranks).reduce((a, b) => a + b, 0) >= 10 },
+  { id: 'capstone', name: 'אדריכל', icon: 'a-crown', t: 4, desc: 'קאפסטון ראשון נקנה', cond: () => ['sysdesign', 'craft-master', 'prod-own'].some(id => nodeRank(id) >= 1) },
+  { id: 'vocab', name: 'לשון האומן', icon: 'g-kodex', t: 2, desc: 'סט לשון הסדנה הושלם', cond: () => (S.setBonus || {})['set-vocab'] >= 2 },
+  { id: 'own1', name: 'בעלות ראשונה', icon: 'a-crown', t: 3, desc: 'מיומנות ראשונה הגיעה ליעד', cond: () => !!(skills && skills.skills && skills.skills.some(s => (S.skillLevels[s.id] ?? s.current) >= s.target)) },
+  { id: 'shield1', name: 'ניצול בעור המגן', icon: 'sre', t: 2, desc: 'מגן רצף נשבר והציל אותך', cond: () => (S.shieldsUsed || 0) >= 1 },
+];
+function checkAchievements() {
+  S.ach = S.ach || {};
+  const fresh = ACHS.filter(a => !S.ach[a.id] && (() => { try { return a.cond(); } catch (e) { return false; } })());
+  if (fresh.length) {
+    fresh.forEach(a => S.ach[a.id] = iso(new Date()));
+    store.save();
+    const top = fresh.reduce((m, a) => a.t > m.t ? a : m, fresh[0]);
+    setTimeout(() => ritual({ kicker: 'חותם חדש', title: top.name, xp: Object.keys(S.ach).length,
+      sub: top.desc + (fresh.length > 1 ? ' · ועוד ' + (fresh.length - 1) : '') + ' · הגליפים התעצמו', tier: top.t }), 900);
+  }
+  paintGlyphTier();
+}
+function paintGlyphTier() {
+  const n = Object.keys(S.ach || {}).length;
+  document.body.dataset.ach = n >= 12 ? 3 : n >= 7 ? 2 : n >= 3 ? 1 : 0;
+}
 
 function ritual({ kicker, title, sub, xp, tier = 0 }, onclose) {
   celebrate(`<div class="rt-spark" aria-hidden="true"><img src="assets/art/spark-portrait.webp" alt=""></div>
@@ -1243,7 +1293,10 @@ function renderPanel() {
       ${t.name}<small>${spentIn(t.id)} הושקעו · ${pool(t.id)} פנויות</small></button>`).join('') + `</div>`;
   const tree = talents.trees.find(t => t.id === activeTree);
   const EMBLEM = { systems: 'os', craft: 'api', ops: 'sre' };
-  html += `<div class="talent-panel" style="${tint(tree)}">
+  const ranksInTree = tree.tiers.flatMap(t => t.nodes).reduce((a, n) => a + nodeRank(n.id), 0);
+  const treeAch = tree.tiers.flatMap(t => t.nodes).some(n => n.kind === 'capstone' && nodeRank(n.id) >= 1) ? 3
+    : ranksInTree >= 12 ? 2 : ranksInTree >= 5 ? 1 : 0;
+  html += `<div class="talent-panel" data-ach="${treeAch}" style="${tint(tree)}">
     <div class="tp-emblem"><svg viewBox="0 0 24 24">${ICON[EMBLEM[tree.id]] || ''}</svg></div>
     <svg class="tp-edges"></svg>
     <div class="tp-head"><span class="tp-name">עץ ${tree.name}</span>
@@ -1400,6 +1453,7 @@ function renderNodeSheet(tree, n, gate) {
       burst(fr, 26 + (r + 1) * 8);
       sparkState('glad'); sfx.coin();
     }
+    checkAchievements();
   };
 }
 
@@ -1727,6 +1781,15 @@ function renderKodex() {
   let html = `<div class="view-head"><h1>האוצר</h1>
     <p>המושגים שנלמדו, הקשרים ביניהם, והערות ששמרת מהמורה. גדל עם כל יום.</p></div>
     <div class="set-strip" id="setStrip"></div>
+    <div class="qhead"><h2>חדר החותמות</h2><span class="d">${Object.keys(S.ach || {}).length}/${ACHS.length}</span></div>
+    <div class="ach-grid">` + ACHS.map(a => {
+      const got = (S.ach || {})[a.id];
+      return `<div class="ach-seal ${got ? 'got t' + a.t : ''}" ${got ? `title="${esc(a.name)} · ${got}"` : ''}>
+        <svg viewBox="0 0 24 24"><use href="#${a.icon}"/></svg>
+        <span class="as-name">${esc(a.name)}</span>
+        <span class="as-desc">${esc(a.desc)}</span>
+      </div>`;
+    }).join('') + `</div>
     <input id="kSearch" type="search" placeholder="חיפוש מושג..." autocomplete="off">
     <canvas id="kGraph" height="300"></canvas>
     <div id="kList" class="k-list"></div>`;
@@ -1948,6 +2011,7 @@ addEventListener('scroll', () => {
   await pullState();
   seedReviews();                 // nav badge needs the queue on every tab
   shieldWatch();                 // a shield may shatter to save the streak
+  checkAchievements();
   paintFolio(); route();
   mountMotes();
   mountExplainLens();

@@ -926,3 +926,41 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
   border-inline-start: 2px solid var(--gold); background: rgba(8,7,13,.35); }
 .ns-quest.locked { opacity: .6; border-inline-start-style: dashed; }
 .ns-quest .q-veil { color: var(--faded); font-style: italic; }
+
+/* ============ חותמות: achievements upgrade the glyphs ============ */
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: .5rem; margin: .3rem 0 1rem; }
+.ach-seal { display: flex; flex-direction: column; align-items: center; gap: .2rem; text-align: center;
+  padding: .6rem .3rem .5rem; border: 1px solid var(--line); border-radius: 4px;
+  background: var(--panel); background-image: var(--noise); opacity: .55; }
+.ach-seal svg { width: 26px; height: 26px; fill: none; stroke: var(--faded); stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round; }
+.ach-seal .as-name { font-size: .72rem; font-weight: 700; color: var(--faded); }
+.ach-seal .as-desc { font-size: .6rem; color: var(--faded); line-height: 1.3; }
+.ach-seal.got { opacity: 1; border-color: var(--gold); }
+.ach-seal.got svg { stroke: var(--gold-hi); filter: drop-shadow(0 0 5px color-mix(in oklab, var(--gold) 60%, transparent)); }
+.ach-seal.got .as-name { color: var(--gold-hi); }
+.ach-seal.got.t3, .ach-seal.got.t4 { box-shadow: 0 0 14px -6px var(--gold); }
+.ach-seal.got.t4 { border-color: var(--gold-hi); outline: 1px dashed color-mix(in oklab, var(--gold) 45%, transparent); outline-offset: -4px; }
+
+/* GLOBAL glyph evolution by total seals: the nav language grows precious */
+body[data-ach="1"] .tg { stroke-width: 1.9; }
+body[data-ach="2"] .tg { stroke-width: 2; filter: drop-shadow(0 0 3px color-mix(in oklab, var(--gold) 45%, transparent)); }
+body[data-ach="3"] .tg { stroke-width: 2.1; filter: drop-shadow(0 0 5px color-mix(in oklab, var(--gold) 65%, transparent)); }
+body[data-ach="3"] #spark svg { filter: drop-shadow(0 0 7px color-mix(in oklab, var(--gold) 55%, transparent)); }
+
+/* PER-TREE medallion ornament by that tree's honors (ranks, capstone) */
+.talent-panel[data-ach="1"] .tnode .frame {
+  box-shadow: 0 3px 10px -3px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 0 3px rgba(8,7,13,.6), 0 0 0 4px color-mix(in oklab, var(--gold) 35%, transparent);
+}
+.talent-panel[data-ach="2"] .tnode .frame {
+  box-shadow: 0 3px 10px -3px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 0 3px rgba(8,7,13,.6), 0 0 0 4.5px color-mix(in oklab, var(--gold) 55%, transparent),
+    0 0 10px -2px color-mix(in oklab, var(--gold) 35%, transparent);
+}
+.talent-panel[data-ach="3"] .tnode .frame {
+  outline: 1px dashed color-mix(in oklab, var(--gold-hi) 50%, transparent); outline-offset: 3px;
+  box-shadow: 0 3px 10px -3px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 0 3px rgba(8,7,13,.6), 0 0 0 4.5px color-mix(in oklab, var(--gold) 70%, transparent),
+    0 0 14px -2px color-mix(in oklab, var(--gold) 50%, transparent);
+}

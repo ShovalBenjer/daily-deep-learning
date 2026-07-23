@@ -20,6 +20,15 @@
   --warden: #7fa3dc;
   --code-bg: #0b0a10;
   --shadow: rgba(0,0,0,.6);
+  /* rarity ramp (one strict grammar: levels/tiers only, never decorative) */
+  --r0: #8f8a99;   /* common: L0-1 */
+  --r1: #79b791;   /* uncommon: L2 */
+  --r2: #7fa3dc;   /* rare: L3 */
+  --r3: #a98fd6;   /* epic: L4 */
+  --r4: #c9a86a;   /* legendary: L5 */
+  --engrave-lo: rgba(0,0,0,.55);
+  --engrave-hi: rgba(232,201,136,.22);
+  --grain-op: .045;
   color-scheme: dark;
 }
 [data-theme="light"] {
@@ -39,6 +48,14 @@
   --warden: #3d64a8;
   --code-bg: #241f2e;
   --shadow: rgba(80,60,30,.35);
+  --r0: #7a7466;
+  --r1: #2e6b4f;
+  --r2: #3d64a8;
+  --r3: #6a4fa3;
+  --r4: #8a6d34;
+  --engrave-lo: rgba(255,250,235,.7);
+  --engrave-hi: rgba(60,40,10,.25);
+  --grain-op: .03;
   color-scheme: light;
 }
 
@@ -528,4 +545,97 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 30;
   html { scroll-behavior: auto; }
   #view, .tnode .frame, #toast span, #xpfill { transition: none !important; }
   .tnode.avail .frame, .next-card, .qz-pts { animation: none !important; }
+}
+
+/* ================= MATERIAL PASS (Arkheron constitution, passes 1-3) =================
+   Rule 1 set-dressing: film grain + stone bevels so no surface is flat CSS chrome.
+   Rule 3 color grammar: the r0-r4 ramp colors LEVELS ONLY (board bars, rank tiers).
+   Rule 5 two voices: engraved small-caps serif titles over plain data text.
+   Rule 6 status on the object: due-charges pips, ping-outline on selection. */
+
+/* film grain over everything (the single biggest flat->material move) */
+body::after {
+  content: ""; position: fixed; inset: -20%; pointer-events: none; z-index: 90;
+  opacity: var(--grain-op); mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* engraved display voice: titles only, data text untouched */
+h1, .part .head h2, .next-card h2, .qp-summary h2, .phase-head h2, .ownership summary {
+  letter-spacing: .045em;
+  text-shadow: 0 1px 0 var(--engrave-lo), 0 -1px 0 var(--engrave-hi);
+}
+
+/* stone-beveled plates: light from above, specular top edge, weightier corners */
+.plate, .next-card, .qz, .widget, .review-call {
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--gold-hi) 14%, transparent),
+    inset 0 -1px 0 rgba(0,0,0,.35),
+    inset 0 0 0 1px color-mix(in oklab, var(--gold) 8%, transparent),
+    0 16px 34px -22px var(--shadow);
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--gold) 4%, transparent), transparent 18%);
+}
+.next-card {
+  border-width: 1px;
+  background-image:
+    linear-gradient(180deg, color-mix(in oklab, var(--gold) 9%, transparent), transparent 30%),
+    radial-gradient(140% 100% at 50% 0%, color-mix(in oklab, var(--gold) 6%, transparent), transparent 55%);
+}
+
+/* metal primary buttons: cast, not painted; press = physically down */
+.qbtn, .finish-day, .qz-check:not(:disabled), .rv-go, .qp-done {
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 52%, color-mix(in oklab, var(--gold) 72%, black));
+  border: 1px solid color-mix(in oklab, var(--gold) 55%, black);
+  color: #14101a; border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.38), inset 0 -1px 0 rgba(0,0,0,.35), 0 3px 8px -3px var(--shadow);
+  text-shadow: 0 1px 0 rgba(255,255,255,.22);
+}
+.qbtn:active, .finish-day:active, .qz-check:active, .rv-go:active, .qp-done:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,.4);
+}
+
+/* carved tab bar: stone shelf with a lit active notch */
+nav.tabs {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--gold-hi) 7%, var(--panel)) 0, var(--panel) 22%);
+  box-shadow: 0 -1px 0 color-mix(in oklab, var(--gold) 22%, transparent), 0 -12px 26px -18px var(--shadow);
+}
+.tabs a.active {
+  background: radial-gradient(80% 120% at 50% 0%, color-mix(in oklab, var(--gold) 14%, transparent), transparent 70%);
+}
+
+/* ping-outline selection (rule 6): chosen option gets a live rim, not a fill */
+.opt.sel {
+  outline: 2px solid var(--gold-hi); outline-offset: 2px;
+  animation: rim-ping 1.3s ease-out infinite;
+}
+@keyframes rim-ping { 0%, 100% { outline-color: var(--gold-hi); } 55% { outline-color: color-mix(in oklab, var(--gold-hi) 25%, transparent); } }
+
+/* due-review charges: consumable pips on the object itself */
+.rv-pips { display: inline-flex; gap: 4px; margin-inline-start: .5rem; vertical-align: middle; }
+.rv-pips i {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 70%);
+  box-shadow: 0 0 6px color-mix(in oklab, var(--gold) 55%, transparent);
+}
+
+/* ownership bars speak the rarity ramp: cell color = the level it certifies */
+.ob-row:not(.risk) .ob-cell.on { background: var(--r1); border-color: var(--r1); }
+.ob-row:not(.risk)[data-lv="3"] .ob-cell.on { background: var(--r2); border-color: var(--r2); }
+.ob-row:not(.risk)[data-lv="4"] .ob-cell.on { background: var(--r3); border-color: var(--r3); }
+.ob-row:not(.risk)[data-lv="5"] .ob-cell.on { background: var(--r4); border-color: var(--r4); }
+.ob-row:not(.risk)[data-lv="0"] .ob-cell.on, .ob-row:not(.risk)[data-lv="1"] .ob-cell.on { background: var(--r0); border-color: var(--r0); }
+
+/* slow memory-light on the header bar (opacity only, motion-gated) */
+header.bar { position: sticky; }
+header.bar::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(60% 140% at 18% 0%, color-mix(in oklab, var(--gold) 10%, transparent), transparent 70%);
+  animation: memlight 9s ease-in-out infinite alternate;
+}
+@keyframes memlight { from { opacity: .45; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .opt.sel, header.bar::after { animation: none !important; }
 }

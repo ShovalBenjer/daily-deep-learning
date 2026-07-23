@@ -867,7 +867,7 @@ async function renderPost(i) {
   const dueN = dueReviews().length;
   if (dueN) {
     const rc = document.createElement('div'); rc.className = 'review-call';
-    rc.innerHTML = `<span>${dueN} פריטים בשלים לשליפה · ~${Math.max(1, Math.round(Math.min(dueN, 10) * 0.5))} דק'</span><button class="rv-go">התחל שליפה</button>`;
+    rc.innerHTML = `<span>${dueN} פריטים בשלים לשליפה · ~${Math.max(1, Math.round(Math.min(dueN, 10) * 0.5))} דק'<span class="rv-pips" aria-hidden="true">${'<i></i>'.repeat(Math.min(dueN, 10))}</span></span><button class="rv-go">התחל שליפה</button>`;
     rc.querySelector('.rv-go').onclick = openReview;
     const h2 = view.querySelector('.head');
     h2 ? h2.insertAdjacentElement('afterend', rc) : view.prepend(rc);
@@ -1095,7 +1095,7 @@ function renderLadder() {
     <input type="checkbox" ${S.ladder.includes(it.id) ? 'checked' : ''} aria-label="בוצע">
     <div class="li-body"><div class="li-t"><span>${it.t}</span>${chips(it)}</div>
       <div class="li-why">${it.why}</div>
-      <div class="li-action">${it.action} · <a href="${it.url}" target="_blank" rel="noopener">מקור</a></div>
+      <div class="li-action">${it.action} · <a href="${it.url}"${it.url.startsWith('#') ? '' : ' target="_blank" rel="noopener"'}>מקור</a></div>
     </div></div>`;
 
   let html = `<div class="view-head"><h1>המסלול</h1></div>`;
@@ -1117,7 +1117,7 @@ function renderLadder() {
       <p class="sy-note">0 מזהה · 1 שולף · 2 מסביר · 3 יישמת · 4 בעלות הנדסית · 5 בגרות תכנונית. אדום = claim ברזומה מתחת ל-4. הקש שורה לעדכון כן.</p>` +
       rows.map(s => {
         const c = cur(s), risk = s.resume_risk && c < 4;
-        return `<div class="ob-row ${risk ? 'risk' : ''}" data-sid="${esc(s.id)}">
+        return `<div class="ob-row ${risk ? 'risk' : ''}" data-sid="${esc(s.id)}" data-lv="${c}">
           <div class="ob-name" dir="ltr">${esc(s.name)}</div>
           <div class="ob-bar">${cells(s)}</div>
           <div class="ob-meta">${c}/${s.target}${s.arms && s.arms.length ? ` · ${s.arms.length} זרועות` : ''}${risk ? ' · בסיכון' : ''}</div>
@@ -1150,7 +1150,7 @@ function renderLadder() {
       <p class="nc-why">${next.why}</p>
       <p class="nc-action">${next.action}</p>
       <div class="nc-foot">${chips(next)}
-        <a class="nc-open" href="${next.url}" target="_blank" rel="noopener">פתח מקור</a>
+        <a class="nc-open" href="${next.url}"${next.url.startsWith('#') ? '' : ' target="_blank" rel="noopener"'}>פתח מקור</a>
         <button class="nc-done" data-id="${next.id}">סיימתי</button>
       </div></div>`;
   } else {
@@ -1273,6 +1273,32 @@ $('#cpForm').onsubmit = e => {
 };
 
 /* ---------- הקודקס: concepts, graph, saved notes ---------- */
+/* in-app corpus reader: docs stay in the app, never a Drive redirect */
+async function renderDoc(slug) {
+  setTab('tab-kodex');
+  paintFolio();
+  const view = $('#view');
+  view.innerHTML = '<p class="finish-hint">טוען מסמך...</p>';
+  $('#status').textContent = '';
+  let md;
+  try {
+    const r = await fetch('corpus/' + slug + '.md');
+    if (!r.ok) throw 0;
+    md = await r.text();
+  } catch (e) {
+    view.innerHTML = '<div class="doc-read"><a class="doc-back" href="#/ladder">&rsaquo; חזרה למסלול</a><p class="finish-hint">המסמך לא נמצא.</p></div>';
+    return;
+  }
+  const art = document.createElement('article');
+  art.className = 'doc-read';
+  art.innerHTML = '<a class="doc-back" href="#/ladder">&rsaquo; חזרה למסלול</a>' +
+    '<div class="doc-body" dir="ltr">' + renderMarkdown(md) + '</div>' +
+    '<a class="doc-back" href="#/ladder">&rsaquo; חזרה למסלול</a>';
+  view.innerHTML = ''; view.appendChild(art);
+  typeset(view);
+  window.scrollTo(0, 0);
+}
+
 function renderKodex() {
   setTab('tab-kodex');
   paintFolio();
@@ -1420,6 +1446,8 @@ function route() {
   if (h === '#/ladder') return renderLadder();
   if (h === '#/kodex') return renderKodex();
   if (h === '#/discover') return renderDiscover();
+  const dm = h.match(/^#\/doc\/([a-z0-9-]+)$/);
+  if (dm) return renderDoc(dm[1]);
   const m = h.match(/^#\/(\d{4}-\d{2}-\d{2})$/);
   if (m) { const i = index.findIndex(p => p.date === m[1]); return renderPost(i >= 0 ? i : 0); }
   // default: YOUR current day = oldest not-yet-completed page

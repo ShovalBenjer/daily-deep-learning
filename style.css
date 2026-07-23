@@ -582,8 +582,9 @@ h1, .part .head h2, .next-card h2, .qp-summary h2, .phase-head h2, .ownership su
     radial-gradient(140% 100% at 50% 0%, color-mix(in oklab, var(--gold) 6%, transparent), transparent 55%);
 }
 
-/* metal primary buttons: cast, not painted; press = physically down */
-.qbtn, .finish-day, .qz-check:not(:disabled), .rv-go, .qp-done {
+/* metal primary buttons: cast, not painted; press = physically down.
+   Doubled selectors outrank the component-scoped originals (.review-call .rv-go etc). */
+.qbtn.qbtn, .finish-day.finish-day, .qz-check.qz-check:not(:disabled), .review-call .rv-go, .qp-summary .qp-done, .rv-go.rv-go, .qp-done.qp-done {
   background: linear-gradient(180deg, var(--gold-hi), var(--gold) 52%, color-mix(in oklab, var(--gold) 72%, black));
   border: 1px solid color-mix(in oklab, var(--gold) 55%, black);
   color: #14101a; border-radius: 3px;

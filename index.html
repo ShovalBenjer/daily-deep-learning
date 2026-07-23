@@ -89,6 +89,7 @@ const store = {
     st.sidequests = st.sidequests || {};                  // discover layer: taken/done
     st.skillLevels = st.skillLevels || {};                // ownership ledger overrides
     st.skillEvidence = st.skillEvidence || {};            // skillId -> [links/notes]
+    st.reviews = st.reviews || {};                        // recall engine: id -> {iv,due,lapses,last}
     return st;
   },
   save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
@@ -316,6 +317,129 @@ function openPlayer() {
   }
   $('#qpClose').onclick = closePlayer;
   function closePlayer() { qp.hidden = true; document.body.style.overflow = ''; route(); }
+  step();
+}
+
+/* ---------- recall engine (spaced retrieval; LEARNING-MODEL implementation #2) ----------
+   Simple ladder, not FSRS: Cepeda 2008 found no reliable expanding-vs-uniform
+   difference, so the lever is spacing itself. Items: every past quiz/fillin
+   (options reshuffled so it tests recall, not answer position) + auto cards
+   from the codex concepts. Review attempts are recorded under id@rDATE so the
+   original first-encounter answer is never overwritten. */
+const REV_IV = [1, 3, 7, 21, 60];
+const DAY1 = '2026-07-21';
+const plusDays = (ds, n) => { const t = new Date(ds + 'T12:00:00'); t.setDate(t.getDate() + n); return iso(t); };
+const idToPostDate = id => { const m = /^d(\d+)-/.exec(id); return m ? plusDays(DAY1, +m[1] - 1) : null; };
+
+function seedReviews() {
+  const today = iso(new Date());
+  Object.entries(S.answers).forEach(([id, a]) => {
+    if (id.includes('@r') || S.reviews[id] || !idToPostDate(id)) return;
+    S.reviews[id] = { iv: 0, due: plusDays(a.date || today, 1), lapses: 0 };
+  });
+  ((kodex && kodex.concepts) || []).forEach(c => {
+    if (c.id && c.d && !S.reviews['c-' + c.id]) S.reviews['c-' + c.id] = { iv: 0, due: today, lapses: 0 };
+  });
+  store.save();
+}
+const dueReviews = () => {
+  const today = iso(new Date());
+  return Object.entries(S.reviews).filter(([, r]) => r.due <= today)
+    .sort((a, b) => (a[1].due < b[1].due ? -1 : 1)).map(([id]) => id);
+};
+
+const postBlockCache = {};
+async function fetchPostBlocks(date) {
+  if (postBlockCache[date]) return postBlockCache[date];
+  const map = {};
+  try {
+    const r = await fetch('posts/' + date + '.md');
+    if (r.ok) for (const m of (await r.text()).matchAll(/```(quiz|fillin)\n(.+?)\n```/gs)) {
+      try { const d = JSON.parse(m[2]); if (d.id) map[d.id] = { kind: m[1], d }; } catch (e) { /* skip bad block */ }
+    }
+  } catch (e) { /* offline: skip this post today */ }
+  postBlockCache[date] = map; return map;
+}
+const shuffledIdx = n => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function conceptCard(cid) {
+  const cs = (kodex && kodex.concepts) || [];
+  const c = cs.find(x => x.id === cid);
+  if (!c || !c.d) return null;
+  const others = cs.filter(x => x.id !== cid && x.d && x.d !== c.d).map(x => x.d);
+  if (others.length < 3) return null;
+  const opts = shuffledIdx(others.length).slice(0, 3).map(i => others[i]);
+  const pos = Math.floor(Math.random() * 4);
+  opts.splice(pos, 0, c.d);
+  return { kind: 'quiz', d: { id: 'c-' + cid, tree: null, q: `מהי המשמעות של "${c.t}${c.he ? ' (' + c.he + ')' : ''}"?`, options: opts, answer: pos, explain: c.d } };
+}
+
+async function resolveReviewItems(ids) {
+  const items = [];
+  for (const id of ids) {
+    if (id.startsWith('c-')) { const it = conceptCard(id.slice(2)); if (it) items.push({ id, ...it }); continue; }
+    const date = idToPostDate(id);
+    if (!date) continue;
+    const map = await fetchPostBlocks(date);
+    const hit = map[id];
+    if (!hit) { if (Object.keys(map).length) delete S.reviews[id]; continue; } // post loaded but id gone: prune
+    let d = { ...hit.d };
+    if (hit.kind === 'quiz' && Array.isArray(d.options)) {
+      const ord = shuffledIdx(d.options.length);
+      d = { ...d, options: ord.map(i => d.options[i]), answer: ord.indexOf(d.answer) };
+    }
+    items.push({ id, kind: hit.kind, d });
+  }
+  return items;
+}
+
+function gradeReview(id, r) {
+  const rec = S.reviews[id]; if (!rec) return;
+  const today = iso(new Date());
+  if (!r.ok) { rec.iv = Math.max(0, rec.iv - 1); rec.lapses = (rec.lapses || 0) + 1; rec.due = plusDays(today, 1); }
+  else if (r.attempts === 1 && (r.conf == null || r.conf >= 50)) { rec.iv = Math.min(REV_IV.length - 1, rec.iv + 1); rec.due = plusDays(today, REV_IV[rec.iv]); }
+  else { rec.due = plusDays(today, REV_IV[rec.iv]); } // shaky success: same interval again
+  rec.last = today; store.save();
+}
+
+async function openReview() {
+  const due = dueReviews();
+  if (!due.length) { toast('אין פריטים בשלים לשליפה'); return; }
+  const qp = $('#qplayer'), body = $('#qpBody');
+  qp.hidden = false; document.body.style.overflow = 'hidden';
+  $('#qpProgress').textContent = 'שליפה'; body.innerHTML = '<p class="finish-hint">אוסף פריטים מהארכיון...</p>';
+  const close = () => { qp.hidden = true; document.body.style.overflow = ''; route(); };
+  $('#qpClose').onclick = close;
+  const pool = shuffledIdx(Math.min(due.length, 14)).map(i => due[i]); // interleave trees/days
+  const items = (await resolveReviewItems(pool)).slice(0, 10);
+  if (!items.length) { close(); toast('הפריטים הבשלים לא זמינים כרגע'); return; }
+  let i = 0; const results = []; const stamp = iso(new Date()).replace(/-/g, '');
+  function step() {
+    $('#qpProgress').textContent = 'שליפה ' + (i + 1) + ' / ' + items.length;
+    body.innerHTML = '';
+    const it = items[i];
+    const d = { ...it.d, id: it.d.id + '@r' + stamp };
+    const el = it.kind === 'quiz'
+      ? buildQuiz(d, r => { gradeReview(it.id, r); results.push(r); next(); })
+      : buildFillin(d, r => { gradeReview(it.id, r); results.push(r); next(); });
+    body.appendChild(el); typeset(body);
+  }
+  function next() { setTimeout(() => { i++; i < items.length ? step() : summary(); }, 1500); }
+  function summary() {
+    const ok = results.filter(r => r.ok).length;
+    const acc = Math.round(100 * ok / results.length);
+    const confs = results.filter(r => r.conf != null);
+    const avgConf = confs.length ? Math.round(confs.reduce((a, r) => a + r.conf, 0) / confs.length) : null;
+    const left = dueReviews().length;
+    $('#qpProgress').textContent = 'סיכום שליפה';
+    body.innerHTML = `<div class="qp-summary plate">
+      <h2>${ok}/${results.length} נשלפו</h2>
+      <p>${left ? 'נותרו ' + left + ' בשלים, אפשר סבב נוסף' : 'התור ריק. הפריטים הבאים יבשילו לפי המרווחים'}</p>
+      ${avgConf !== null ? `<p class="qp-cal">כיול: ביטחון ${avgConf}% מול דיוק ${acc}%</p>` : ''}
+      ${left ? '<button class="rv-again">סבב נוסף</button> ' : ''}<button class="qp-done">חזרה לדף</button></div>`;
+    body.querySelector('.qp-done').onclick = close;
+    const ag = body.querySelector('.rv-again'); if (ag) ag.onclick = () => { close(); openReview(); };
+  }
   step();
 }
 
@@ -738,6 +862,15 @@ async function renderPost(i) {
     qb.textContent = 'בוחן היום · ' + pageBlocks.length + ' שאלות';
     qb.onclick = openPlayer;
     const h = view.querySelector('.head'); h && h.appendChild(qb);
+  }
+  seedReviews();
+  const dueN = dueReviews().length;
+  if (dueN) {
+    const rc = document.createElement('div'); rc.className = 'review-call';
+    rc.innerHTML = `<span>${dueN} פריטים בשלים לשליפה · ~${Math.max(1, Math.round(Math.min(dueN, 10) * 0.5))} דק'</span><button class="rv-go">התחל שליפה</button>`;
+    rc.querySelector('.rv-go').onclick = openReview;
+    const h2 = view.querySelector('.head');
+    h2 ? h2.insertAdjacentElement('afterend', rc) : view.prepend(rc);
   }
   toggle(S.read, p.date, true);
   currentDay = p.day;

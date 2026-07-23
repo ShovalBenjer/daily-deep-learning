@@ -47,6 +47,8 @@ Adaptation rules, applied every run:
 1. **Resurface**: any answer with ok=false OR conf<50 from 2 days ago and from
    7 days ago -> write a NEW quiz on the same concept (rephrased, new id,
    same tree) inside the matching section. 1-3 resurfaces per day, oldest first.
+   The state also carries `reviews` (the in-app recall engine: per item iv/due/
+   lapses); items with lapses>=2 are proven-leaky, prefer them for resurfaces.
 2. **Target weakness**: שיקול דעת picks its domain from the tree with the
    lowest first-try accuracy (min 3 answers); tie -> lowest total points.
 3. **Coverage**: new quiz topics come from course_plan.json -> topic_pools,

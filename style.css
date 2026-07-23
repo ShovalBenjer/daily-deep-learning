@@ -415,6 +415,15 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 30;
 .sy-t small { color: var(--faded); }
 .sy-note { color: var(--faded); font-size: .8rem; margin: .6rem 0 0; }
 
+/* recall engine */
+.review-call { display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  margin: .9rem 0 .3rem; padding: .55rem .8rem; border: 1px solid var(--gold);
+  border-radius: 4px; background: rgba(198, 161, 91, .08); font-size: .85rem; }
+.review-call .rv-go { min-height: 40px; padding: 0 .9rem; background: var(--gold); color: #14101a;
+  border: none; border-radius: 3px; font-family: inherit; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+.rv-again { min-height: 44px; padding: 0 1rem; background: transparent; border: 1px solid var(--gold);
+  color: var(--gold); border-radius: 3px; font-family: inherit; font-weight: 700; cursor: pointer; }
+
 /* ownership board */
 .ownership summary { color: var(--gold-hi); }
 .ob-row { display: grid; grid-template-columns: 1fr auto; gap: .15rem .8rem; align-items: center;

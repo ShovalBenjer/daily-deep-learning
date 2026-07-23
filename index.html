@@ -1444,6 +1444,36 @@ async function renderDoc(slug) {
   window.scrollTo(0, 0);
 }
 
+/* Recall-lens: any concept is quizzable ON DEMAND (it + its neighbors) */
+function openConceptQuiz(cid) {
+  const cs = (kodex && kodex.concepts) || [];
+  const ids = [cid, ...(((cs.find(c => c.id === cid) || {}).rel) || [])]
+    .filter(id => cs.some(c => c.id === id && c.d)).slice(0, 4);
+  const items = ids.map(id => conceptCard(id)).filter(Boolean);
+  if (!items.length) { toast('אין מספיק מושגים לבוחן'); return; }
+  const qp = $('#qplayer'), body = $('#qpBody');
+  qp.hidden = false; document.body.style.overflow = 'hidden';
+  const close = () => { qp.hidden = true; document.body.style.overflow = ''; };
+  $('#qpClose').onclick = close;
+  let i = 0; const results = []; const stamp = iso(new Date()).replace(/-/g, '');
+  function step() {
+    $('#qpProgress').textContent = 'בוחן מושג ' + (i + 1) + ' / ' + items.length;
+    body.innerHTML = '';
+    const d = { ...items[i].d, id: items[i].d.id + '@q' + stamp };
+    body.appendChild(buildQuiz(d, r => { results.push(r); setTimeout(() => { i++; i < items.length ? step() : summary(); }, 1500); }));
+    typeset(body);
+  }
+  function summary() {
+    const ok = results.filter(r => r.ok).length;
+    $('#qpProgress').textContent = 'סיכום';
+    body.innerHTML = `<div class="qp-summary plate"><h2>${ok}/${results.length} נכונות</h2>
+      <p>המושג ושכניו מהגרף. שליפה חוזרת תגיע דרך התור הרגיל.</p>
+      <button class="qp-done">חזרה לאוצר</button></div>`;
+    body.querySelector('.qp-done').onclick = close;
+  }
+  step();
+}
+
 function renderKodex() {
   setTab('tab-kodex');
   paintFolio();
@@ -1469,7 +1499,13 @@ function renderKodex() {
       <div class="k-t"><b>${esc(c.t)}</b><span class="k-he">${esc(c.he)}</span><span class="chip2">יום ${esc(c.day)}</span></div>
       <p>${esc(c.d)}</p>
       ${(c.rel || []).length ? `<div class="k-rel">${c.rel.map(r => { const t = cs.find(x => x.id === r); return t ? `<a class="chip2" href="#k-${r}" onclick="document.getElementById('k-${r}').scrollIntoView({behavior:'smooth'});return false">${t.t}</a>` : ''; }).join(' ')}</div>` : ''}
+      <div class="k-act"><button class="k-quiz" data-c="${esc(c.id)}">בחן אותי</button><button class="k-ask" data-c="${esc(c.id)}">שאל את המורה</button></div>
     </div>`).join('') || '<p class="finish-hint">אין תוצאות.</p>';
+    list.querySelectorAll('.k-quiz').forEach(b => b.onclick = () => openConceptQuiz(b.dataset.c));
+    list.querySelectorAll('.k-ask').forEach(b => b.onclick = () => {
+      const c = cs.find(x => x.id === b.dataset.c); if (!c) return;
+      openChat(`בהקשר המושג "${c.t}" (${c.he}): ${c.d} — `);
+    });
   }
   paintList('');
   $('#kSearch').oninput = e => paintList(e.target.value);

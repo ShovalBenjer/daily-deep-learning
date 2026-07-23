@@ -16,6 +16,13 @@ between. Five streams are permanent across all seasons:
   ingested. A weekly COUNCIL (Sunday morning, separate run) diffs the folder,
   ingests new docs into topic_pools / ladder / paper-card queue / judgment
   scenarios, and updates the manifest.
+- RESUME->LEDGER SYNC (council duty): the council also runs
+  `py tools/sync_resume_skills.py` — it scans the resume generator
+  (new-recruit/resumes_2026/gen.py) for technology claims and appends any
+  claimed-but-untracked skill to skills.json as resume_risk (current=1).
+  A new claim in ANY resume arm therefore becomes, within a week: a red row
+  on the ownership board + a drill target under rule 1c.1. Report new rows
+  in the commit message.
 - The spaced-review pool GROWS FOREVER: Saturday raids draw from the entire
   history (all seasons) with widening intervals (2d / 7d / 21d / 60d), not
   just the current week.

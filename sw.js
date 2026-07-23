@@ -1,7 +1,8 @@
-const V = 'sadna-v28';
+const V = 'sadna-v29';
 const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest',
   'vendor/katex.min.css', 'vendor/katex.min.js', 'vendor/auto-render.min.js', 'vendor/marked.min.js', 'vendor/purify.min.js',
-  'assets/ui/frame-plate.svg', 'assets/ui/frame-hero.svg', 'assets/ui/frame-plate-light.svg', 'assets/ui/frame-hero-light.svg'];
+  'assets/ui/frame-plate.svg', 'assets/ui/frame-hero.svg', 'assets/ui/frame-plate-light.svg', 'assets/ui/frame-hero-light.svg',
+  'assets/art/board-bg.webp', 'assets/art/crest-systems.webp', 'assets/art/crest-craft.webp', 'assets/art/crest-ops.webp', 'assets/art/spark-portrait.webp'];
 const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json', 'corpus_manifest.json', 'concepts.json', 'discoveries.json', 'skills.json'];
 // The shell itself is NETWORK-FIRST so an open with connectivity always gets
 // the latest app (staleness burned us repeatedly); cache is the offline fallback.

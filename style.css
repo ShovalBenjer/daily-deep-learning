@@ -804,3 +804,30 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
 .tp-emblem svg { opacity: .06; }
 
 @media (prefers-reduced-motion: reduce) { .tnode.maxed .frame { animation: none; } }
+
+/* ============ PAINTED LAYER (gemini-3.1-flash-image, prompts per DESIGN.md) ============ */
+/* the guild board is now actual carved wood */
+.talent-panel {
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--tt, var(--gold)) 6%, transparent), transparent 55%),
+    url("assets/art/board-bg.webp") center / cover no-repeat,
+    var(--well);
+}
+/* each tree banner carries its painted crest */
+.tree-tab { overflow: hidden; }
+.tree-tab::before {
+  content: ""; position: absolute; inset-inline-end: -8px; top: 50%;
+  width: 54px; height: 54px; transform: translateY(-50%);
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  opacity: .38; pointer-events: none; filter: saturate(.9);
+}
+.tree-tab.active::before { opacity: .8; }
+.tree-tab[data-t="systems"]::before { background-image: url("assets/art/crest-systems.webp"); }
+.tree-tab[data-t="craft"]::before { background-image: url("assets/art/crest-craft.webp"); }
+.tree-tab[data-t="ops"]::before { background-image: url("assets/art/crest-ops.webp"); }
+.tree-tab > * { position: relative; }
+/* the painted spark presides over the ritual */
+.rt-spark img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px;
+  filter: drop-shadow(0 0 14px color-mix(in oklab, var(--gold) 80%, transparent));
+  animation: sp-glad 1.1s var(--ease-spring); transform-origin: 50% 80%; }
+@media (prefers-reduced-motion: reduce) { .rt-spark img { animation: none; } }

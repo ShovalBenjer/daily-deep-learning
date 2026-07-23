@@ -115,7 +115,11 @@ only; ranks relabeled investment-vs-evidence; honest tiered time commitment
 role/aria/Escape; boot degrades per-resource; graph capped pending worker.
 ADOPTED DISCIPLINE: until 30/09, BREAK-stage items (3D, reels, audio, public
 feed, graph analytics) are frozen; the daily ritual + interviews + AI-103 +
-one portfolio project outrank everything. Remaining from the audit, scheduled:
+one portfolio project outrank everything.
+UPDATE 2026-07-23: OPERATOR UNFROZE ALL ("Unblock all"). The design freeze is
+lifted; the incremental material-pass direction was REJECTED ("looks lame").
+New direction must come from the next-gen research doc (see
+DESIGN-RESEARCH-NEXTGEN-2026-07) and be approved before a full reskin ships. Remaining from the audit, scheduled:
 scoped separate tokens + named tunnel + CF Access (E2), evidence-based mastery
 (B1), tiered lesson paths as structure (not just copy), module split + unit
 tests, content-validation/expiry automation, canvas keyboard alternatives.

@@ -420,6 +420,55 @@
       "rel": [
         "dagger"
       ]
+    },
+    {
+      "id": "iaas",
+      "t": "IaaS (Droplets / VMs)",
+      "he": "תשתית כשירות",
+      "d": "אתה שוכר מכונה וירטואלית חשופה (DigitalOcean Droplet, Azure VM, EC2): אתה מתקין, מעדכן ומתחזק הכל. שליטה מקסימלית, אחריות מקסימלית.",
+      "day": 4,
+      "rel": [
+        "paas",
+        "faas",
+        "managed-k8s"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "paas",
+      "t": "PaaS (App Platform)",
+      "he": "פלטפורמה כשירות",
+      "d": "אתה דוחף קוד והפלטפורמה בונה, מריצה ומסקיילת (DO App Platform, Azure App Service, Heroku). בלי ניהול שרתים; פחות שליטה בתשתית.",
+      "day": 4,
+      "rel": [
+        "iaas",
+        "faas"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "faas",
+      "t": "FaaS / Serverless (Functions)",
+      "he": "פונקציות כשירות",
+      "d": "קוד רץ רק כשאירוע קורה, ומחויב לפי הרצה (DO Functions, Azure Functions, Lambda). אפס תחזוקת שרת; מגבלות זמן ריצה וקור-סטארט.",
+      "day": 4,
+      "rel": [
+        "paas",
+        "iaas"
+      ],
+      "bonus": true
+    },
+    {
+      "id": "managed-k8s",
+      "t": "Managed Kubernetes",
+      "he": "קוברנטיס מנוהל",
+      "d": "הספק מפעיל את ה-control plane של הקלאסטר ואתה מנהל את ה-workloads (DOKS, AKS, EKS). כוח של אורקסטרציה בלי לתחזק את המוח שלה.",
+      "day": 4,
+      "rel": [
+        "iaas",
+        "paas"
+      ],
+      "bonus": true
     }
   ]
 }

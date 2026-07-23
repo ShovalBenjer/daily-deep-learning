@@ -250,6 +250,49 @@ function ptsFloat(el, pts) {
   ], { duration: 950, easing: 'ease-out' }).finished.then(() => f.remove());
 }
 
+/* "explain this": select ANY text in the page -> floating lens ->
+   the concept card if we have it, else המורה grounded in the sentence */
+function mountExplainLens() {
+  const b = document.createElement('button');
+  b.id = 'selExplain'; b.textContent = 'הסבר לי'; b.hidden = true;
+  document.body.appendChild(b);
+  let selText = '', selCtx = '', hideT = null;
+  document.addEventListener('selectionchange', () => {
+    clearTimeout(hideT);
+    hideT = setTimeout(() => {
+      const s = document.getSelection();
+      const view = $('#view');
+      if (!s || s.isCollapsed || !s.rangeCount || !view) { b.hidden = true; return; }
+      const r = s.getRangeAt(0);
+      if (!view.contains(r.commonAncestorContainer)) { b.hidden = true; return; }
+      selText = s.toString().trim().slice(0, 160);
+      if (selText.length < 2) { b.hidden = true; return; }
+      const host = r.commonAncestorContainer.nodeType === 3
+        ? r.commonAncestorContainer.parentElement : r.commonAncestorContainer;
+      const para = host && host.closest ? host.closest('p,li,h2,h3,blockquote') : null;
+      selCtx = (para ? para.textContent : '').trim().slice(0, 240);
+      const rect = r.getBoundingClientRect();
+      b.style.top = Math.max(8, rect.top - 46) + 'px';
+      b.style.left = Math.min(innerWidth - 96, Math.max(8, rect.left + rect.width / 2 - 42)) + 'px';
+      b.hidden = false;
+    }, 180);
+  });
+  b.onpointerdown = e => e.preventDefault(); // don't steal the selection
+  b.onclick = () => {
+    b.hidden = true;
+    const cs = (kodex && kodex.concepts) || [];
+    const q = selText.toLowerCase();
+    const hit = cs.find(c => c.t.toLowerCase() === q || c.he === selText ||
+      (q.length > 3 && (c.t.toLowerCase().includes(q) || selText.includes(c.t))));
+    if (hit) {
+      kOpen = hit.id; location.hash = '#/kodex';
+      setTimeout(() => { const el = document.getElementById('k-' + hit.id); el && el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 450);
+      return;
+    }
+    openChat(`הסבר לי בפשטות, בעברית, את "${selText}"${selCtx ? ` — בהקשר של המשפט: "${selCtx}"` : ''}. `);
+  };
+}
+
 /* bespoke UI sound: WebAudio synthesis in the fiction (no stock assets).
    Default on; toggled in the header; unlocked by the first touch (iOS). */
 const sfx = (() => {
@@ -1778,6 +1821,7 @@ addEventListener('scroll', () => {
   seedReviews();                 // nav badge needs the queue on every tab
   paintFolio(); route();
   mountMotes();
+  mountExplainLens();
   const st = $('#sndToggle');
   if (st) {
     st.classList.toggle('off', !sfx.isOn());

@@ -765,3 +765,11 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
 #sndToggle.off { color: var(--line); }
 
 @media (prefers-reduced-motion: reduce) { .rt-spark .sp-fl { animation: none; } .k-card { animation: none; } }
+
+/* "explain this" selection lens */
+#selExplain { position: fixed; z-index: 50; min-height: 40px; padding: 0 1rem;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 52%, color-mix(in oklab, var(--gold) 72%, black));
+  border: 1px solid color-mix(in oklab, var(--gold) 55%, black); border-radius: 999px;
+  color: #14101a; font-family: inherit; font-weight: 700; font-size: .85rem; cursor: pointer;
+  box-shadow: 0 4px 14px -4px var(--shadow), inset 0 1px 0 rgba(255,255,255,.35);
+  animation: popin .25s var(--ease-spring); }

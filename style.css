@@ -773,3 +773,34 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
   color: #14101a; font-family: inherit; font-weight: 700; font-size: .85rem; cursor: pointer;
   box-shadow: 0 4px 14px -4px var(--shadow), inset 0 1px 0 rgba(255,255,255,.35);
   animation: popin .25s var(--ease-spring); }
+
+/* ============ TREE DEPTH PASS (aoe2 strata / d2 states / filled glyphs) ============ */
+/* tier strata: each layer is an age band with its numeral carved at the edge */
+.tp-tier { position: relative; }
+.tp-tier::before {
+  content: attr(data-tier); position: absolute; inset-inline-end: .6rem; top: 50%;
+  transform: translateY(-50%); font-family: "Frank Ruhl Libre", serif;
+  font-size: 2.4rem; font-weight: 900; color: color-mix(in oklab, var(--tt, var(--gold)) 30%, transparent);
+  opacity: .28; pointer-events: none; text-shadow: 0 1px 0 rgba(0,0,0,.6);
+}
+.tp-tier:nth-child(odd) { background: linear-gradient(180deg, rgba(255,255,255,.015), transparent 60%); }
+.tp-tier + .tp-gatebar { margin-top: -.2rem; }
+
+/* bigger medallions, filled glyphs breathe at 34px */
+.tnode .frame { width: 70px; height: 70px; }
+.tnode .frame svg { width: 34px; height: 34px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.9)); }
+
+/* D2 state depth: locked = engraved stone; maxed = burning */
+.tnode.locked .frame { background: radial-gradient(circle at 36% 28%, #2a2733, #191622 62%, #0d0b12 100%); }
+.tnode.locked .frame svg { opacity: .55; filter: drop-shadow(0 1px 0 rgba(0,0,0,.9)) grayscale(1); }
+.tnode.maxed .frame { animation: node-burn 2.2s ease-in-out infinite; }
+@keyframes node-burn {
+  0%, 100% { box-shadow: 0 0 18px -2px color-mix(in oklab, var(--gold) 75%, transparent), inset 0 0 10px color-mix(in oklab, var(--gold) 25%, transparent); }
+  50% { box-shadow: 0 0 26px 0 color-mix(in oklab, var(--gold-hi) 80%, transparent), inset 0 0 14px color-mix(in oklab, var(--gold) 40%, transparent); }
+}
+/* heavier carved channels */
+.tp-edges .edge-groove { stroke-width: 8; }
+.tp-edges .edge-flow { stroke-width: 3.5; }
+.tp-emblem svg { opacity: .06; }
+
+@media (prefers-reduced-motion: reduce) { .tnode.maxed .frame { animation: none; } }

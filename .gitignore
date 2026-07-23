@@ -12,3 +12,4 @@ daemon/.key
 
 daemon/node_modules/
 daemon/bun.lock
+daemon/.comfy-key

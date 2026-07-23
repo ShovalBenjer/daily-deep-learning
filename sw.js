@@ -1,4 +1,4 @@
-const V = 'sadna-v27';
+const V = 'sadna-v28';
 const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest',
   'vendor/katex.min.css', 'vendor/katex.min.js', 'vendor/auto-render.min.js', 'vendor/marked.min.js', 'vendor/purify.min.js',
   'assets/ui/frame-plate.svg', 'assets/ui/frame-hero.svg', 'assets/ui/frame-plate-light.svg', 'assets/ui/frame-hero-light.svg'];

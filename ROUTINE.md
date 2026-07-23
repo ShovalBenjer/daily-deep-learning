@@ -145,7 +145,9 @@ of the post as `<!-- widget-request: <type>: <one line spec> -->` so it gets
 built. When the day's drill maps to a classic DSA algorithm, also link the
 matching visualizer page on https://visualgo.net as enrichment.
 
-Imagery rule: NO stock photos, ever. The page's imagery is (a) the widgets,
+Design rule: any HTML/SVG/visual output obeys DESIGN.md (the binding style
+contract: fiction map, tokens, motion contract, avoid-list). Imagery rule: NO
+stock photos, ever. The page's imagery is (a) the widgets,
 (b) ONE hand-authored inline `<svg>` diagram in עיון when the concept has a
 shape (an MDP loop, an architecture, a flow): small, viewBox 0 0 320 180,
 stroke="currentColor", theme-neutral, labels in Hebrew, wrapped in a plain

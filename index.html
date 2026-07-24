@@ -113,6 +113,7 @@ const store = {
     st.skillEvidence = st.skillEvidence || {};            // skillId -> [links/notes]
     st.reviews = st.reviews || {};                        // recall engine: id -> {iv,due,lapses,last}
     st.armFocus = st.armFocus || null;                    // targeted resume arm (1-7)
+    st.questsDone = st.questsDone || {};                  // "nodeId:rank" -> {d, ev}
     st.shieldsUsed = st.shieldsUsed || 0;                 // streak shields consumed
     st.shieldDays = st.shieldDays || [];                  // dates covered by a shield
     return st;
@@ -501,6 +502,8 @@ function paintFolio(txt) {
   if (txt !== undefined) { $('#folio').textContent = txt; return; }
   const p = poolAll(), n = runLength(), e = totalEarned(), lv = level();
   const bits = [];
+  const caps = talents ? ['sysdesign', 'craft-master', 'prod-own'].filter(id => nodeRank(id) >= 1).length : 0;
+  bits.push(['שוליה', 'נאמן', 'אומן', 'רב-אומן'][caps]);
   if (currentDay) bits.push('יום ' + currentDay);
   bits.push('רמה ' + lv, e + ' XP');
   if (combo >= 2) bits.push('קומבו x' + combo);
@@ -1427,7 +1430,11 @@ function renderNodeSheet(tree, n, gate) {
       ${dayList.length ? `<div class="ns-row">נלמד בימים: ${dayList.map(x => `<span class="chip2">יום ${x}</span>`).join(' ')}</div>` : ''}
       ${syn.length ? `<div class="ns-row">סינרגיות: ${syn.map(s => `<span class="chip2">${s.from === n.id ? '→ ' + ((domainOf(s.to) || {}).name || s.to) : '← ' + ((domainOf(s.from) || {}).name || s.from)}</span>`).join(' ')}</div>` : ''}
       ${nodeConcepts.length ? `<button class="ns-quiz">בחן אותי על הצומת (${nodeConcepts.length})</button>` : ''}
-      ${n.quests && r > 0 ? `<div class="ns-quest"><b>המשימה שקנית (דרגה ${r}):</b> ${esc(n.quests[r - 1])}</div>` : ''}
+      ${n.quests && r > 0 ? (() => {
+        const qk = n.id + ':' + r, qdone = (S.questsDone || {})[qk];
+        return `<div class="ns-quest ${qdone ? 'qdone' : ''}"><b>המשימה שקנית (דרגה ${r}):</b> ${esc(n.quests[r - 1])}
+          ${qdone ? `<span class="q-ok">הושלמה · ${qdone.d}</span>` : `<button class="q-done" data-qk="${qk}">סיימתי, יש ראיה</button>`}</div>`;
+      })() : ''}
       ${n.quests && r < talents.max_rank ? `<div class="ns-quest locked">דרגה ${r + 1} פותחת משימה: ${r === 0 ? esc(n.quests[0]) : '<span class="q-veil">נחשפת בהשקעה</span>'}</div>` : ''}
     </div>
     <p class="rank-flavor">${r > 0 ? `<b>דרגת השקעה ${r}</b> · ${RANK_MEANING[r]}` : 'טרם הושקעה נקודה.'}
@@ -1439,12 +1446,31 @@ function renderNodeSheet(tree, n, gate) {
     </div></div>`;
   const nq = $('#sheet .ns-quiz');
   if (nq) nq.onclick = () => openConceptQuiz(nodeConcepts.map(c => c.id));
+  const qd = $('#sheet .q-done');
+  if (qd) qd.onclick = () => {
+    const ev = prompt('הראיה (קישור PR / פלט / משפט אחד):');
+    if (!ev || !ev.trim()) return;
+    S.questsDone[qd.dataset.qk] = { d: iso(new Date()), ev: ev.trim().slice(0, 300) };
+    (n.skills || []).forEach(sid => {
+      (S.skillEvidence[sid] = S.skillEvidence[sid] || []).push(
+        { t: '[משימה ' + qd.dataset.qk + '] ' + ev.trim().slice(0, 250), d: iso(new Date()) });
+    });
+    store.save(); sfx.coin(); burst(qd, 30); sparkState('glad');
+    toast('הראיה נשמרה ללדג\'ר. אם הגיע הזמן, העלה רמה בלוח הבעלות.');
+    renderNodeSheet(tree, n, gate);
+  };
   const btn = $('#sheet .invest');
   if (btn && can) btn.onclick = () => {
     S.points[tree.id] = S.points[tree.id] || { earned: 0, spent: 0 };
     S.points[tree.id].spent += cost;
     S.ranks[n.id] = r + 1; store.save();
     toast(d.name + ' דרגה ' + (r + 1));
+    if (n.kind === 'capstone' && r + 1 === 1) {
+      const caps = ['sysdesign', 'craft-master', 'prod-own'].filter(id => nodeRank(id) >= 1).length;
+      const T = ['שוליה', 'נאמן', 'אומן', 'רב-אומן'];
+      setTimeout(() => ritual({ kicker: 'קידום מעמד', title: T[caps], xp: totalSpent(),
+        sub: 'הקאפסטון של עץ ' + tree.name + ' נקנה. מעמדך החדש: ' + T[caps], tier: 4 }), 600);
+    }
     renderPanel();
     renderNodeSheet(tree, n, gate); paintFolio();
     const fr = $(`.tnode[data-id="${n.id}"] .frame`);
@@ -1484,6 +1510,7 @@ function renderLadder() {
       <div class="hb-body"><b>ימים עד היעד: חוזה חתום, 30/09</b>
       <span>${weeks} שבועות · ${ladder.hire_goal.line}</span></div></div>`;
   }
+  html += `<div class="ledger-art" aria-hidden="true"></div>`;
   // arm focus: choosing a resume variation is choosing your build
   html += `<div class="arm-strip">` + Object.entries(ARMS).map(([k, v]) =>
     `<button class="arm-chip ${S.armFocus === +k ? 'on' : ''}" data-arm="${k}" dir="ltr">${v}</button>`).join('') +
@@ -1500,8 +1527,10 @@ function renderLadder() {
       <p class="sy-note">0 מזהה · 1 שולף · 2 מסביר · 3 יישמת · 4 בעלות הנדסית · 5 בגרות תכנונית. אדום = claim ברזומה מתחת ל-4. הקש שורה לעדכון כן.</p>` +
       rows.map(s => {
         const c = cur(s), risk = s.resume_risk && c < 4;
+        const ret = Object.entries(S.reviews || {}).some(([id, rec]) =>
+          rec.iv >= 3 && S.answers[id] && S.answers[id].skill === s.id);
         return `<div class="ob-row ${risk ? 'risk' : ''} ${c >= s.target ? 'own' : ''}" data-sid="${esc(s.id)}" data-lv="${c}">
-          <div class="ob-name" dir="ltr">${esc(s.name)}</div>
+          <div class="ob-name" dir="ltr">${esc(s.name)}${ret ? ' <i class="ob-ret" title="Retained: שרד שליפה של 7+ ימים"></i>' : ''}</div>
           <div class="ob-bar">${cells(s)}</div>
           <div class="ob-meta">${c}/${s.target}${s.arms && s.arms.length ? ` · ${s.arms.length} זרועות` : ''}${risk ? ' · בסיכון' : ''}</div>
           <div class="ob-edit" hidden>${[0,1,2,3,4,5].map(l => `<button class="ob-set" data-l="${l}">${l}</button>`).join('')}

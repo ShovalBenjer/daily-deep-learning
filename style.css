@@ -964,3 +964,26 @@ body[data-ach="3"] #spark svg { filter: drop-shadow(0 0 7px color-mix(in oklab, 
     0 0 0 3px rgba(8,7,13,.6), 0 0 0 4.5px color-mix(in oklab, var(--gold) 70%, transparent),
     0 0 14px -2px color-mix(in oklab, var(--gold) 50%, transparent);
 }
+
+/* ============ ROUND: quests-done, ceremony, retained, painted wiring ============ */
+/* the PAINTED baroque frame crowns the ritual (generated, judged, wired) */
+#overlay .ov-plate {
+  border: 20px solid transparent;
+  border-image: url("assets/art/frame-hero-painted.png") 128 / 20px stretch;
+}
+/* the ledger scene opens המסלול */
+.ledger-art { height: 128px; margin: .6rem 0 .8rem; border-radius: 3px;
+  border: 1px solid var(--line);
+  background: url("assets/art/ledger-banner.webp") center 38% / cover no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.4), 0 12px 26px -18px var(--shadow); }
+/* quest completion */
+.q-done { display: block; margin-top: .45rem; min-height: 40px; padding: 0 1rem;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 52%, color-mix(in oklab, var(--gold) 72%, black));
+  border: 1px solid color-mix(in oklab, var(--gold) 55%, black); color: #14101a;
+  border-radius: 3px; font-family: inherit; font-weight: 700; font-size: .84rem; cursor: pointer; }
+.ns-quest.qdone { border-inline-start-color: var(--green); }
+.q-ok { display: block; margin-top: .3rem; color: var(--green); font-weight: 700; font-size: .78rem; }
+/* retained dot on the ownership board */
+.ob-ret { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #a8e6c3, var(--green) 75%);
+  box-shadow: 0 0 6px color-mix(in oklab, var(--green) 70%, transparent); vertical-align: middle; }

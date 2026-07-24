@@ -12,6 +12,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Validate content graph
+        run: python3 tools/validate_links.py
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:

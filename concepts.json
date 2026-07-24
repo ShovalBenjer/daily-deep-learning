@@ -511,6 +511,94 @@
       ],
       "bonus": true,
       "node": "containers"
+    },
+    {
+      "id": "value-function",
+      "t": "State Value Function",
+      "he": "פונקציית ערך מצב",
+      "d": "V^π(s): תוחלת התשואה המצטברת כשמתחילים ממצב s ומשחקים לפי π",
+      "day": 4,
+      "rel": [
+        "action-value",
+        "advantage-function",
+        "bellman-equation"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "action-value",
+      "t": "Action-Value Function",
+      "he": "פונקציית ערך-פעולה",
+      "d": "Q^π(s,a): תוחלת התשואה כשנוטלים פעולה a במצב s ואז משחקים לפי π",
+      "day": 4,
+      "rel": [
+        "value-function",
+        "advantage-function"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "advantage-function",
+      "t": "Advantage Function",
+      "he": "פונקציית יתרון",
+      "d": "A^π(s,a) = Q^π(s,a) - V^π(s): כמה הפעולה טובה יחסית לממוצע המדיניות; ממוצעה על π שווה אפס",
+      "day": 4,
+      "rel": [
+        "value-function",
+        "action-value",
+        "reinforce"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "bellman-equation",
+      "t": "Bellman Equation",
+      "he": "משוואת בלמן",
+      "d": "ייצוג רקורסיבי: V(s) = תשואה מיידית + γ·V(s'); מה שמאפשר חישוב ערכים בהדרגה",
+      "day": 4,
+      "rel": [
+        "value-function",
+        "td-learning"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "monte-carlo-value",
+      "t": "Monte Carlo Value Estimation",
+      "he": "אמידת ערך מונטה קרלו",
+      "d": "V(s_t) ≈ G_t: ממוצע תשואות מלאות עד סוף האפיזודה; אפס הטיה, שונות גבוהה",
+      "day": 4,
+      "rel": [
+        "value-function",
+        "bias-variance-rl"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "td-learning",
+      "t": "TD Learning",
+      "he": "למידת הפרש זמני",
+      "d": "V(s_t) ← r_t + γV(s_{t+1}): bootstrap מהצעד הבא; שונות נמוכה, הטיה עד כיול המודל",
+      "day": 4,
+      "rel": [
+        "bellman-equation",
+        "bias-variance-rl",
+        "advantage-function"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "bias-variance-rl",
+      "t": "Bias-Variance in RL",
+      "he": "הטיה-שונות ב-RL",
+      "d": "MC: אפס הטיה, שונות O(T); TD: הטיה שיורדת עם כיול, שונות נמוכה; n-step ו-GAE מאזנים",
+      "day": 4,
+      "rel": [
+        "monte-carlo-value",
+        "td-learning",
+        "variance"
+      ],
+      "node": "prob-stats"
     }
   ]
 }

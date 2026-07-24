@@ -538,6 +538,18 @@
       "node": "optimization"
     },
     {
+      "id": "q-function",
+      "t": "Action Value Q^pi",
+      "he": "פונקציית ערך פעולה",
+      "d": "תוחלת התשואה כשעושים a במצב s וממשיכים לפי המדיניות; V הוא הממוצע של Q לפי המדיניות",
+      "day": 4,
+      "rel": [
+        "value-function",
+        "advantage"
+      ],
+      "node": "optimization"
+    },
+    {
       "id": "advantage-function",
       "t": "Advantage Function",
       "he": "פונקציית יתרון",
@@ -599,6 +611,76 @@
         "variance"
       ],
       "node": "prob-stats"
+    },
+    {
+      "id": "bias-variance",
+      "t": "Bias-Variance (value estimates)",
+      "he": "הטיה מול שונות",
+      "d": "אומדן מונטה קרלו ל-V לא מוטה אבל רועש; V נלמד יציב אבל מוטה: ציר ההכרעה של actor-critic",
+      "day": 4,
+      "rel": [
+        "value-function",
+        "variance"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "group-relative-advantage",
+      "t": "Group-Relative Advantage",
+      "he": "יתרון יחסי לקבוצה",
+      "d": "baseline אמפירי מממוצע קבוצת דגימות לאותו prompt במקום critic נלמד; הלב של GRPO",
+      "day": 4,
+      "rel": [
+        "advantage",
+        "baseline"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "content-filter",
+      "t": "Content Filtering (RAI policy)",
+      "he": "סינון תוכן",
+      "d": "ארבע קטגוריות נזק בסולם safe/low/medium/high; ברירת המחדל חוסמת medium ומעלה, מדיניות מותאמת לכל deployment",
+      "day": 4,
+      "rel": [
+        "prompt-shields",
+        "groundedness"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "prompt-shields",
+      "t": "Prompt Shields",
+      "he": "מגני פרומפט",
+      "d": "זיהוי jailbreak בפרומפט המשתמש ומתקפות עקיפות שמוטמעות במסמכים מאוחזרים",
+      "day": 4,
+      "rel": [
+        "content-filter"
+      ],
+      "node": "sec-gov"
+    },
+    {
+      "id": "groundedness",
+      "t": "Groundedness Detection",
+      "he": "זיהוי עיגון",
+      "d": "בדיקה שכל טענה בתשובה נתמכת במקורות שסופקו; מצב correction מתקן טענות תלושות לפני הצגה",
+      "day": 4,
+      "rel": [
+        "content-filter"
+      ],
+      "node": "evals-obs"
+    },
+    {
+      "id": "cost-attribution",
+      "t": "Cost Attribution",
+      "he": "ייחוס עלות",
+      "d": "כל דולר ענן ממופה לפיצ'ר ולבעלים לפני כל אופטימיזציה; המונה חייב להתפרק לבעלים אחד",
+      "day": 4,
+      "rel": [
+        "ptu",
+        "group-relative-advantage"
+      ],
+      "node": "finops"
     }
   ]
 }

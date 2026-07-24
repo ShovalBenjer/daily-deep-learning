@@ -79,14 +79,13 @@
       {
        "day": 4,
        "date": "2026-07-24",
-       "title": "ערכי מצב ו-Advantage: הבסיס שמשדרג את REINFORCE",
+       "title": "V, Q ו-Advantage: הסרגל שכל פעולה נמדדת בו",
        "source": "CS224R הרצאה 2 חלק 1",
        "topics": [
         "value functions",
+        "Q function",
         "advantage",
-        "Bellman",
-        "Monte Carlo",
-        "TD learning",
+        "baseline",
         "bias-variance"
        ],
        "nodes": [
@@ -95,8 +94,9 @@
        ],
        "skills": [
         "rl",
-        "python",
-        "yaml"
+        "pandas-da",
+        "toml",
+        "azure-foundry"
        ],
        "status": "done",
        "why": "כדי להוריד שונות מ-REINFORCE צריך קנה מידה: כמה טוב המצב בכלל."

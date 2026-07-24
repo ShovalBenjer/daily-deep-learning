@@ -79,20 +79,26 @@
       {
        "day": 4,
        "date": "2026-07-24",
-       "title": "מתוכנן: ערכי מצב ו-Advantage",
+       "title": "ערכי מצב ו-Advantage: הבסיס שמשדרג את REINFORCE",
        "source": "CS224R הרצאה 2 חלק 1",
        "topics": [
         "value functions",
         "advantage",
+        "Bellman",
+        "Monte Carlo",
+        "TD learning",
         "bias-variance"
        ],
        "nodes": [
-        "optimization"
+        "optimization",
+        "prob-stats"
        ],
        "skills": [
-        "rl"
+        "rl",
+        "python",
+        "yaml"
        ],
-       "status": "planned",
+       "status": "done",
        "why": "כדי להוריד שונות מ-REINFORCE צריך קנה מידה: כמה טוב המצב בכלל."
       },
       {

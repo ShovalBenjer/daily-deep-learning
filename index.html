@@ -2002,11 +2002,19 @@ function route() {
   if (dm) return renderDoc(dm[1]);
   const m = h.match(/^#\/(\d{4}-\d{2}-\d{2})$/);
   if (m) { const i = index.findIndex(p => p.date === m[1]); return renderPost(i >= 0 ? i : 0); }
-  // default: YOUR current day = oldest not-yet-completed page
-  const open = [...index].reverse().find(p => !S.daysDone.includes(p.date)) || index[0];
-  renderPost(index.findIndex(p => p.date === open.date));
+  // default: today's page if it exists, else the latest available (index is newest-first)
+  const today = iso(new Date());
+  const ti = index.findIndex(p => p.date === today);
+  renderPost(ti >= 0 ? ti : 0);
 }
 addEventListener('hashchange', route);
+// Re-pick today's page when the PWA is resumed from memory (fixes the phone showing a stale day).
+addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  if (!$('#qplayer').hidden || !$('#overlay').hidden || !$('#chatPane').hidden) return; // don't disrupt active practice
+  const h = location.hash;
+  if (h === '' || h === '#/') route();
+});
 addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (!$('#qplayer').hidden) { $('#qpClose').click(); }

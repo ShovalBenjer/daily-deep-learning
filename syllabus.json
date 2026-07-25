@@ -104,6 +104,44 @@
       {
        "day": 5,
        "date": "2026-07-25",
+       "title": "שבת: פשיטת שליפה",
+       "source": "raid",
+       "topics": [
+        "spaced retrieval",
+        "MDP",
+        "REINFORCE",
+        "advantage",
+        "behavior cloning",
+        "value functions"
+       ],
+       "nodes": [
+        "optimization",
+        "prob-stats",
+        "ml-applied"
+       ],
+       "skills": [
+        "rl"
+       ],
+       "status": "done",
+       "why": "שליפה מרווחת על כל השבוע: זה מה שהופך קריאה לזיכרון."
+      },
+      {
+       "day": 6,
+       "date": "2026-07-26",
+       "title": "ראשון: תיקון וסינתזה",
+       "source": "repair",
+       "topics": [
+        "Feynman",
+        "synthesis"
+       ],
+       "nodes": [],
+       "skills": [],
+       "status": "planned",
+       "why": "ללמד מחדש את המושג החלש של השבוע, ולגשר לשבוע הבא."
+      },
+      {
+       "day": 7,
+       "date": "2026-07-27",
        "title": "מתוכנן: Actor-Critic",
        "source": "CS224R הרצאה 2 חלק 2",
        "topics": [
@@ -120,33 +158,6 @@
        ],
        "status": "planned",
        "why": "המבקר לומד ערכים, השחקן לומד מדיניות: הארכיטקטורה שממנה הכל נבנה."
-      },
-      {
-       "day": 6,
-       "date": "2026-07-26",
-       "title": "שבת: פשיטת שליפה",
-       "source": "raid",
-       "topics": [
-        "spaced retrieval"
-       ],
-       "nodes": [],
-       "skills": [],
-       "status": "planned",
-       "why": "שליפה מרווחת על כל השבוע: זה מה שהופך קריאה לזיכרון."
-      },
-      {
-       "day": 7,
-       "date": "2026-07-27",
-       "title": "ראשון: תיקון וסינתזה",
-       "source": "repair",
-       "topics": [
-        "Feynman",
-        "synthesis"
-       ],
-       "nodes": [],
-       "skills": [],
-       "status": "planned",
-       "why": "ללמד מחדש את המושג החלש של השבוע, ולגשר לשבוע הבא."
       }
      ]
     }

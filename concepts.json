@@ -681,6 +681,41 @@
         "group-relative-advantage"
       ],
       "node": "finops"
+    },
+    {
+      "id": "spaced-retrieval",
+      "t": "Spaced Retrieval",
+      "he": "שליפה מרווחת",
+      "d": "טכניקת למידה: בדיקה פעילה של זיכרון במרווחי זמן גדלים; עדיפה על קריאה חוזרת כי מאלצת שחזור פעיל.",
+      "day": 5,
+      "rel": [
+        "bias-variance-rl"
+      ],
+      "node": "ml-applied"
+    },
+    {
+      "id": "effective-horizon",
+      "t": "Effective Horizon",
+      "he": "אופק אפקטיבי",
+      "d": "1/(1-γ): מספר הצעדים האפקטיבי שתשואה מונחתת 'רואה'; γ=0.9 נותן אופק של 10 צעדים.",
+      "day": 5,
+      "rel": [
+        "discounting",
+        "return"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "bootstrapping",
+      "t": "Bootstrapping (RL)",
+      "he": "אתחול עצמי",
+      "d": "שימוש בהערכת ערך נוכחית כ-target לעדכון: V(s) ← r + γV(s'). מוריד שונות אבל מוסיף הטיה עד כיול המודל.",
+      "day": 5,
+      "rel": [
+        "td-learning",
+        "bellman-equation"
+      ],
+      "node": "optimization"
     }
   ]
 }

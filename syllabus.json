@@ -128,15 +128,29 @@
       {
        "day": 6,
        "date": "2026-07-26",
-       "title": "ראשון: תיקון וסינתזה",
+       "title": "ראשון: תיקון וסינתזה - Advantage, Binary Search ו-SRE",
        "source": "repair",
        "topics": [
-        "Feynman",
-        "synthesis"
+        "advantage",
+        "discounted-return",
+        "actor-critic",
+        "binary-search",
+        "RAG",
+        "error-budget",
+        "SRE"
        ],
-       "nodes": [],
-       "skills": [],
-       "status": "planned",
+       "nodes": [
+        "optimization",
+        "dsa",
+        "rag-search",
+        "sre"
+       ],
+       "skills": [
+        "rl",
+        "python",
+        "azure-foundry"
+       ],
+       "status": "done",
        "why": "ללמד מחדש את המושג החלש של השבוע, ולגשר לשבוע הבא."
       },
       {

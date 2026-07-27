@@ -1,128 +1,76 @@
-# Messages for עידו
+# Message for עידו
 
-Nothing sent. Post is live:
-**https://daily-deep-learning.pages.dev/writing/the-bench**
+**Nothing sent.** WhatsApp Web is logged out (QR linking screen) and the Desktop
+app is not running with a debug port, so the send, the reply-quote and the
+reaction are all blocked. Re-linking needs a QR scan from your phone.
 
----
-
-## What was wrong with the previous draft
-
-**1. Length.** Measured against 8,548 of your authored messages to him:
-
-| metric | your actual | old draft |
-| --- | --- | --- |
-| median chars | **20** | ~700 |
-| median words | **4** | ~110 |
-| median lines | **1** | 25 |
-| p95 chars | 75 | |
-| p99 chars | 142 | |
-| single-line under 40 chars | **77%** | |
-| messages with 4+ lines | **1%** | |
-
-The old draft was roughly five times your 99th percentile. Not "a bit long":
-outside your distribution entirely. You do not write paragraphs to him, you
-send **bursts of one-liners**.
-
-**2. `בלי רמזים` was an AI tell.** It has a name: the **Dramatic Fragment**, a
-standalone clipped phrase tacked on for emphasis (the English equivalent is
-"Full stop."). It performs significance rather than adding information. Removed.
+Post is live: **https://daily-deep-learning.pages.dev/writing/the-bench**
 
 ---
 
-## A. The message, as a burst
+## The message
 
-Send as separate messages, in these groups. Every line is its own send.
+Reply-quote the bench photo with the first line, then send the rest as normal
+follow-ups. Every line is its own send.
 
-**burst 1**
 ```
 מופז סליחה על העיכוב
-12 שעות על הודעה אחת
-```
-
-**burst 2**
-```
+לקח לו 12 שעות
 נתתי לקלוד למצוא את הספסל
-התחיל בירקון
-אחר כך גינת וינר
+היה בטוח שזה הירקון
 ואז מנוע חיפוש שלח אותו לטורקיה
-```
-
-**burst 3**
-```
-מצא את ההודעה על שאול המלך
-והחליט שזאת כתובת
-שעתיים על זה
-```
-
-**burst 4**
-```
+מצא את ההודעה על שאול המלך והחליט שזאת כתובת
 בסוף פיצח את ההצפנה של הוואטסאפ
 78,406 הודעות
-מצא הודעת שליח על חבילה ליד האופניים
-יש אופניים בתמונה
-```
-
-**burst 5**
-```
+מצא הודעה על חבילה
+ואז שם לב לאופניים
 דפנה
-```
-
-**burst 6**
-```
 אגב הוא קרא הכל
-יודע על איזי קפה
-שאל אותי מה זה אני מתלבט
-```
-
-**burst 7**
-```
 איזי
 ```
 
-Longest line is 36 characters. Median 16. That sits inside your real
-distribution instead of five times outside it.
-
----
-
-## B. If even that is too much
+Then, as a separate run:
 
 ```
-מופז סליחה על העיכוב
-12 שעות בשביל להגיד דפנה
-נתתי לקלוד למצוא, הוא נסע בטעות לטורקיה ואז פיצח לי את ההצפנה של הוואטסאפ
-איזי
-```
-
----
-
-## C. The link, separate
-
-```
-כתבתי על זה
-אתה שם בלי שם
+תקרא את זה כשאתה פנוי
 https://daily-deep-learning.pages.dev/writing/the-bench
+your claude io marchiso
 ```
 
----
+## Reaction on the photo
 
-## D. Held in reserve, if he goes quiet
+**❤** is the recommendation. It is the most frequent emoji in the thread, 16
+occurrences, 7.2% of all emoji, and it fits a memory-lane photo.
 
-```
-קלאסי עידו
-בניתי מודל על ארבע שנים של ההתכתבות שלנו
-המודל אומר ששלישי לא יקרה
-אינשאללה כמובן
-```
+Alternative if you want the troll register instead: **🐐**, 6 in-message plus 3
+as a standalone send.
 
----
+Caveat: the corpus has no sender direction, so these are thread-level counts and
+cannot prove *you* send ❤ rather than him. The live DOM does carry direction
+(`message-in` / `message-out`), so this becomes checkable the moment WhatsApp is
+linked again.
 
-## And the football question, separately
+## Why these words and not the previous ones
 
-```
-ולגבי כדורגל, שלישי נשאר? רביעי נפל לי
-```
+Every line was scored against your real thread rather than picked by ear, using
+`voice-metrics`. Three changes came from measurement, not taste:
 
----
+| was | became | why |
+| --- | --- | --- |
+| `התחיל בירקון ועבר לגינת וינר` | `היה בטוח שזה הירקון` | p7, off-voice. The replacement scores p73 and is funnier: it carries the confident wrongness. |
+| `מצא הודעת שליח על חבילה ליד האופניים` | `מצא הודעה על חבילה` + `ואז שם לב לאופניים` | p2. Every single-line rewrite stayed under p25; splitting it fixed it. |
+| `12 שעות על הודעה אחת` | `לקח לו 12 שעות` | p34 to p75. |
 
-Note: these name דפנה and quote the archive. Right for him, wrong anywhere
-public. The published article names no person, street or city.
+`אגב הוא קרא הכל יודע על איזי קפה` merged scores p10 and fails; split into two
+sends they score p66 and p57. That is the burst rule showing up as a number.
+
+**Gate result:** score 0.970, 13 sends against a run p95 of 14, line-length
+cv 0.443 against a 0.18 floor, longest send 44 characters against a 75 ceiling,
+centrality p53 in a target band of p25 to p97.
+
+## Notes
+
+- Spell check is clean apart from `הוואטסאפ` and `קלאסי`, both loanwords.
+- These name דפנה and quote the archive. Right for him, wrong anywhere public.
+  The published article names no person, street or city.
+- A passing gate is not a decision to send. That is yours.

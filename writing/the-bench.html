@@ -51,6 +51,29 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:99;op
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.79 0 0 0 0 0.66 0 0 0 0 0.42 0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>")}
 .wrap{max-width:720px;margin:0 auto;padding:0 24px 110px}
 .wide{max-width:960px;margin-left:calc((720px - 960px)/2)}
+
+/* Desktop was a phone layout in a wide window: a 720px column centred in 1440
+   with dead space on both sides and a hero scaled for a 390px screen. Above
+   1180 the shell shifts left and the freed margin becomes a working rail for
+   apparatus labels and captions, the way a Tufte layout uses it, instead of
+   staying empty. Below that width nothing changes and the rail content falls
+   back inline. */
+@media(min-width:1180px){
+  .wrap{max-width:1140px;padding-right:60px}
+  .wrap>*{max-width:720px}
+  .wide{max-width:960px;margin-left:0}
+  .app{max-width:720px}
+  .app::after{position:absolute;top:20px;left:756px;width:180px;margin:0;
+    padding:0;border:0;text-align:left}
+  figcaption{position:relative}
+  /* the base rule is clamp(40px,7.4vw,66px); 7.4vw is tuned for a phone and
+     runs to the cap on any desktop, so the hero eats the first screen */
+  h1{font-size:clamp(44px,3.6vw,58px)}
+}
+@media(min-width:1600px){
+  .wrap{max-width:1280px}
+  .app::after{left:800px}
+}
 @media(max-width:1010px){.wide{max-width:100%;margin-left:0}}
 h1,h2,h3,h4{font-family:var(--serif);font-weight:700;text-wrap:balance;
   text-shadow:0 1px 0 var(--engrave-lo),0 -1px 0 var(--engrave-hi)}
@@ -100,21 +123,31 @@ figure{margin:26px 0}
 figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:3px}
 figcaption{font-family:var(--mono);font-size:11.5px;color:var(--faded);margin-top:9px;line-height:1.65}
 
-.app{background:var(--panel);border:1px solid var(--line);border-radius:3px;
-  padding:22px;margin:30px 0;position:relative}
-.app::after{content:attr(data-tag);position:absolute;top:-9px;right:14px;background:var(--panel);
-  padding:0 8px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--gold)}
+/* Apparatus: a typographic aside, not a card. The previous treatment was a
+   filled rounded rectangle with a notched corner tab, which is the current
+   house style of generated design and reads as such. A rule and a margin label
+   carry the same "this is an instrument, not prose" signal without the box. */
+.app{background:none;border:0;border-top:1px solid var(--ink);
+  border-bottom:1px solid var(--line);border-radius:0;
+  padding:20px 0 24px;margin:38px 0;position:relative}
+.app::after{content:attr(data-tag);display:block;font-family:var(--mono);
+  font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--faded);
+  margin-top:18px;padding-top:9px;border-top:1px solid var(--line)}
 .app h4{margin:0 0 3px;font-size:17px}
 .app .hint{font-family:var(--mono);font-size:11.5px;color:var(--faded);margin:0 0 18px}
 
-.segbar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:15px}
-.seg{font-family:var(--mono);font-size:11.5px;padding:9px 12px;border:1px solid var(--line);
-  background:var(--panel-2);color:var(--faded);cursor:pointer;border-radius:3px;
-  transition:all .25s var(--spring)}
-.seg:hover{border-color:var(--gold);color:var(--ink)}
-.seg[aria-selected="true"]{border-color:var(--gold);color:var(--bg);background:var(--gold)}
-.seg.absent{border-style:dashed;color:var(--red);border-color:var(--red)}
+/* Segment row: square, rule-joined, sharing one border rather than six
+   floating chips. Selection is weight and ground, not a pill. */
+.segbar{display:flex;gap:0;flex-wrap:wrap;margin-bottom:15px;
+  border:1px solid var(--line);width:fit-content;max-width:100%}
+.seg{font-family:var(--mono);font-size:11.5px;padding:9px 13px;border:0;
+  border-right:1px solid var(--line);background:none;color:var(--faded);
+  cursor:pointer;border-radius:0;transition:background .18s ease,color .18s ease}
+.segbar .seg:last-child{border-right:0}
+.seg:hover{color:var(--ink);background:var(--panel)}
+.seg[aria-selected="true"]{color:var(--bg);background:var(--ink)}
+.seg.absent{color:var(--red)}
+.seg.absent::after{content:"\00a0\00b7";opacity:.7}
 .seg.absent[aria-selected="true"]{background:var(--red);color:#fff;border-style:solid}
 .segout{font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--faded);
   min-height:82px;border-left:2px solid var(--gold);padding-left:14px}

@@ -760,6 +760,42 @@
       "day": 6,
       "rel": [],
       "node": "sre"
+    },
+    {
+      "id": "td-error",
+      "t": "TD Error",
+      "he": "שגיאת הפרש זמני",
+      "d": "δ = r + γV_φ(s') - V_φ(s): ה-Advantage המקורב שמעדכן את ה-Actor ב-Actor-Critic. כשδ>0 הפעולה עדיפה על הצפוי; כשδ<0 גרועה ממנה.",
+      "day": 7,
+      "rel": ["td-learning", "actor-critic", "advantage-function", "bootstrapping"],
+      "node": "optimization"
+    },
+    {
+      "id": "online-learning",
+      "t": "Online Learning",
+      "he": "למידה אונליין",
+      "d": "עדכון הפרמטרים אחרי כל צעד במקום אחרי אפיזודה שלמה. Actor-Critic מאפשר זאת כי TD error זמין מיד; REINFORCE חייב לחכות לסוף.",
+      "day": 7,
+      "rel": ["actor-critic", "td-error", "reinforce"],
+      "node": "ml-applied"
+    },
+    {
+      "id": "target-network",
+      "t": "Target Network",
+      "he": "רשת מטרה",
+      "d": "עותק מוקפא של ה-Critic שמשמש כ-target יציב לעדכון; מונע מעגל שבו ה-target זזה בזמן האימון. נפוץ ב-DQN ו-SAC.",
+      "day": 7,
+      "rel": ["td-error", "actor-critic", "bootstrapping"],
+      "node": "optimization"
+    },
+    {
+      "id": "keyset-pagination",
+      "t": "Keyset Pagination",
+      "he": "ענבל מפתח",
+      "d": "WHERE id > cursor LIMIT n: יציב תחת כתיבות מקביליות, O(log n) תמיד. OFFSET קורס עם טבלאות גדולות ויוצר phantom reads.",
+      "day": 7,
+      "rel": [],
+      "node": "api"
     }
   ]
 }

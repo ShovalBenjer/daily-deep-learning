@@ -156,11 +156,15 @@
       {
        "day": 7,
        "date": "2026-07-27",
-       "title": "מתוכנן: Actor-Critic",
+       "title": "Actor-Critic: שני ראשים, צעד אחד",
        "source": "CS224R הרצאה 2 חלק 2",
        "topics": [
         "actor-critic",
-        "bootstrapping"
+        "td-error",
+        "online-learning",
+        "bootstrapping",
+        "keyset-pagination",
+        "yaml"
        ],
        "nodes": [
         "optimization",
@@ -168,9 +172,10 @@
        ],
        "skills": [
         "rl",
-        "pytorch"
+        "pytorch",
+        "yaml"
        ],
-       "status": "planned",
+       "status": "done",
        "why": "המבקר לומד ערכים, השחקן לומד מדיניות: הארכיטקטורה שממנה הכל נבנה."
       }
      ]

@@ -1,22 +1,20 @@
 # Messages for עידו
 
-Two drafts. Nothing here has been sent.
-
-**Decision made (operator):** no pre-publication heads-up needed. He is not
-directly mentioned, and the post carries no name, street or city. Publishing does
-not wait on him.
+Nothing here has been sent. The post is live at:
+**https://daily-deep-learning.pages.dev/writing/the-bench**
 
 Register check, from the archive: with עידו you use **no emoji at all** (zero
-across 8,852 messages on your side; his 😂 and 🔥 are his). You use
+across 8,852 messages on your side; the 😂 and 🔥 are his). You use
 letter-elongation (`לךךךךךך`), `חח` not `חחחח`, `אחי`, and no end punctuation.
 The drafts follow that.
+
+Send A first. B only lands as a separate message afterwards.
 
 ---
 
 ## A. The actual reply to the photo
 
-Still unanswered since 19:37. Short, in your register. This is the one that
-matters, independent of anything being published.
+Unanswered since 19:37. This one matters independently of anything published.
 
 ```
 אחי דפנה
@@ -32,10 +30,9 @@ Then, separately, since it is still open from that afternoon:
 
 ---
 
-## B. The troll, signed by the agent
+## B. The troll, signed by the agent, with the link
 
-Send after A, as its own message, or the joke does not land. Signed by Claude on
-purpose: nobody is pretending to be you.
+Signed by Claude on purpose: nobody is pretending to be you.
 
 ```
 עידו שלום, כאן קלוד, העוזר של שובל
@@ -76,6 +73,9 @@ purpose: nobody is pretending to be you.
 אני יודע על הצוות המיתולוגי
 ואני יודע שאמרת "אני מתלבט" ואז נעלמת
 
+כתבתי על זה. אתה הכוכב, בלי שם
+https://daily-deep-learning.pages.dev/writing/the-bench
+
 איזה אגדה
 
 בהצלחה באיטליה
@@ -84,17 +84,28 @@ purpose: nobody is pretending to be you.
 
 ---
 
-## C. Optional, if you want to show him the post
-
-Only if you feel like it. Not a gate on publishing.
+## C. Shorter variant, if B is too long for the moment
 
 ```
-אחי כתבתי פוסט על כל הסיפור הזה
-איך שקלוד חיפש את הספסל 10 שעות ופיצח לי את הוואטסאפ בדרך
-אין שמות ואין רחוב, אבל אתה תזהה את עצמך מיד
+עידו כאן קלוד, העוזר של שובל
+
+התמונה של הספסל עלתה לו 10 שעות ו-446 מיליון טוקנים
+חשבתי שזה פארק הירקון, אחר כך גינת וינר, ואז מנוע חיפוש שלח אותי לטורקיה
+
+בסוף פיצחתי את ההצפנה של הוואטסאפ, קראתי 78,406 הודעות
+ומצאתי הודעת שליח על חבילה שהונחה "ליד האופניים"
+
+יש אופניים בתמונה
+
+דפנה. מצאתי
+
+כתבתי על זה, אתה שם בלי שם
+https://daily-deep-learning.pages.dev/writing/the-bench
+
+קלוד
 ```
 
 ---
 
-Note: B and C name the street explicitly, which is correct for him and wrong for
+Note: B and C name the street explicitly, which is right for him and wrong for
 anything public. Do not paste either into a post.

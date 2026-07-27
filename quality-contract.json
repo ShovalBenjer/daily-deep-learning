@@ -1,0 +1,87 @@
+{
+  "project": "daily-deep-learning",
+  "created": "2026-07-25",
+  "app": {
+    "start": "python -m http.server 8080",
+    "url": "http://localhost:8080/",
+    "routes": [
+      "/",
+      "/#/map",
+      "/#/ladder",
+      "/#/kodex",
+      "/#/discover",
+      "/#/doc/ai-pr-review",
+      "/#/doc/mcp-sensitive-data",
+      "/#/2026-07-25"
+    ],
+    "_comment": "Static PWA (index.html at repo root, no build step, no root package.json). Served with `python -m http.server 8080` from the repo root; gate.py never starts this itself (checked: nothing in gate.py reads app.start), so the operator running the gate must have that server already up at app.url before running the e2e/a11y_ux domains, or those two will fail closed with connection errors rather than reporting real findings. This local server does NOT apply the repo's `_headers` file (CSP, X-Content-Type-Options, etc.) -- those only apply on Cloudflare Pages -- so header-dependent checks here understate what production actually sends. Routes are hash-based SPA routes read from route() in index.html, not guessed: '/' defaults to today's or the latest post; /#/map, /#/ladder, /#/kodex, /#/discover are fixed views; /#/doc/{slug} fetches corpus/{slug}.md (only ai-pr-review and mcp-sensitive-data exist on disk today); /#/2026-07-25 pins a specific day's post and will need updating as the daily post rotates -- it is largely redundant with '/' (same view type) and can be dropped or re-pinned in a later edit without weakening coverage, since '/' already exercises the daily-post view."
+  },
+  "domains": {
+    "build": {
+      "required": true,
+      "cmd": "python tools/validate_links.py",
+      "_comment": "No bundler exists for this static site (confirmed: no root package.json, README states no build step). This is the closest real analog and is literally the pre-deploy check in .github/workflows/deploy.yml (`python3 tools/validate_links.py`, run before the Cloudflare Pages deploy step) -- it validates referential integrity across talents.json/skills.json/concepts.json/syllabus.json. Personally run 2026-07-25 from the project root: exit 0, output 'nodes=48 skills=45 concepts=66 errors=0'."
+    },
+    "unit": {
+      "required": true,
+      "cmd": "bun test tests/boundaries.test.ts",
+      "waived": {
+        "until": "2026-08-10",
+        "reason": "9 of 10 pass, including every live-Worker boundary case (401, 400 invalid JSON, 413 oversize, roundtrip). The single failure is `daemon: /chat real roundtrip`, which is connection-refused because the teacher daemon on localhost:8788 was not started: daemon/server.ts reads the gitignored daemon/.key and launches a cloudflared quick tunnel, which is an outbound publication action this session did not take unilaterally. This is the suite's designed fail-closed behaviour for a real backing service, not a regression. Lift by starting the daemon before the gate, or by splitting the daemon cases into a separately-invoked suite."
+      },
+      "_comment": "Only test file in the repo. Personally run 2026-07-25: exit 0, '10 pass, 0 fail, 15 expect() calls'. NOT hermetic, and the gate must not be read as if it were: this suite makes an authenticated, state-mutating (self-restoring) round trip against the LIVE production Cloudflare Worker at https://sadna-sync.shovalb9.workers.dev, and 4 of the 10 tests require a local daemon answering on http://localhost:8788 (started separately via `cd daemon && bun run server.ts` or equivalent; confirmed alive at run time, HTTP 401 on a bare GET, which is a live auth-required response not a dead port). If that daemon is not already running when the gate executes this command, those 4 tests fail closed with connection-refused rather than being skipped -- which may be the correct fail-closed behavior for a suite that depends on a real backing service, but a bare 'exit 0 expected' reading of this domain would be misleading without this note."
+    },
+    "types": {
+      "required": true,
+      "cmd": "node --check tree3d.js && node --check sw.js && python tools/check_inline_js.py && python -m compileall -q tools && bash -n tools/gen_art.sh",
+      "_comment": "No tsconfig, .eslintrc, or biome.json anywhere in the repo outside daemon/'s node_modules dependencies, so there is no real typecheck or lint to run -- this is a syntax-only sweep of every piece of JS/shell in the deployed app: the two standalone JS files (tree3d.js, sw.js), the ~113KB inline <script> block in index.html (the bulk of the app's logic, extracted and checked by the new tools/check_inline_js.py helper added alongside this contract -- see that file for the extraction method), every tools/*.py file via compileall, and the one shell tool script. It catches parse errors, nothing semantic. Personally run 2026-07-25 via the exact shell (subprocess.run(..., shell=True) on Windows, i.e. cmd.exe) that gate.py itself uses: exit 0, 'inline script #0 (113134 bytes): ok' plus clean compileall and bash -n."
+    },
+    "e2e": {
+      "required": true,
+      "waived": {
+        "until": "2026-08-10",
+        "reason": "Blocked by a defect in the harness, not in this app, and the harness is another lane's tree so this lane does not patch it. claude-setup/tools/browser/cdp.py WS.__init__ splits the websocket host and port with partition(':'), which on the bracketed IPv6 endpoint [::1]:9224 yields host '[' and port ':1]:9224' and raises ValueError before any route is audited. That endpoint is the CORRECT choice: the module's own choose_host() prefers the [::1] instance because 127.0.0.1:9224 is a stranger Chrome on a throwaway profile. Setting CDP_HOST=127.0.0.1 does not route around it, verified 2026-07-27, because choose_host overrides the env default. Fix belongs in the setup lane: bracket-aware host parsing in WS.__init__. Lift when that lands and a fresh state/e2e/last.json is written."
+      },
+      "cmd": "python C:/Users/shova/claude-setup/tools/e2e/flow.py audit ${APP_URL} --route \"/\" --route \"/#/map\" --route \"/#/ladder\" --route \"/#/kodex\" --route \"/#/discover\" --route \"/#/doc/ai-pr-review\" --route \"/#/doc/mcp-sensitive-data\" --route \"/#/2026-07-25\" --viewport mobile --max-controls 15 --out state/e2e/last.json",
+      "_comment": "OPERATING INSTRUCTION FOR THIS MACHINE: run gate.py itself via PowerShell here, not the Bash tool / Git Bash. Reproduced 3x: Git Bash/MSYS silently rewrites a bare '/' route argument into a Windows path before flow.py ever sees it (visible in -v output as a mangled '[mobile] C:/Program Files/Git/' route), producing a generic 'websocket closed while reading' failure that is a shell-tooling artifact, not a defect in flow.py, cdp.py, or the app. Switching to PowerShell/cmd.exe (which is what gate.py's own subprocess.run(shell=True) uses on Windows anyway) fixes it. Personally run 2026-07-25 via PowerShell against the live local server: exit 1, 42 fail-level findings (WCAG tap-target and contrast violations down to 1.05:1, and dead controls: #themeToggle and #sndToggle do nothing when pressed on every route audited). This is a real, reproducible app defect, not a harness or contract problem -- confirmed by `flow.py selftest` (26/26 planted defects detected, clean page passes clean). Report written to state/e2e/last.json, schema-verified to match what the a11y_ux domain below reads (by_viewport.mobile[].findings[].{kind,sev,msg})."
+    },
+    "a11y_ux": {
+      "required": true,
+      "read_report": "state/e2e/last.json",
+      "max_warn": 0,
+      "waived": {
+        "until": "2026-08-10",
+        "reason": "NOT EVALUABLE on this tree, and the waiver says so rather than implying the app is clean. This domain grades the report the e2e domain writes immediately before it; e2e now raises before writing, so the graded file is state/e2e/last.json from 2026-07-27T07:41, produced from an earlier tree. Its 37 fail and 387 warn are real, pre-existing defects (contrast to 1.05:1 on the quiz and retrieval buttons, board labels at 1.35:1 and 2.92:1, the header wordmark at 84x21 and the ask control at 89x22 against the 24x24 floor). None was introduced by this session, which changed no CSS, no HTML and no app JavaScript: the diff is tools/, workflows, .gitignore, sw.js FRESH list, README, CLAUDE.md and two generated data files. The fixes are specified per finding in docs/PLAN-GATE-TO-GREEN-2026-07-25.md and are track C work. Lift together with e2e, since a fresh measurement is the precondition."
+      },
+      "_comment": "Reads the report the e2e domain just wrote (e2e runs immediately before a11y_ux in gate.py's fixed domain order, so this is always fresh from the same run, not a stale prior report). Filters to accessibility/layout finding kinds only (contrast, target, label, name, text, overflow, image, head, layout) -- dead-control findings (kind=flow) are NOT counted here, only in e2e's exit code, so this domain isolates 'can a phone user perceive and reach the controls' from 'do the controls work'. max_warn 0 is the strict floor recommended by the gate's own starter; given the current backlog (contrast down to 1.05:1, multiple tap targets under the 24x24 WCAG floor including the header wordmark on every route) this domain will legitimately FAIL today. That is an accurate report of the app's current state, not a contract defect."
+    },
+    "security": {
+      "required": true,
+      "builtin": "secret_scan"
+    },
+    "docs": {
+      "required": true,
+      "builtin": "docs_touched",
+      "paths": ["README.md", "DESIGN.md", "ROUTINE.md", "docs/", "CHANGELOG.md"]
+    },
+    "pipeline": {
+      "required": true,
+      "builtin": "ci_runs_gate",
+      "waived": {
+        "until": "2026-08-10",
+        "reason": "Partially closed for real on 2026-07-27, not waived into invisibility. New .github/workflows/ci.yml runs on every pull request and every non-main push and executes the build domain (tools/validate_links.py), the full types sweep, the curriculum budget, and tools/stage_site.py, whose leak audit makes the publication boundary a CI-enforced check. It also publishes a Cloudflare Pages preview per pull request, which creates the stage environment ENGINEERING-STANDARDS section 2 records as missing. Two contract commands remain genuinely unrunnable on a GitHub runner: the unit suite needs the gitignored daemon/.key and a daemon on localhost:8788, and e2e needs a Chrome CDP endpoint plus the flow.py harness that lives in claude-setup, outside this repo. Closing those means vendoring the gate or adding a self-hosted runner, which is a deliberate decision, not a quick fix."
+      },
+      "_comment": "Honest as of 2026-07-25: neither .github/workflows/deploy.yml nor claude-code-review.yml invokes gate.py, so this domain reports the true gap rather than being waived into invisibility. deploy.yml does call `python3 tools/validate_links.py` (matching this contract's build domain) but nothing else here. Expect FAIL until a workflow step runs `python tools/gate/gate.py run --project .` (or every contract cmd's trailing path token is made to appear literally in a workflow file, which is the builtin's weaker fallback match) -- that CI authoring is a separate, later step, not something to fake here."
+    },
+    "review": {
+      "required": true,
+      "artifact": "state/reviews/${SHA}.json",
+      "cmd": "python C:/Users/shova/claude-setup/tools/review/panel.py run --project .",
+      "_comment": "Personally run 2026-07-25 against this repo's actual HEAD (90cff76b20190639c1e3f17c1604a673543a36f1): exit 0, artifact written to state/reviews/90cff76b20190639c1e3f17c1604a673543a36f1.json with reviewer 'persona-panel/local' (not self/author) and verdict 'changes-requested' (1 high, 0 medium, 1 low across 32 pattern checks in 5 personas) -- so the review domain will legitimately FAIL right now, which is the panel's real output, not a contract or gate defect. The one high finding is a sql-concat pattern match inside docs/research/ENGINE-RESEARCH-PROMPT-2026-07-24-v3.md (a research-prompt markdown file containing example SQL prose, not executable code) -- plausibly a false positive for this specific file, but this contract does not get to decide that for the panel; a human or a second reviewer resolves it, or the tree gets cleaned up and re-reviewed. The tree is also currently dirty (uncommitted changes to concepts.json/posts/index.json/syllabus.json, several new untracked docs/ files, this contract, and tools/check_inline_js.py), so the artifact describes uncommitted work under the last real commit's sha -- committing first and re-running is what turns this from an approximate read into an exact one."
+    },
+    "perf": {
+      "required": false,
+      "na_reason": "No performance budget exists anywhere in this repo as of 2026-07-25 -- no lighthouserc, no size-limit config, no CI perf gate; repo-wide search for budget/lighthouse/perf-budget across .md/.yml/.toml/.json hit only unrelated learning-content prose about SRE error budgets. Static site with no bundler, so there is nothing to measure a fabricated threshold against. Not a waiver (no expiry would be honest for a genuinely undefined budget) -- na_reason instead, and it should convert to a real cmd the day someone sets an actual budget (e.g. a max total byte count for index.html + inline script, or a Lighthouse CI run against the Cloudflare Pages deploy)."
+    }
+  }
+}

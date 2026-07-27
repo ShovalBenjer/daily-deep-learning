@@ -4,7 +4,7 @@ const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest',
   'assets/ui/frame-plate.svg', 'assets/ui/frame-hero.svg', 'assets/ui/frame-plate-light.svg', 'assets/ui/frame-hero-light.svg',
   'assets/art/board-bg.webp', 'assets/art/crest-systems.webp', 'assets/art/crest-craft.webp', 'assets/art/crest-ops.webp', 'assets/art/spark-portrait.webp',
   'assets/art/frame-hero-painted.png', 'assets/art/ledger-banner.webp'];
-const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json', 'corpus_manifest.json', 'concepts.json', 'discoveries.json', 'skills.json', 'syllabus.json'];
+const FRESH = ['/posts/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json', 'corpus_manifest.json', 'concepts.json', 'discoveries.json', 'skills.json', 'syllabus.json', 'curriculum.json', 'goals.json'];
 // The shell itself is NETWORK-FIRST so an open with connectivity always gets
 // the latest app (staleness burned us repeatedly); cache is the offline fallback.
 const NETFIRST_SHELL = ['index.html', 'style.css', 'tree3d.js', 'sw.js'];

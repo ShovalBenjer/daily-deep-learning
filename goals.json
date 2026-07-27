@@ -1,0 +1,33 @@
+{
+ "goals": [
+  {
+   "id": "hire-2026-09-30",
+   "deadline": "2026-09-30",
+   "weight": 1.0,
+   "active": true,
+   "he": "חתימה על חוזה עד סוף ספטמבר"
+  },
+  {
+   "id": "ai103-sit",
+   "deadline": "2026-09-15",
+   "weight": 0.7,
+   "active": true,
+   "he": "לגשת למבחן AI-103"
+  },
+  {
+   "id": "interviews-3wk",
+   "cadence": "weekly",
+   "target": 3,
+   "weight": 0.9,
+   "active": true,
+   "he": "שלושה ראיונות בשבוע"
+  },
+  {
+   "id": "msc-application",
+   "deadline": "2027-03-01",
+   "weight": 0.4,
+   "active": true,
+   "he": "מועמדות לתואר שני"
+  }
+ ]
+}

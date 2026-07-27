@@ -1,0 +1,55 @@
+name: CI
+
+# Stage, in the sense ENGINEERING-STANDARDS section 2 means it: every pull
+# request and every non-main push gets the checks plus a Pages preview with a
+# unique URL, so proving CI ran something no longer requires deploying
+# production. Never `|| true`: a check that cannot run must fail the job.
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # build domain of quality-contract.json
+      - name: Validate the content graph
+        run: python3 tools/validate_links.py
+
+      # types domain, minus the shell script that needs a local bash on Windows
+      - name: Syntax sweep
+        run: |
+          node --check sw.js
+          node --check tree3d.js
+          python3 tools/check_inline_js.py
+          python3 -m compileall -q tools
+          bash -n tools/gen_art.sh
+
+      - name: Curriculum budget against the deadline
+        run: python3 tools/curriculum_budget.py
+
+      # Fails if any forbidden path reaches the upload, so the publication
+      # boundary is enforced by CI rather than by remembering.
+      - name: Stage the site and audit the boundary
+        run: python3 tools/stage_site.py dist
+
+  preview:
+    needs: checks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage the shippable site
+        run: python3 tools/stage_site.py dist
+      - name: Publish a preview deployment
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=daily-deep-learning --branch=${{ github.head_ref }}

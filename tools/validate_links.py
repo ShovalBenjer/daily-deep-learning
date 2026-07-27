@@ -38,6 +38,34 @@ for season in syllabus["seasons"]:
             for sid in d.get("skills", []):
                 if sid not in skill_ids: errs.append(f"syllabus day {d['day']}: skill '{sid}' missing")
 
-print(f"nodes={len(nodes)} skills={len(skill_ids)} concepts={len(concept_ids)} errors={len(errs)}")
+# curriculum.json + goals.json (SYSTEM-SPEC 4.2 step 3). Checked against what is
+# ON DISK, not against the builder's in-memory output, so a hand-edit or a stale
+# file fails here rather than rendering an empty node sheet.
+TREE_BY_MOSCOW = {"must": "pvp", "should": "between", "could": "pve", "wont": "pve"}
+cur_path = os.path.join(R, "curriculum.json")
+units = []
+if os.path.exists(cur_path):
+    units = J("curriculum.json")["units"]
+    goal_ids = {g["id"] for g in J("goals.json")["goals"]}
+    unit_ids, taught = set(), set()
+    for u in units:
+        taught.update(u.get("teaches", []))
+    for u in units:
+        if u["id"] in unit_ids: errs.append(f"unit {u['id']}: duplicate id")
+        unit_ids.add(u["id"])
+        if u["node"] not in nodes: errs.append(f"unit {u['id']}: node '{u['node']}' missing")
+        for s in u.get("skills", []):
+            if s not in skill_ids: errs.append(f"unit {u['id']}: skill '{s}' missing")
+        for g in u.get("goals", []):
+            if g not in goal_ids: errs.append(f"unit {u['id']}: goal '{g}' missing")
+        for c in u.get("requires", []):
+            if c not in taught: errs.append(f"unit {u['id']}: requires '{c}', which no unit teaches")
+        if u["tree"] != TREE_BY_MOSCOW[u["moscow"]]:
+            errs.append(f"unit {u['id']}: tree '{u['tree']}' does not derive from moscow '{u['moscow']}'")
+        if u["volatile"] and u["staleAfterDays"] is None:
+            errs.append(f"unit {u['id']}: volatile without staleAfterDays")
+
+print(f"nodes={len(nodes)} skills={len(skill_ids)} concepts={len(concept_ids)} "
+      f"units={len(units)} errors={len(errs)}")
 for e in errs: print(" !", e)
 sys.exit(1 if errs else 0)

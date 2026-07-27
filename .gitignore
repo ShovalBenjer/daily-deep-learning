@@ -6,6 +6,10 @@ node_modules/
 
 .wrangler/
 
+dist/
+.venv/
+__pycache__/
+
 shots/
 
 daemon/.key

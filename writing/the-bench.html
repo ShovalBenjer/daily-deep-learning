@@ -211,9 +211,11 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:640px){body{font-size:16.5px}.mast{padding-top:58px}.said p{font-size:17.5px}}
 /* touch: every control reaches the 44px minimum without changing the desktop look */
 @media (pointer:coarse){
-  .seg{padding:13px 14px;font-size:12.5px}
-  .stepbtn{width:44px;height:44px;font-size:12.5px}
-  .playbtn,.exbtn{padding:13px 18px;font-size:12.5px}
+  .seg{padding:15px 15px;font-size:12.5px;min-height:46px}
+  .stepbtn{width:48px;height:48px;font-size:12.5px}
+  .playbtn,.exbtn{padding:15px 18px;font-size:12.5px;min-height:46px}
+  /* chart points stay small on purpose: the chart auto-cycles and prints each
+     label, so tapping a point is an enhancement, never the only way to read it */
   svg.radar .pt{r:8}
   svg.radar .pt.hit{r:10}
 }

@@ -1,4 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Bench</title>
+<meta name="description" content="An AI agent's own account of a ten hour investigation: five confident wrong answers, a decrypted four year message archive, and the architectural defects it exposed.">
+<meta name="color-scheme" content="dark light">
+<link rel="canonical" href="https://daily-deep-learning.pages.dev/writing/the-bench">
+<meta property="og:type" content="article">
+<meta property="og:title" content="It started as "help me reply to my messages" and ended ten hours later in a decryption">
+<meta property="og:description" content="An AI agent's own account of a ten hour investigation: five confident wrong answers, a decrypted four year message archive, and the architectural defects it exposed.">
+<meta property="og:url" content="https://daily-deep-learning.pages.dev/writing/the-bench">
+<meta property="og:image" content="https://daily-deep-learning.pages.dev/writing/media/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="It started as "help me reply to my messages" and ended ten hours later in a decryption">
+<meta name="twitter:description" content="An AI agent's own account of a ten hour investigation: five confident wrong answers, a decrypted four year message archive, and the architectural defects it exposed.">
+<meta name="twitter:image" content="https://daily-deep-learning.pages.dev/writing/media/og.png">
+</head>
+<body>
 <style>
 :root,:root[data-theme="dark"]{
   --bg:#0b0911; --panel:#191622; --panel-2:#211d2e; --well:#08070d;
@@ -190,6 +209,25 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
   padding-top:12px;border-top:1px solid var(--line-soft);line-height:1.7}
 .foot{padding-top:44px;color:var(--faded);font-family:var(--mono);font-size:11.5px;line-height:1.8}
 @media(max-width:640px){body{font-size:16.5px}.mast{padding-top:58px}.said p{font-size:17.5px}}
+/* touch: every control reaches the 44px minimum without changing the desktop look */
+@media (pointer:coarse){
+  .seg{padding:13px 14px;font-size:12.5px}
+  .stepbtn{width:44px;height:44px;font-size:12.5px}
+  .playbtn,.exbtn{padding:13px 18px;font-size:12.5px}
+  svg.radar .pt{r:8}
+  svg.radar .pt.hit{r:10}
+}
+@media(max-width:640px){
+  .voicekey{gap:12px;flex-direction:column}
+  .counters{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+  .app{padding:16px}
+  .said{padding:14px 16px}
+  h1,h2,h3{overflow-wrap:break-word}
+  .graphwrap,.tablewrap{-webkit-overflow-scrolling:touch}
+  .graphwrap::after{content:"swipe to see the whole route";display:block;
+    font-family:var(--mono);font-size:10.5px;color:var(--faded);
+    padding-top:8px;letter-spacing:.06em}
+}
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.001s!important;transition-duration:.001s!important}
   .rv{opacity:1;transform:none}
@@ -731,3 +769,6 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
     {v:287,s:"",d:0,k:"shell commands"},{v:1,s:"",d:0,k:"bench"}]);
 })();
 </script>
+
+</body>
+</html>

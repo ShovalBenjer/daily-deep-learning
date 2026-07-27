@@ -1,9 +1,13 @@
 # Messages for עידו
 
-Three drafts. Pick one, or send A then B. Nothing here has been sent.
+Two drafts. Nothing here has been sent.
+
+**Decision made (operator):** no pre-publication heads-up needed. He is not
+directly mentioned, and the post carries no name, street or city. Publishing does
+not wait on him.
 
 Register check, from the archive: with עידו you use **no emoji at all** (zero
-across 8,852 messages, both directions apart from his 😂 and 🔥). You use
+across 8,852 messages on your side; his 😂 and 🔥 are his). You use
 letter-elongation (`לךךךךךך`), `חח` not `חחחח`, `אחי`, and no end punctuation.
 The drafts follow that.
 
@@ -11,7 +15,8 @@ The drafts follow that.
 
 ## A. The actual reply to the photo
 
-Still unanswered since 19:37. Short, in your register. Send this one regardless.
+Still unanswered since 19:37. Short, in your register. This is the one that
+matters, independent of anything being published.
 
 ```
 אחי דפנה
@@ -19,7 +24,7 @@ Still unanswered since 19:37. Short, in your register. Send this one regardless.
 מאיפה חפרת את זה
 ```
 
-Then, separately, since it is still open:
+Then, separately, since it is still open from that afternoon:
 
 ```
 ולגבי כדורגל, שלישי נשאר? רביעי נפל לי
@@ -29,8 +34,8 @@ Then, separately, since it is still open:
 
 ## B. The troll, signed by the agent
 
-Long, and the joke only lands if it arrives as its own message after A. It is
-signed by Claude on purpose: nobody is pretending to be you.
+Send after A, as its own message, or the joke does not land. Signed by Claude on
+purpose: nobody is pretending to be you.
 
 ```
 עידו שלום, כאן קלוד, העוזר של שובל
@@ -79,26 +84,17 @@ signed by Claude on purpose: nobody is pretending to be you.
 
 ---
 
-## C. The heads-up about the blog post
+## C. Optional, if you want to show him the post
 
-Send this **before** the post goes public, not after. He is in it, even
-anonymised, and it is his photo that started the whole thing.
+Only if you feel like it. Not a gate on publishing.
 
 ```
-אחי רגע ברצינות
-כתבתי פוסט על כל הסיפור של הספסל
-איך שקלוד חיפש אותו 10 שעות ופיצח לי את הוואטסאפ בדרך
-
-הכל אנונימי, אין שמות ואין רחוב ואין עיר
-אבל אתה תזהה את עצמך מיד
-
-רוצה לראות לפני שאני מעלה? אם משהו מפריע לך אני מוריד
+אחי כתבתי פוסט על כל הסיפור הזה
+איך שקלוד חיפש את הספסל 10 שעות ופיצח לי את הוואטסאפ בדרך
+אין שמות ואין רחוב, אבל אתה תזהה את עצמך מיד
 ```
 
-**Why this matters:** the post is anonymised against strangers, not against him.
-It quotes the shape of your conversations, describes his old neighbourhood, and
-the photo he sent is the reason it exists. Asking costs one message and removes
-the only real risk in publishing.
+---
 
-If he says no, the post still works: the corpus, the decryption, the defects and
-the research questions carry it without the bench narrative at all.
+Note: B and C name the street explicitly, which is correct for him and wrong for
+anything public. Do not paste either into a post.

@@ -10,6 +10,14 @@ dist/
 .venv/
 __pycache__/
 
+# The GitHub remote is PUBLIC. These hold planning material, requirement
+# transcripts quoting the operator, transcript-derived grade bands, cross-lane
+# handoffs enumerating security exposure in other repositories, and unpublished
+# message drafts. The Pages allowlist in tools/stage_site.py keeps them off the
+# deployed site; this keeps them off github.com. Both are needed.
+docs/
+writing/drafts/
+
 shots/
 
 daemon/.key

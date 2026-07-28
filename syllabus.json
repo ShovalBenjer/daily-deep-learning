@@ -179,6 +179,39 @@
        "why": "המבקר לומד ערכים, השחקן לומד מדיניות: הארכיטקטורה שממנה הכל נבנה."
       }
      ]
+    },
+    {
+     "w": 2,
+     "theme": "CS224R L2: Policy gradients ו-GAE",
+     "days": [
+      {
+       "day": 8,
+       "date": "2026-07-28",
+       "title": "GAE: הגשר בין TD ל-Monte Carlo",
+       "source": "CS224R הרצאה 2 (המשך)",
+       "topics": [
+        "n-step-return",
+        "gae",
+        "lambda-return",
+        "bias-variance-spectrum",
+        "eligibility-traces",
+        "sql-window-functions",
+        "multi-agent-orchestration"
+       ],
+       "nodes": [
+        "optimization",
+        "prob-stats",
+        "ml-applied"
+       ],
+       "skills": [
+        "rl",
+        "sql",
+        "azure-foundry"
+       ],
+       "status": "done",
+       "why": "GAE סוגר את הפרק בין TD ל-MC: האומדן שמאחורי PPO וכל ה-RL המודרני."
+      }
+     ]
     }
    ]
   }

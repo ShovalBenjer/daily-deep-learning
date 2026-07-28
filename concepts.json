@@ -796,6 +796,51 @@
       "day": 7,
       "rel": [],
       "node": "api"
+    },
+    {
+      "id": "n-step-return",
+      "t": "N-Step Return",
+      "he": "החזר N-צעדים",
+      "d": "הרחבה של TD: משתמש ב-n תגמולים אמיתיים ואז מבוטסטרפ. \\(\\hat{G}_t^{(n)} = \\sum_{k=0}^{n-1}\\gamma^k r_{t+k} + \\gamma^n V(s_{t+n})\\). n=1 הוא TD, n→∞ הוא Monte Carlo.",
+      "day": 8,
+      "rel": ["td-error", "gae", "lambda-return"],
+      "node": "optimization"
+    },
+    {
+      "id": "gae",
+      "t": "GAE (Generalized Advantage Estimation)",
+      "he": "אומדן Advantage מוכלל",
+      "d": "ממוצע גאומטרי של כל ה-n-step advantages: \\(\\hat{A}_t^{GAE} = \\sum_{k=0}^{\\infty}(\\gamma\\lambda)^k \\delta_{t+k}\\). רקורסיה: \\(A_t = \\delta_t + \\gamma\\lambda A_{t+1}\\). λ שולט בספקטרום bias-variance.",
+      "day": 8,
+      "rel": ["n-step-return", "lambda-return", "bias-variance-spectrum", "td-error", "actor-critic"],
+      "node": "optimization"
+    },
+    {
+      "id": "lambda-return",
+      "t": "Lambda Return (λ-return)",
+      "he": "החזר למבדה",
+      "d": "ממוצע גאומטרי של כל ה-n-step returns: \\(G_t^\\lambda = (1-\\lambda)\\sum_{n=1}^{\\infty}\\lambda^{n-1}\\hat{G}_t^{(n)}\\). GAE הוא ה-advantage של ה-λ-return.",
+      "day": 8,
+      "rel": ["n-step-return", "gae"],
+      "node": "optimization"
+    },
+    {
+      "id": "bias-variance-spectrum",
+      "t": "Bias-Variance Spectrum in RL",
+      "he": "ספקטרום הטיה-שונות ב-RL",
+      "d": "TD (λ=0): bias גבוה מ-V_φ לא מדויק, variance נמוכה. MC (λ=1): bias=0, variance גבוהה ממסלולים ארוכים. GAE/λ שם נקודה על הספקטרום הזה.",
+      "day": 8,
+      "rel": ["gae", "td-error", "advantage"],
+      "node": "prob-stats"
+    },
+    {
+      "id": "multi-agent-orchestration",
+      "t": "Multi-Agent Orchestration",
+      "he": "תזמור רב-סוכנים",
+      "d": "orchestrator קורא ל-sub-agent כ-tool; השגיאה חוזרת כ-tool response, לא כ-exception. Autonomous-with-Approval: required_action עוצר את הלולאה; הלקוח שולח submit_tool_outputs אחרי אישור אנושי.",
+      "day": 8,
+      "rel": [],
+      "node": "agents-loop"
     }
   ]
 }

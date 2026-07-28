@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="הסדנה">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Rubik:wght@400;700;900&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="vendor/katex.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -91,6 +91,7 @@ const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
 const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
 let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null, disco = null, skills = null, syl = null;
+let curriculum = null, goalDefs = null;
 let pageBlocks = [];
 const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
 const syncKey = () => localStorage.getItem('sadna-sync-key') || '';
@@ -116,6 +117,8 @@ const store = {
     st.questsDone = st.questsDone || {};                  // "nodeId:rank" -> {d, ev}
     st.shieldsUsed = st.shieldsUsed || 0;                 // streak shields consumed
     st.shieldDays = st.shieldDays || [];                  // dates covered by a shield
+    st.unitState = st.unitState || {};                    // unitId -> {closed, skips}: progression, replaces daysDone
+    st.known = st.known || [];                            // concept slugs proven known (placement writes here)
     return st;
   },
   save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
@@ -322,7 +325,7 @@ function mountExplainLens() {
       setTimeout(() => { const el = document.getElementById('k-' + hit.id); el && el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 450);
       return;
     }
-    openChat(`הסבר לי בפשטות, בעברית, את "${selText}"${selCtx ? ` — בהקשר של המשפט: "${selCtx}"` : ''}. `);
+    openChat(`הסבר לי בפשטות, בעברית, את "${selText}"${selCtx ? `, בהקשר של המשפט: "${selCtx}"` : ''}. `);
   };
 }
 
@@ -430,12 +433,17 @@ const ACHS = [
   { id: 'own1', name: 'בעלות ראשונה', icon: 'a-crown', t: 3, desc: 'מיומנות ראשונה הגיעה ליעד', cond: () => !!(skills && skills.skills && skills.skills.some(s => (S.skillLevels[s.id] ?? s.current) >= s.target)) },
   { id: 'shield1', name: 'ניצול בעור המגן', icon: 'sre', t: 2, desc: 'מגן רצף נשבר והציל אותך', cond: () => (S.shieldsUsed || 0) >= 1 },
 ];
-function checkAchievements() {
+function checkAchievements(silent) {
   S.ach = S.ach || {};
   const fresh = ACHS.filter(a => !S.ach[a.id] && (() => { try { return a.cond(); } catch (e) { return false; } })());
   if (fresh.length) {
     fresh.forEach(a => S.ach[a.id] = iso(new Date()));
     store.save();
+    // Never perform a ritual during boot. Several conditions read SEEDED ledger
+    // rows (own1 fires when any skills.json current already meets its target),
+    // so a first-time open would celebrate before any work and, worse, leave a
+    // modal overlay intercepting every tap on the home screen.
+    if (silent) { paintGlyphTier(); return; }
     const top = fresh.reduce((m, a) => a.t > m.t ? a : m, fresh[0]);
     setTimeout(() => ritual({ kicker: 'חותם חדש', title: top.name, xp: Object.keys(S.ach).length,
       sub: top.desc + (fresh.length > 1 ? ' · ועוד ' + (fresh.length - 1) : '') + ' · הגליפים התעצמו', tier: top.t }), 900);
@@ -800,7 +808,7 @@ const ALGS = {
       x.fillStyle = themeC('--faded'); x.font = '11px "IBM Plex Mono"';
       x.fillText('lo=' + s.lo, x0 + s.lo * bw + bw / 2, 90);
       if (s.hi >= 0 && s.hi !== s.lo) x.fillText('hi=' + s.hi, x0 + s.hi * bw + bw / 2, 90);
-      x.fillStyle = themeC('--gold'); x.font = '700 12px "Frank Ruhl Libre"';
+      x.fillStyle = themeC('--gold'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
       x.fillText('יעד: ' + s.target + ' · השוואות: ' + s.ops, W / 2, 14);
     }
   },
@@ -822,7 +830,7 @@ const ALGS = {
       const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
       const n = s.r.length, bw = Math.min(46, (W - 8) / n), x0 = (W - bw * n) / 2;
       x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.fillStyle = themeC('--faded'); x.font = '11px "Frank Ruhl Libre"';
+      x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
       x.fillText('rewards', x0 - 2 + bw * n + 2 > W ? W - 30 : x0 + bw * n + 2, 30);
       s.r.forEach((v, i) => {
         const px = x0 + i * bw, cur = i === s.t;
@@ -840,7 +848,7 @@ const ALGS = {
         x.globalAlpha = 1;
         if (has) { x.fillStyle = '#0c1410'; x.font = '11px "IBM Plex Mono"'; x.fillText(v.toFixed(2), px + bw / 2, 93); }
       });
-      x.fillStyle = themeC('--faded'); x.font = '11px "Frank Ruhl Libre"';
+      x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
       x.fillText('G (מהסוף להתחלה ←)', W / 2, 128);
     }
   }
@@ -937,7 +945,7 @@ function widgetGridworld(d) {
     }
     const box = (c, col, glyph) => {
       x.fillStyle = col; x.globalAlpha = .25; x.fillRect(c[0] * s + 2, c[1] * s + 2, s - 4, s - 4); x.globalAlpha = 1;
-      x.fillStyle = col; x.font = '700 ' + (s * 0.34) + 'px "Frank Ruhl Libre"'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillStyle = col; x.font = '700 ' + (s * 0.34) + 'px "Rubik", "Noto Sans Hebrew", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
       x.fillText(glyph, c[0] * s + s / 2, c[1] * s + s / 2);
     };
     box(GOAL, themeC('--green'), '+1'); box(TRAP, themeC('--red'), '-1');
@@ -1856,7 +1864,7 @@ function renderKodex() {
     list.querySelectorAll('.k-ask').forEach(b => b.onclick = e => {
       e.stopPropagation();
       const c = cs.find(x => x.id === b.dataset.c); if (!c) return;
-      openChat(`בהקשר המושג "${c.t}" (${c.he}): ${c.d} — `);
+      openChat(`בהקשר המושג "${c.t}" (${c.he}): ${c.d}. `);
     });
   }
   paintList('');
@@ -1916,7 +1924,7 @@ function drawKodexGraph(csAll) {
     x.shadowBlur = 0;
     if (hub || hot || deg[i] >= 2) {
       x.fillStyle = hub ? goldHi : themeC('--faded');
-      x.font = (hub ? '700 ' : '') + '9.5px "Frank Ruhl Libre"'; x.textAlign = 'center';
+      x.font = (hub ? '700 ' : '') + '9.5px "Rubik", "Noto Sans Hebrew", sans-serif'; x.textAlign = 'center';
       x.fillText(n.c.t.length > 16 ? n.c.t.slice(0, 15) + '…' : n.c.t, n.x, n.y + r + 10);
     }
   });
@@ -1989,8 +1997,203 @@ function renderDiscover() {
 }
 
 /* ---------- routing ---------- */
+/* ---------- the spine: ordering, workout, home (SYSTEM-SPEC 2.1, 2.2, 3.1) ----------
+   No date decides anything here. A unit is proposed by its pull toward an active
+   goal, the measured gap it closes, and whether its prerequisites are met. */
+const MOSCOW_W = { must: 1, should: 0.45, could: 0.15, wont: 0 };
+const allUnits = () => (curriculum && curriculum.units) || [];
+const unitById = id => allUnits().find(u => u.id === id);
+const uState = id => (S.unitState[id] = S.unitState[id] || { closed: null, skips: 0 });
+const daysTo = ds => Math.round((new Date(ds + 'T12:00:00') - new Date()) / 864e5);
+
+// Urgency rises as a deadline nears. A cadence goal (three interviews a week)
+// has no horizon to compress, so it sits at a constant middling pull.
+const urgency = g => g.deadline ? 1 / Math.max(1, daysTo(g.deadline) / 7) : 0.6;
+
+function goalPull(u) {
+  const gs = ((goalDefs && goalDefs.goals) || []).filter(g => g.active && (u.goals || []).includes(g.id));
+  return gs.reduce((m, g) => Math.max(m, g.weight * urgency(g)), 0);
+}
+
+const ledgerRow = id => (skills && skills.skills.find(x => x.id === id)) || null;
+function skillGap(id) {
+  const row = ledgerRow(id);
+  const cur = S.skillLevels[id] != null ? S.skillLevels[id] : (row ? row.current : 0);
+  return Math.max(0, (row ? row.target : 5) - cur) / 5;
+}
+function gapFactor(u) {
+  if (!u.skills || !u.skills.length) return 0.5;   // no ledger row: neutral, neither boosted nor sunk
+  return Math.min(1, u.skills.reduce((a, id) => a + skillGap(id), 0) / u.skills.length);
+}
+
+// A prerequisite names a CONCEPT, so any closed unit teaching it satisfies it.
+// That is what lets placement mark a concept known and unlock everything below.
+function knownConcepts() {
+  const set = new Set(S.known || []);
+  allUnits().forEach(u => { if (uState(u.id).closed) (u.teaches || []).forEach(c => set.add(c)); });
+  return set;
+}
+const available = (u, known) => (u.requires || []).every(c => known.has(c));
+
+// Units carry no blocks until body generation (build order step 7), so this is
+// zero BY CONSTRUCTION rather than by accident. Due items still reach the
+// learner through the workout's recall row; they just cannot be attributed to a
+// unit yet. When bodies land, count this unit's due items here.
+const reviewDebt = () => 0;
+
+function priority(u, known) {
+  if (uState(u.id).closed) return -1;
+  const base = goalPull(u) * gapFactor(u) * MOSCOW_W[u.moscow] * (available(u, known) ? 1 : 0);
+  return base * Math.pow(0.6, uState(u.id).skips || 0) + reviewDebt();
+}
+
+function rankedUnits() {
+  const known = knownConcepts();
+  return allUnits().map(u => ({ u, p: priority(u, known) })).filter(x => x.p > 0)
+    .sort((a, b) => b.p - a.p || a.u.estMin - b.u.estMin);   // ties: the cheapest real move
+}
+
+// talents.json still ships systems/craft/ops; the pvp/between/pve rename is a
+// later step. Deriving the tree from the unit's NODE keeps XP landing where the
+// work was done either way, which is the actual requirement (R11).
+function treeOfNode(nodeId) {
+  const t = talents && talents.trees.find(t => t.tiers.some(ti => ti.nodes.some(n => n.id === nodeId)));
+  return t ? t.id : 'craft';
+}
+
+function closeUnit(u) {
+  const st = uState(u.id);
+  if (st.closed) return;
+  st.closed = iso(new Date());
+  (u.objectives || []).forEach((o, i) => {          // objectives enter the recall pool
+    const rid = 'u-' + u.id + '-' + i;
+    if (!S.reviews[rid]) S.reviews[rid] = { iv: 0, due: plusDays(st.closed, 1), lapses: 0 };
+  });
+  store.save();
+  award(treeOfNode(u.node), Math.max(2, Math.round(u.estMin / 4)), null, true, (u.skills || [])[0]);
+}
+
+function whyThisUnit(u) {
+  const gs = ((goalDefs && goalDefs.goals) || []).filter(g => g.active && (u.goals || []).includes(g.id));
+  const g = gs.sort((a, b) => b.weight * urgency(b) - a.weight * urgency(a))[0];
+  const bits = [];
+  if (g) bits.push(g.he + (g.deadline ? ' · ' + daysTo(g.deadline) + ' ימים' : ''));
+  const weakest = (u.skills || []).slice().sort((a, b) => skillGap(b) - skillGap(a))[0];
+  if (weakest) {
+    const row = ledgerRow(weakest);
+    if (row) bits.push('פער ב-' + weakest + ': ' + (S.skillLevels[weakest] != null ? S.skillLevels[weakest] : row.current) + ' מתוך ' + row.target);
+  }
+  return bits.join(' · ');
+}
+
+function renderHome() {
+  setTab('tab-today');
+  currentDay = null;                                 // no calendar in the chrome either
+  paintFolio();
+  const view = $('#view');
+  $('#status').textContent = '';
+  if (!curriculum) {
+    view.innerHTML = '<p class="finish-hint">תוכנית הלימוד לא זמינה כרגע. נסה שוב כשיש רשת.</p>';
+    return;
+  }
+  const ranked = rankedUnits();
+  const u = ranked.length ? ranked[0].u : null;
+  const due = dueReviews().length;
+  const must = allUnits().filter(x => x.moscow === 'must');
+  const closed = must.filter(x => uState(x.id).closed).length;
+  const left = must.length - closed;
+
+  const propose = u ? `
+    <section class="part">
+      <div class="part-head"><span class="mark">א</span><h2>המשך מכאן</h2></div>
+      <div class="plate">
+        <div class="folio-line">${u.block} · ${whyThisUnit(u)}</div>
+        <h3>${u.he}</h3>
+        <div class="u-chips"><span class="chip2">~${u.estMin} דק׳</span>
+          <span class="chip2">${u.kind === 'practice' ? 'תרגול' : 'לימוד'}</span>
+          <span class="chip2">עומק ~${u.depthEstMin} דק׳</span></div>
+        <div class="u-actions">
+          <button class="finish-day" id="startUnit">התחל</button>
+          <button class="u-ghost" id="swapUnit">משהו אחר</button>
+        </div>
+      </div>
+    </section>` : `
+    <section class="part"><div class="plate">
+      <h3>הכל סגור בשלב הזה</h3>
+      <p class="finish-hint">אין יחידה זמינה שתלויה בידע שכבר הוכח. פתח יחידה מהעץ, או המתן להרחבת התוכנית.</p>
+    </div></section>`;
+
+  view.innerHTML = `
+    ${propose}
+    <section class="part">
+      <div class="part-head"><span class="mark">ב</span><h2>שליפה</h2></div>
+      <div class="plate">
+        ${due ? `<p>${due} פריטים בשלים לשליפה.</p><button class="finish-day" id="startRecall">שלוף</button>`
+              : '<p class="finish-hint">אין פריטים בשלים כרגע. השליפה נפתחת מעצמה כשמגיע הזמן.</p>'}
+      </div>
+    </section>
+    <section class="part">
+      <div class="part-head"><span class="mark">ג</span><h2>המצב</h2></div>
+      <div class="plate">
+        <div class="u-stat"><span>יחידות חובה שנסגרו</span><b>${closed} מתוך ${must.length}</b></div>
+        <div class="u-stat"><span>נשארו</span><b>${left}</b></div>
+        <div class="u-stat"><span>רצף</span><b>${runLength()}</b></div>
+        <div class="u-stat"><span>לדף היומי הישן</span><b><a href="#/history">היסטוריה</a></b></div>
+      </div>
+    </section>`;
+
+  const start = $('#startUnit');
+  if (start && u) start.onclick = () => { location.hash = '#/u/' + u.id; };
+  const swap = $('#swapUnit');
+  if (swap && u) swap.onclick = () => {              // proposed, never forced; repeated skips lower its pull
+    uState(u.id).skips = (uState(u.id).skips || 0) + 1; store.save(); renderHome();
+  };
+  const rec = $('#startRecall');
+  if (rec) rec.onclick = () => openReview();
+}
+
+function renderUnit(id) {
+  const u = unitById(id);
+  if (!u) { location.hash = '#/'; return; }
+  setTab('tab-today'); currentDay = null; paintFolio();
+  const st = uState(u.id);
+  const objectives = (u.objectives || []).map(o => `<li>${o}</li>`).join('');
+  $('#status').textContent = '';
+  $('#view').innerHTML = `
+    <article>
+      <header class="head">
+        <div class="folio-line">${u.block} · ${u.title}</div>
+        <h1>${u.he}</h1>
+      </header>
+      <section class="part"><div class="plate">
+        ${objectives ? `<h3>מה נדרש כאן</h3><ul>${objectives}</ul>` : ''}
+        ${u.body && u.body.status === 'pending' ? `<p class="finish-hint">השיעור המלא ליחידה הזאת עוד לא נכתב. השלד קיים, התוכן נוצר בשלב הבא. אפשר לסמן שהיחידה נסגרה אם החומר כבר ידוע.</p>` : ''}
+        <div class="u-chips"><span class="chip2">~${u.estMin} דק׳</span><span class="chip2">עומק ~${u.depthEstMin} דק׳</span>
+          <span class="chip2">צומת: ${u.node}</span>${(u.skills || []).map(s => `<span class="chip2">${s}</span>`).join('')}</div>
+        <div class="u-actions">
+          ${st.closed ? `<p class="finish-hint">נסגר ב-${st.closed}.</p>`
+                      : '<button class="finish-day" id="closeUnit">סמן שנסגר</button>'}
+          <a class="u-ghost" href="#/">חזרה</a>
+        </div>
+      </div></section>
+    </article>`;
+  const btn = $('#closeUnit');
+  if (btn) btn.onclick = () => { closeUnit(u); location.hash = '#/'; renderHome(); };
+}
+
+function renderHistory() {
+  setTab('tab-today'); currentDay = null; paintFolio();
+  $('#status').textContent = '';
+  const rows = index.map(p => `<div class="ladder-item"><div class="li-body"><div class="li-t">
+      <a href="#/${p.date}">${p.title}</a></div><div class="li-why">${p.date}</div></div></div>`).join('');
+  $('#view').innerHTML = `<section class="part">
+    <div class="part-head"><span class="mark">א</span><h2>הדפים היומיים</h2></div>
+    <div class="plate"><p class="finish-hint">הדפים שנכתבו לפני שהתוכנית עברה ליחידות. נשארים קריאים.</p>
+    ${rows}</div></section>`;
+}
+
 function route() {
-  if (!index.length) return;
+  if (!index.length && !curriculum) return;
   const h = location.hash;
   const vw = $('#view');
   if (vw && !REDUCED()) { vw.classList.remove('stage'); void vw.offsetWidth; vw.classList.add('stage'); }
@@ -2000,12 +2203,16 @@ function route() {
   if (h === '#/discover') return renderDiscover();
   const dm = h.match(/^#\/doc\/([a-z0-9-]+)$/);
   if (dm) return renderDoc(dm[1]);
+  if (h === '#/history') return renderHistory();
+  const um = h.match(/^#\/u\/([a-z0-9-]+)$/);
+  if (um) return renderUnit(um[1]);
   const m = h.match(/^#\/(\d{4}-\d{2}-\d{2})$/);
   if (m) { const i = index.findIndex(p => p.date === m[1]); return renderPost(i >= 0 ? i : 0); }
-  // default: today's page if it exists, else the latest available (index is newest-first)
-  const today = iso(new Date());
-  const ti = index.findIndex(p => p.date === today);
-  renderPost(ti >= 0 ? ti : 0);
+  // Default: the proposed unit, never a date. R1, the oldest standing complaint:
+  // "It auto moved to day 2 without me completing." Dated pages stay reachable at
+  // #/YYYY-MM-DD and through #/history; nothing is waiting unread.
+  if (curriculum) return renderHome();
+  renderPost(0);
 }
 addEventListener('hashchange', route);
 // Re-pick today's page when the PWA is resumed from memory (fixes the phone showing a stale day).
@@ -2039,16 +2246,18 @@ addEventListener('scroll', () => {
   const rs = await Promise.allSettled([
     j('posts/index.json'), j('judgment_map.json'), j('research_ladder.json'),
     j('talents.json'), j('course_plan.json'), j('concepts.json'), j('discoveries.json'),
-    j('skills.json'), j('syllabus.json')
+    j('skills.json'), j('syllabus.json'), j('curriculum.json'), j('goals.json')
   ]);
   const val = i => rs[i].status === 'fulfilled' ? rs[i].value : null;
   index = val(0) || []; jmap = val(1); ladder = val(2); talents = val(3);
   plan = val(4); kodex = val(5); disco = val(6); skills = val(7); syl = val(8);
-  if (!index.length) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
+  curriculum = val(9); goalDefs = val(10);
+  // The home screen runs off curriculum.json, so posts are no longer required to boot.
+  if (!index.length && !curriculum) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();
   seedReviews();                 // nav badge needs the queue on every tab
   shieldWatch();                 // a shield may shatter to save the streak
-  checkAchievements();
+  checkAchievements(true);       // record, never celebrate, on boot
   paintFolio(); route();
   mountMotes();
   mountExplainLens();

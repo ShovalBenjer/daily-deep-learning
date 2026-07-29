@@ -32,13 +32,13 @@
 | L3 fuzz | have 1.0 | `tests/fuzz.test.ts`, 2000 hostile bodies + every nasty value in every field | Required the boundary to be extracted to `daemon/server_parse.ts` so it runs with no network, key or rate limiter |
 | L4 mutation | partial 0.5 | `tests/mutation.test.ts:MUTANTS`, 8 planted defects, all killed, plus a control mutant that must survive | Covers the deck/seed block ONLY. `mentorQueue`, the daemon tools and the client renderers have no mutation coverage |
 | L5 component | gap 0 | none | No Testing Library, no Storybook. Renderers are only exercised through e2e |
-| L6 contract | gap 0 | none | Three hops, zero contract tests. See open item 1 |
+| L6 contract | have 1.0 | `tests/contract.test.ts` | Consumer-driven: the payload is built by the REAL client code lifted from `index.html` and fed to the REAL parser. Found a live defect, see below |
 | L7 integration | partial 0.5 | `tests/boundaries.test.ts`, 10 tests | NOT replayable. Hits the LIVE production Worker and a local daemon. The rubric calls replayability mandatory; there are no cassettes |
 | L8 e2e | partial 0.5 | e2e domain, waived to 2026-08-05 | Harness works; two dead toggles are real failures |
 | L9 golden/regression | partial 0.5 | one proven regression oracle (`tests/mentor.test.ts`, belief suppression, shown to fail against the pre-fix logic) | No snapshot or visual baseline. Not every past bug became a test |
 | L10 non-functional | gap 0 | `perf` domain is N/A, no budget exists | Prod-deployed with no LCP/INP/CLS budget, no load, no chaos |
 
-**Layer score: 6.0 / 11 applicable = 0.55.**
+**Layer score: 7.0 / 11 applicable = 0.64.**
 
 ## 3. Frontend pack (rubric 3.D)
 
@@ -46,7 +46,7 @@
 |---|---|---|
 | Design-token contrast valid light and dark | **have** | `tools/contrast_pass.py`, 34 pairs, exits non-zero on a required failure. Found and fixed two genuine AA failures in `--faded` on 2026-07-29 |
 | Accessibility hard gate (axe-core, Lighthouse >= 95) | partial | The e2e/a11y domain measures it but is waived; 27 fail / 378 warn as of 2026-07-29 |
-| prefers-reduced-motion hard gate | **gap** | `REDUCED()` is checked throughout `index.html` and nothing tests it. Every animation is gated on a branch no test exercises |
+| prefers-reduced-motion hard gate | **have** | `tests/contract.test.ts` takes both branches, asserts `animate()` is never called when reduced, asserts it IS called when not (so a permanently broken helper cannot pass), and checks every `REDUCED()` call site is a guard rather than a discarded expression |
 | prefers-color-scheme / forced-colors | partial | Both themes exist and are contrast-graded; forced-colors untested |
 | Visual regression | gap | No `toHaveScreenshot`, no baseline |
 | Performance budgets (LCP/INP/CLS, bundle size) | gap | None. The 135 KB inline script has no budget |
@@ -71,21 +71,27 @@ tests, a gated a11y pass, and a regression suite that is more than one oracle.
 
 ## 6. Open items, in priority order
 
-1. **Contract tests (L6).** Three hops, no contract. The browser posts a shape to
-   the daemon and another to the Worker; the Worker enforces a 300 KB cap and a
-   bearer; the daemon now declares its shape in `daemon/server_parse.ts`. Nothing
-   asserts the client and server agree. A field rename ships green.
-2. **Replayable integration (L7).** `tests/boundaries.test.ts` mutates LIVE
+1. **Replayable integration (L7).** `tests/boundaries.test.ts` mutates LIVE
    production state to test. It self-restores, and that is one bug away from not
    restoring. Record cassettes.
-3. **prefers-reduced-motion (3.D hard gate).** A branch that gates every
-   animation in the product and is never taken in any test.
-4. **Prompt-as-code regression (3.B).** Pin the mentor's refusal-to-presume
+2. **Prompt-as-code regression (3.B).** Pin the mentor's refusal-to-presume
    behaviour to a fixture set so a prompt edit that breaks it fails a test rather
    than a conversation.
-5. **Mutation beyond one block (L4).** `mentorQueue` decides what the learner is
+3. **Mutation beyond one block (L4).** `mentorQueue` decides what the learner is
    told about their own mistakes and has no mutation coverage.
-6. **Performance budget (L10).** Prod-deployed, 135 KB inline script, no budget.
+4. **Performance budget (L10).** Prod-deployed, 137 KB inline script, no budget.
+
+## 6a. Defect found by the contract layer, fixed
+
+`schedulePush()` posted whole state with `fetch(...).catch(() => {})`. That
+catches network failure only. A 413 over the Worker's 300 KB cap, or a 401 on a
+stale key, RESOLVES normally, so a dead sync was indistinguishable from a healthy
+one and could have stayed dead for weeks with no symptom on any surface. The
+client now knows the cap (`SYNC_CAP`, asserted equal to the Worker's own 300000
+in `sadna-sync/worker.js:16`), skips a push that is certain to be rejected, reads
+`r.ok`, and surfaces the last failure on the home screen. This is exactly the
+class of bug L6 exists to find: both sides were individually correct and disagreed
+about what failure looked like.
 
 ## 7. Filed to lane B (claude-setup)
 

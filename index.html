@@ -127,13 +127,37 @@ const store = {
 };
 let S = store.load();
 let pushT = null;
+
+//: The Worker stores state under one KV key and rejects a body over 300 KB.
+//: The client has to know that number, because a push that exceeds it fails at
+//: the far end and the learner has no way to find out.
+const SYNC_CAP = 300000;
+//: Last push failure, kept OUT of S deliberately: it would otherwise be pushed
+//: to the Worker and become part of the payload it is reporting on.
+let lastSyncError = null;
+
 function schedulePush() {
   if (!syncKey()) return;
   clearTimeout(pushT);
-  pushT = setTimeout(() => {
-    fetch(SYNC_URL, { method: 'POST', keepalive: true,
-      headers: { 'authorization': 'Bearer ' + syncKey(), 'content-type': 'application/json' },
-      body: JSON.stringify(S) }).catch(() => {});
+  pushT = setTimeout(async () => {
+    const body = JSON.stringify(S);
+    // A body over the cap is a guaranteed rejection, so do not spend the request.
+    if (body.length > SYNC_CAP) {
+      lastSyncError = `המצב גדול מדי לסנכרון (${Math.round(body.length / 1024)}KB)`;
+      return;
+    }
+    try {
+      // The old code was fetch(...).catch(() => {}), which only catches network
+      // failure. A 4xx from the Worker resolves normally, so an over-cap or
+      // unauthorised push looked exactly like success and sync could be dead for
+      // weeks without a symptom.
+      const r = await fetch(SYNC_URL, { method: 'POST', keepalive: true,
+        headers: { 'authorization': 'Bearer ' + syncKey(), 'content-type': 'application/json' },
+        body });
+      lastSyncError = r.ok ? null : `הסנכרון נדחה (${r.status})`;
+    } catch {
+      lastSyncError = 'אין רשת, הסנכרון ימתין';
+    }
   }, 1500);
 }
 async function pullState() {
@@ -2369,6 +2393,7 @@ function renderHome() {
         <div class="u-stat"><span>נשארו</span><b>${left}</b></div>
         <div class="u-stat"><span>רצף</span><b>${runLength()}</b></div>
         <div class="u-stat"><span>לדף היומי הישן</span><b><a href="#/history">היסטוריה</a></b></div>
+        ${lastSyncError ? `<div class="u-stat"><span>סנכרון</span><b>${esc(lastSyncError)}</b></div>` : ''}
       </div>
     </section>`;
 

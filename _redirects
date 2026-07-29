@@ -1,3 +1,5 @@
-# writing/ moved to its own Pages project (the-bench) on 2026-07-29; the
+# writing/ moved to its own Pages project (case-ledgers) on 2026-07-29; the
 # learning PWA no longer ships it. 301 keeps every shared /writing link alive.
-/writing/* https://the-bench.pages.dev/:splat 301
+# NOT the-bench.pages.dev: that slug belongs to a third party's account, found
+# the hard way when the first deploy returned "Project not found" [8000007].
+/writing/* https://case-ledgers.pages.dev/:splat 301

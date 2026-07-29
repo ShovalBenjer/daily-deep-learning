@@ -194,8 +194,8 @@ const TOOLS_MENTOR = ['mcp__sadna__get_state', 'mcp__sadna__get_mistakes', 'mcp_
                       'mcp__sadna__get_lesson', 'mcp__sadna__open_belief',
                       'mcp__sadna__close_belief', 'mcp__sadna__save_note'];
 
-type ChatMsg = { role: 'user' | 'bot'; text: string };
-type ChatContext = Record<string, unknown>;
+import { parseChatRequest } from './server_parse';
+import type { ChatMsg, ChatContext } from './server_parse';
 
 async function runAgent(message: string, history: ChatMsg[], context: ChatContext,
                         verify: boolean, persona: string): Promise<string> {
@@ -260,21 +260,13 @@ Bun.serve({
       if (hits.length >= 6) return Response.json({ error: 'rate limited, wait a minute' }, { status: 429, headers: cors });
       hits.push(now);
       const body = await req.json().catch(() => null);
-      if (!body || typeof body.message !== 'string' || !body.message.trim() || body.message.length > 4000)
-        return Response.json({ error: 'message required (1-4000 chars)' }, { status: 400, headers: cors });
-      // Boundary: the request is untrusted, so history is filtered to the shape
-      // runAgent declares rather than cast into it.
-      const history: ChatMsg[] = (Array.isArray(body.history) ? body.history : [])
-        .filter((m: unknown): m is ChatMsg =>
-          !!m && typeof (m as ChatMsg).text === 'string' &&
-          ((m as ChatMsg).role === 'user' || (m as ChatMsg).role === 'bot'))
-        .slice(-10);
-      let context: ChatContext = (body.context && typeof body.context === 'object') ? body.context : {};
-      if (JSON.stringify(context).length > 1500) context = { note: 'context too large, dropped' };
-      const persona = body.persona === 'mentor' ? 'mentor' : 'teacher';
+      const parsed = parseChatRequest(body);
+      if (!parsed.ok)
+        return Response.json({ error: parsed.error }, { status: 400, headers: cors });
       // המנטור always gets the presumption check. It is the one rule the feature
       // exists for, so it is not left to a client flag.
-      const reply = await runAgent(body.message, history, context, !!body.verify || persona === 'mentor', persona);
+      const reply = await runAgent(parsed.message, parsed.history, parsed.context,
+                                   parsed.verify || parsed.persona === 'mentor', parsed.persona);
       return Response.json({ reply }, { headers: cors });
     }
     return new Response('not found', { status: 404, headers: cors });

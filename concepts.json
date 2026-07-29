@@ -2339,6 +2339,81 @@
       ],
       "node": "company",
       "deck": "corporate"
+    },
+    {
+      "id": "compilation",
+      "t": "Compilation",
+      "he": "קומפילציה",
+      "d": "תרגום קוד לייצוג אחר לפני ההרצה; היעד אינו חייב להיות שפת מכונה, ולכן גם Python מקמפלת",
+      "rel": [
+        "bytecode",
+        "machine-code"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "bytecode",
+      "t": "Bytecode",
+      "he": "קוד ביניים",
+      "d": "הוראות קומפקטיות עבור מכונה וירטואלית ולא עבור מעבד; Python שומר אותן ב-__pycache__ עם magic number שקושר אותן לגרסה",
+      "rel": [
+        "compilation",
+        "virtual-machine"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "machine-code",
+      "t": "Machine code",
+      "he": "קוד מכונה",
+      "d": "הוראות שהמעבד מבצע ישירות, היעד של C ו-Rust ולא של Python או TypeScript",
+      "rel": [
+        "compilation",
+        "bytecode"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "virtual-machine",
+      "t": "Interpreter / VM",
+      "he": "מפרש",
+      "d": "התוכנית שקוראת bytecode ומבצעת אותו; בלעדיה קובץ pyc חסר משמעות",
+      "rel": [
+        "bytecode"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "type-erasure",
+      "t": "Type erasure",
+      "he": "מחיקת טיפוסים",
+      "d": "טיפוסי TypeScript קיימים רק במקור ונמחקים בתרגום, ולכן לא נשאר מהם דבר בזמן ריצה",
+      "rel": [
+        "transpile-vs-typecheck",
+        "compilation"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "transpile-vs-typecheck",
+      "t": "Transpile versus typecheck",
+      "he": "תרגום מול בדיקת טיפוסים",
+      "d": "שתי פעולות נפרדות: bundler מתרגם ומוחק טיפוסים, ורק tsc בודק אותם; פרויקט שמריץ רק את הראשון אינו מוגן",
+      "rel": [
+        "type-erasure"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "constant-folding",
+      "t": "Constant folding",
+      "he": "קיפול קבועים",
+      "d": "חישוב בזמן קומפילציה של ביטוי שערכו ידוע מראש, כך ש-1+2 הופך ל-LOAD_CONST 3",
+      "rel": [
+        "compilation",
+        "bytecode"
+      ],
+      "node": "os"
     }
   ]
 }

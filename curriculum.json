@@ -140,9 +140,9 @@
    "estMin": 10,
    "depthEstMin": 25,
    "body": {
-    "status": "pending",
-    "generated": null,
-    "hash": null
+    "status": "fresh",
+    "generated": "2026-07-29T00:00:00Z",
+    "hash": "40c24d29f6d4ea13"
    }
   },
   {
@@ -176,9 +176,9 @@
    "estMin": 6,
    "depthEstMin": 25,
    "body": {
-    "status": "pending",
-    "generated": null,
-    "hash": null
+    "status": "fresh",
+    "generated": "2026-07-29T00:00:00Z",
+    "hash": "93239f3177ebbb59"
    }
   },
   {
@@ -7819,6 +7819,46 @@
     "status": "pending",
     "generated": null,
     "hash": null
+   }
+  },
+  {
+   "id": "s2-artifact-repo",
+   "title": "Artifact repository versus version control",
+   "he": "מאגר ארטיפקטים מול ניהול גרסאות",
+   "block": "S2",
+   "moscow": "should",
+   "tree": "between",
+   "node": "cicd-pipe",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "docker",
+    "cicd",
+    "yaml",
+    "makefile",
+    "iac"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "artifact-repo"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "gap",
+    "name": "operator request 2026-07-29, JFrog binary versus git"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "fresh",
+    "generated": "2026-07-29T00:00:00Z",
+    "hash": "761faac273db3c48"
    }
   },
   {

@@ -14,8 +14,10 @@ rendering an empty node sheet. Rerunning is idempotent: same input, same file.
 
 Agent-context: run it after editing an enumeration. It overwrites curriculum.json
 and goals.json wholesale, so hand-edits to those files do not survive. Unit
-bodies live in body.status/generated/hash and are NOT touched by a rerun that
-preserves them via --keep-bodies.
+bodies live in body.status/generated/hash and are carried across a rerun by
+carry_bodies(), unconditionally. This file previously documented a --keep-bodies
+flag that was never implemented; measured on 2026-07-29, a plain rerun reset all
+three written bodies to pending.
 
 Typical usage::
 
@@ -293,6 +295,9 @@ BLOCKS = [
         "source": {"kind": "ledger", "name": "research_ladder.json foundations phase"},
         "estMin": 10, "depthEstMin": 30, "goals": HIRE,
         "topics": [
+            ("artifact-repo", "Artifact repository versus version control",
+             "מאגר ארטיפקטים מול ניהול גרסאות", False,
+             {"kind": "gap", "name": "operator request 2026-07-29, JFrog binary versus git"}),
             ("docker-images", "Docker images", "אימג'ים של Docker", True),
             ("docker-compose", "Docker compose and local stacks", "Docker compose", True),
             ("cicd-anatomy", "CI/CD anatomy", "אנטומיה של CI/CD", True),
@@ -427,7 +432,8 @@ BLOCKS = [
 ]
 
 
-def _unit(block: dict, slug: str, en: str, he: str, kind: str) -> dict:
+def _unit(block: dict, slug: str, en: str, he: str, kind: str,
+          source: dict | None = None) -> dict:
     """Build one unit record.
 
     Args:
@@ -436,6 +442,9 @@ def _unit(block: dict, slug: str, en: str, he: str, kind: str) -> dict:
         en: English title.
         he: Hebrew title.
         kind: "concept" (teaches something new) or "practice" (drills it).
+        source: provenance for this one topic. Defaults to the block's, which
+            is right when the whole block came from one enumeration and wrong
+            when a single topic was added from somewhere else.
 
     Returns:
         A unit dict conforming to SYSTEM-SPEC section 1.1.
@@ -460,7 +469,7 @@ def _unit(block: dict, slug: str, en: str, he: str, kind: str) -> dict:
         "objectives": [],
         "volatile": volatile,
         "staleAfterDays": block.get("staleAfterDays") if volatile else None,
-        "source": block["source"],
+        "source": source or block["source"],
         "estMin": block["estMin"] if kind == "concept" else block["estMin"] + 4,
         "depthEstMin": block["depthEstMin"],
         "body": {"status": "pending", "generated": None, "hash": None},
@@ -478,10 +487,12 @@ def expand(block: dict) -> list[dict]:
         drill when the topic is flagged for one.
     """
     units = []
-    for slug, en, he, drill in block["topics"]:
-        units.append(_unit(block, slug, en, he, "concept"))
+    for topic in block["topics"]:
+        slug, en, he, drill = topic[:4]
+        source = topic[4] if len(topic) > 4 else None
+        units.append(_unit(block, slug, en, he, "concept", source))
         if drill:
-            units.append(_unit(block, slug, en, he, "practice"))
+            units.append(_unit(block, slug, en, he, "practice", source))
     return units
 
 
@@ -543,6 +554,44 @@ def validate(units: list[dict]) -> list[str]:
     return errs
 
 
+def carry_bodies(units: list[dict]) -> int:
+    """Copy written-body state from the previous curriculum.json onto a rebuild.
+
+    Purpose: a rebuild re-derives every unit record from the enumeration, so
+    without this the `body` block resets to pending and the record of which
+    lessons already have a written file is destroyed. The ordering function then
+    proposes units that were already written.
+
+    Contracts: `units/<id>.md` is the truth about whether a lesson exists
+    (ROUTINE section 0), so a body is carried only when that file is present.
+    That keeps the invariant "body.status is not pending implies the file
+    exists" true even if a lesson file was deleted between runs.
+
+    Args:
+        units: freshly derived units. Mutated in place.
+
+    Returns:
+        How many bodies were carried.
+
+    Agent-context: unconditional, no flag. Nothing else restores this state.
+    """
+    path = ROOT / "curriculum.json"
+    if not path.exists():
+        return 0
+    previous = {u["id"]: u.get("body") for u
+                in json.loads(path.read_text(encoding="utf-8"))["units"]}
+    carried = 0
+    for u in units:
+        body = previous.get(u["id"])
+        if not body or body.get("status") == "pending":
+            continue
+        if not (ROOT / "units" / f"{u['id']}.md").exists():
+            continue
+        u["body"] = body
+        carried += 1
+    return carried
+
+
 def main() -> None:
     """Build both files, report per-block counts, exit non-zero on any error."""
     units = []
@@ -567,13 +616,15 @@ def main() -> None:
             print("  !", e, file=sys.stderr)
         sys.exit(1)
 
+    carried = carry_bodies(units)
+
     (ROOT / "curriculum.json").write_text(
         json.dumps({"version": 1, "units": units}, ensure_ascii=False, indent=1) + "\n",
         encoding="utf-8")
     (ROOT / "goals.json").write_text(
         json.dumps({"goals": GOALS}, ensure_ascii=False, indent=1) + "\n",
         encoding="utf-8")
-    print("\nwrote curriculum.json and goals.json")
+    print(f"\nwrote curriculum.json and goals.json, carried {carried} written bodies")
 
 
 if __name__ == "__main__":

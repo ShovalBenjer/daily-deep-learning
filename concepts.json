@@ -683,194 +683,245 @@
       "node": "finops"
     },
     {
-      "id": "spaced-retrieval",
-      "t": "Spaced Retrieval",
-      "he": "שליפה מרווחת",
-      "d": "טכניקת למידה: בדיקה פעילה של זיכרון במרווחי זמן גדלים; עדיפה על קריאה חוזרת כי מאלצת שחזור פעיל.",
+      "id": "actor-critic",
+      "t": "Actor-Critic",
+      "he": "שחקן-מבקר",
+      "d": "שתי רשתות: השחקן מייצר מדיניות, המבקר מנבא ערך; שגיאת TD אחת מאמנת את שתיהן",
       "day": 5,
       "rel": [
-        "bias-variance-rl"
-      ],
-      "node": "ml-applied"
-    },
-    {
-      "id": "effective-horizon",
-      "t": "Effective Horizon",
-      "he": "אופק אפקטיבי",
-      "d": "1/(1-γ): מספר הצעדים האפקטיבי שתשואה מונחתת 'רואה'; γ=0.9 נותן אופק של 10 צעדים.",
-      "day": 5,
-      "rel": [
-        "discounting",
-        "return"
+        "td-error",
+        "value-function",
+        "advantage",
+        "reinforce"
       ],
       "node": "optimization"
     },
     {
-      "id": "bootstrapping",
-      "t": "Bootstrapping (RL)",
-      "he": "אתחול עצמי",
-      "d": "שימוש בהערכת ערך נוכחית כ-target לעדכון: V(s) ← r + γV(s'). מוריד שונות אבל מוסיף הטיה עד כיול המודל.",
+      "id": "td-error",
+      "t": "TD Error (delta)",
+      "he": "שגיאת הפרש-זמני",
+      "d": "r + gamma*V(s') פחות V(s): ההפתעה של הצעד; אומדן חסר הטיה של ה-advantage רק כשהמבקר מכויל",
       "day": 5,
       "rel": [
+        "actor-critic",
         "td-learning",
+        "advantage-function",
         "bellman-equation"
       ],
       "node": "optimization"
     },
     {
-      "id": "actor-critic",
-      "t": "Actor-Critic",
-      "he": "אקטור-קריטיק",
-      "d": "ארכיטקטורה דו-רשתית: Actor לומד מדיניות π_θ, Critic מעריך V_φ(s). TD error משמש כ-Advantage מקורב לעדכון ה-Actor. מאפשר online learning ללא המתנה לסוף episode.",
-      "day": 6,
+      "id": "bootstrapping",
+      "t": "Bootstrapping",
+      "he": "הישענות עצמית",
+      "d": "לעדכן אומדן על בסיס אומדן אחר במקום על תוצאה שנמדדה עד הסוף; מוריד שונות ומכניס הטיה",
+      "day": 5,
       "rel": [
-        "advantage-function",
-        "value-function",
-        "td-learning",
-        "bootstrapping"
-      ],
-      "node": "optimization"
-    },
-    {
-      "id": "binary-search",
-      "t": "Binary Search",
-      "he": "חיפוש בינארי",
-      "d": "חיפוש O(log n) במערך ממוין. בכל שלב המרחב נחצה לשניים. Invariant: target נמצא ב-[left..right]. משפחה: exact, leftmost, rightmost, insertion point.",
-      "day": 6,
-      "rel": [],
-      "node": "dsa"
-    },
-    {
-      "id": "rag-retrieval",
-      "t": "RAG (Retrieval-Augmented Generation)",
-      "he": "גנרציה מוגברת שליפה",
-      "d": "דפוס LLM: בזמן inference שולפים chunks רלוונטיים ממאגר vectors ומזריקים לפרומפט. פותר ידע מיושן ומאפשר ציטוט. ב-Azure: AI Search כמנוע שליפה, Agent Service כתזמורן.",
-      "day": 6,
-      "rel": [
-        "foundry",
-        "managed-identity"
-      ],
-      "node": "rag-search"
-    },
-    {
-      "id": "error-budget",
-      "t": "Error Budget",
-      "he": "תקציב שגיאות",
-      "d": "כמות ה-downtime/errors שה-SLO מאפשר בחלון זמן (לרוב חודשי). משמש כמדיניות פריסה: budget מלא = מאיצים, budget אזל = מקפיאים deployments.",
-      "day": 6,
-      "rel": [],
-      "node": "sre"
-    },
-    {
-      "id": "td-error",
-      "t": "TD Error",
-      "he": "שגיאת הפרש זמני",
-      "d": "δ = r + γV_φ(s') - V_φ(s): ה-Advantage המקורב שמעדכן את ה-Actor ב-Actor-Critic. כשδ>0 הפעולה עדיפה על הצפוי; כשδ<0 גרועה ממנה.",
-      "day": 7,
-      "rel": [
-        "td-learning",
-        "actor-critic",
-        "advantage-function",
-        "bootstrapping"
-      ],
-      "node": "optimization"
-    },
-    {
-      "id": "online-learning",
-      "t": "Online Learning",
-      "he": "למידה אונליין",
-      "d": "עדכון הפרמטרים אחרי כל צעד במקום אחרי אפיזודה שלמה. Actor-Critic מאפשר זאת כי TD error זמין מיד; REINFORCE חייב לחכות לסוף.",
-      "day": 7,
-      "rel": [
-        "actor-critic",
         "td-error",
-        "reinforce"
+        "monte-carlo-value",
+        "bias-variance-rl"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "semi-gradient",
+      "t": "Semi-Gradient",
+      "he": "חצי-גרדיאנט",
+      "d": "מתייחסים ל-TD target כאל קבוע ולא גוזרים דרכו; במימוש זו בדיוק קריאת detach אחת",
+      "day": 5,
+      "rel": [
+        "td-error",
+        "bootstrapping"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "n-step-return",
+      "t": "n-step Return",
+      "he": "תשואה בת n צעדים",
+      "d": "n תגמולים אמיתיים ואז הישענות על המבקר; n=1 הוא TD, n=אינסוף הוא מונטה קרלו, והבורר הוא הטיה מול שונות",
+      "day": 5,
+      "rel": [
+        "bootstrapping",
+        "monte-carlo-value",
+        "bias-variance-rl"
+      ],
+      "node": "optimization"
+    },
+    {
+      "id": "moving-target",
+      "t": "Moving Target",
+      "he": "מטרה נעה",
+      "d": "המבקר עושה רגרסיה על מטרות שזזות כי גם הוא וגם המדיניות משתנים; אינטואיציות מ-ML מפוקח לא עוברות",
+      "day": 5,
+      "rel": [
+        "actor-critic",
+        "semi-gradient"
       ],
       "node": "ml-applied"
     },
     {
-      "id": "target-network",
-      "t": "Target Network",
-      "he": "רשת מטרה",
-      "d": "עותק מוקפא של ה-Critic שמשמש כ-target יציב לעדכון; מונע מעגל שבו ה-target זזה בזמן האימון. נפוץ ב-DQN ו-SAC.",
-      "day": 7,
+      "id": "critic-miscalibration",
+      "t": "Non-Uniform Critic Error",
+      "he": "שגיאת מבקר לא אחידה",
+      "d": "שגיאה אחידה בין מצבים היא הזזת baseline ולכן שקופה; שגיאה שמשתנה בין מצבים הופכת את דירוג הפעולות",
+      "day": 5,
       "rel": [
         "td-error",
-        "actor-critic",
-        "bootstrapping"
+        "baseline",
+        "actor-critic"
+      ],
+      "node": "ml-applied"
+    },
+    {
+      "id": "control-vs-data-plane-logs",
+      "t": "Control Plane vs Data Plane Logs",
+      "he": "לוגי בקרה מול לוגי נתונים",
+      "d": "Activity Log מתעד מי שינה resource ודולק תמיד; resource logs מתעדים מה עבר בו ולא נאספים כברירת מחדל",
+      "day": 5,
+      "rel": [
+        "diagnostic-settings",
+        "managed-identity"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "diagnostic-settings",
+      "t": "Diagnostic Settings",
+      "he": "הגדרות אבחון",
+      "d": "הברז שמפנה מטריקות ולוגים ליעד: Log Analytics לחקירה, Storage לארכיון ארוך, Event Hub ל-SIEM; אפשר כמה במקביל",
+      "day": 5,
+      "rel": [
+        "control-vs-data-plane-logs",
+        "groundedness"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "workflow-dispatch",
+      "t": "workflow_dispatch",
+      "he": "טריגר הרצה ידנית",
+      "d": "המפתח תחת on שמוסיף כפתור Run workflow; בלעדיו ה-pipeline רץ רק מהטריגר האוטומטי",
+      "day": 5,
+      "rel": [
+        "diagnostic-settings"
+      ],
+      "node": "config-lang"
+    },
+    {
+      "id": "lambda-return",
+      "t": "λ-return",
+      "he": "תשואת למדא",
+      "d": "ממוצע משוקלל גיאומטרית של כל התשואות בנות n צעדים; המשקלים מסתכמים ל-1 ולכן ההטיה מגיעה רק משגיאת המבקר",
+      "day": 6,
+      "rel": [
+        "n-step-return",
+        "monte-carlo-value",
+        "td-learning",
+        "bias-variance-rl"
       ],
       "node": "optimization"
     },
     {
-      "id": "keyset-pagination",
-      "t": "Keyset Pagination",
-      "he": "ענבל מפתח",
-      "d": "WHERE id > cursor LIMIT n: יציב תחת כתיבות מקביליות, O(log n) תמיד. OFFSET קורס עם טבלאות גדולות ויוצר phantom reads.",
-      "day": 7,
-      "rel": [],
-      "node": "api"
-    },
-    {
-      "id": "n-step-return",
-      "t": "N-Step Return",
-      "he": "החזר N-צעדים",
-      "d": "הרחבה של TD: משתמש ב-n תגמולים אמיתיים ואז מבוטסטרפ. \\(\\hat{G}_t^{(n)} = \\sum_{k=0}^{n-1}\\gamma^k r_{t+k} + \\gamma^n V(s_{t+n})\\). n=1 הוא TD, n→∞ הוא Monte Carlo.",
-      "day": 8,
+      "id": "td-lambda",
+      "t": "TD(λ)",
+      "he": "TD למדא",
+      "d": "למידת ערך שהמטרה שלה היא ה-λ-return; λ=0 הוא TD(0) ו-λ=1 הוא מונטה קרלו, אותו אלגוריתם על שני קצוות",
+      "day": 6,
       "rel": [
+        "lambda-return",
         "td-error",
-        "gae",
-        "lambda-return"
+        "bootstrapping"
       ],
       "node": "optimization"
     },
     {
       "id": "gae",
-      "t": "GAE (Generalized Advantage Estimation)",
-      "he": "אומדן Advantage מוכלל",
-      "d": "ממוצע גאומטרי של כל ה-n-step advantages: \\(\\hat{A}_t^{GAE} = \\sum_{k=0}^{\\infty}(\\gamma\\lambda)^k \\delta_{t+k}\\). רקורסיה: \\(A_t = \\delta_t + \\gamma\\lambda A_{t+1}\\). λ שולט בספקטרום bias-variance.",
-      "day": 8,
+      "t": "Generalized Advantage Estimation",
+      "he": "אומדן יתרון מוכלל",
+      "d": "A(t) = סכום של (gamma*lambda)^k כפול delta(t+k); מחושב בסריקה אחורה אחת A(t) = delta(t) + gamma*lambda*A(t+1)",
+      "day": 6,
       "rel": [
-        "n-step-return",
         "lambda-return",
-        "bias-variance-spectrum",
+        "advantage-function",
         "td-error",
         "actor-critic"
       ],
       "node": "optimization"
     },
     {
-      "id": "lambda-return",
-      "t": "Lambda Return (λ-return)",
-      "he": "החזר למבדה",
-      "d": "ממוצע גאומטרי של כל ה-n-step returns: \\(G_t^\\lambda = (1-\\lambda)\\sum_{n=1}^{\\infty}\\lambda^{n-1}\\hat{G}_t^{(n)}\\). GAE הוא ה-advantage של ה-λ-return.",
-      "day": 8,
+      "id": "effective-horizon",
+      "t": "Effective Horizon",
+      "he": "אופק אפקטיבי",
+      "d": "1/(1-gamma) לבעיה ו-1/(1-gamma*lambda) לאומדן; שני מספרים שונים שקל לבלבל ביניהם ושקובעים כמה רחוק באמת מסתכלים",
+      "day": 6,
       "rel": [
-        "n-step-return",
-        "gae"
-      ],
-      "node": "optimization"
-    },
-    {
-      "id": "bias-variance-spectrum",
-      "t": "Bias-Variance Spectrum in RL",
-      "he": "ספקטרום הטיה-שונות ב-RL",
-      "d": "TD (λ=0): bias גבוה מ-V_φ לא מדויק, variance נמוכה. MC (λ=1): bias=0, variance גבוהה ממסלולים ארוכים. GAE/λ שם נקודה על הספקטרום הזה.",
-      "day": 8,
-      "rel": [
+        "discounting",
         "gae",
-        "td-error",
-        "advantage"
+        "lambda-return"
       ],
       "node": "prob-stats"
     },
     {
-      "id": "multi-agent-orchestration",
-      "t": "Multi-Agent Orchestration",
-      "he": "תזמור רב-סוכנים",
-      "d": "orchestrator קורא ל-sub-agent כ-tool; השגיאה חוזרת כ-tool response, לא כ-exception. Autonomous-with-Approval: required_action עוצר את הלולאה; הלקוח שולח submit_tool_outputs אחרי אישור אנושי.",
-      "day": 8,
-      "rel": [],
-      "node": "agents-loop"
+      "id": "done-mask",
+      "t": "Done Mask",
+      "he": "מסכת סיום",
+      "d": "הכפלה ב-(1-d) בשני מקומות, ב-delta וברקורסיה; בלעדיה advantage של צעד טרמינלי מקבל אשראי על אפיזודה אחרת",
+      "day": 6,
+      "rel": [
+        "gae",
+        "credit-assignment"
+      ],
+      "node": "ml-applied"
+    },
+    {
+      "id": "truncation-bootstrap",
+      "t": "Truncation vs Termination",
+      "he": "קטיעה מול סיום",
+      "d": "סיום אומר שההמשך שווה 0; קטיעה אומרת שהמדידה נפסקה וההמשך עדיין שווה V(s_T), שמועבר כ-last_value",
+      "day": 6,
+      "rel": [
+        "done-mask",
+        "gae",
+        "bootstrapping"
+      ],
+      "node": "ml-applied"
+    },
+    {
+      "id": "value-target",
+      "t": "Value Target (returns = adv + values)",
+      "he": "מטרת המבקר",
+      "d": "כשמשתמשים ב-GAE, המטרה שעליה עושים רגרסיה למבקר היא G^lambda, שהיא בדיוק advantage ועוד הערך הנוכחי",
+      "day": 6,
+      "rel": [
+        "gae",
+        "lambda-return",
+        "value-function"
+      ],
+      "node": "ml-applied"
+    },
+    {
+      "id": "error-budget",
+      "t": "Error Budget",
+      "he": "תקציב שגיאות",
+      "d": "המרווח שה-SLO מתיר, כמדיניות פריסה ולא כדשבורד: תקציב בריא מתיר שחרור, תקציב שרוף עוצר פיצ'רים",
+      "day": 6,
+      "rel": [
+        "burn-rate"
+      ],
+      "node": "sre"
+    },
+    {
+      "id": "burn-rate",
+      "t": "Burn Rate Alerting",
+      "he": "התראת קצב שריפה",
+      "d": "התראה על קצב צריכת תקציב השגיאות בשני חלונות זמן, במקום התראה על כל שגיאה בודדת שהיא רעש ולא סיכון",
+      "day": 6,
+      "rel": [
+        "error-budget",
+        "diagnostic-settings"
+      ],
+      "node": "sre"
     },
     {
       "id": "shell",
@@ -947,6 +998,115 @@
       "node": "os"
     },
     {
+      "id": "artifact-repository",
+      "t": "Artifact repository",
+      "he": "מאגר ארטיפקטים",
+      "d": "שרת לתוצרי בילד שמדבר את פרוטוקול כל אקוסיסטם, עם repository מסוג local, remote ו-virtual",
+      "rel": [
+        "build-info",
+        "checksum-storage",
+        "remote-repository"
+      ],
+      "node": "cicd-pipe"
+    },
+    {
+      "id": "build-info",
+      "t": "Build-info",
+      "he": "מידע בילד",
+      "d": "JSON שה-CI מפרסם: אילו ארטיפקטים יצאו, אילו dependencies נצרכו, ומקטע VCS עם ה-commit; זה החיבור בין git לבינארי",
+      "rel": [
+        "artifact-repository",
+        "content-digest"
+      ],
+      "node": "cicd-pipe"
+    },
+    {
+      "id": "checksum-storage",
+      "t": "Checksum-based storage",
+      "he": "אחסון לפי checksum",
+      "d": "הבתים נשמרים ב-filestore תחת ה-SHA-1 שלהם וה-database ממפה נתיב ל-checksum, ולכן תוכן זהה נשמר פעם אחת",
+      "rel": [
+        "artifact-repository",
+        "content-digest"
+      ],
+      "node": "cicd-pipe"
+    },
+    {
+      "id": "content-digest",
+      "t": "Content digest",
+      "he": "טביעת תוכן",
+      "d": "hash שנגזר מהבתים עצמם ולכן אינו ניתן לכיוון מחדש, בניגוד ל-tag שהוא שם",
+      "rel": [
+        "checksum-storage",
+        "delta-compression"
+      ],
+      "node": "cicd-pipe"
+    },
+    {
+      "id": "delta-compression",
+      "t": "Delta compression",
+      "he": "דחיסת הפרשים",
+      "d": "שמירת אובייקט כהפרש מאובייקט דומה; חסרת תועלת על פורמטים שכבר דחוסים ולכן git יקר לבינאריים",
+      "rel": [
+        "content-digest"
+      ],
+      "node": "cicd-pipe"
+    },
+    {
+      "id": "remote-repository",
+      "t": "Remote repository",
+      "he": "מאגר מרוחק",
+      "d": "proxy ו-cache מול מקור חיצוני כמו PyPI או Docker Hub; הוא cache ולא גיבוי של מה שייצרת",
+      "rel": [
+        "artifact-repository"
+      ],
+      "node": "cicd-pipe"
+    },
+    {
+      "id": "git-lfs",
+      "t": "Git LFS",
+      "he": "Git LFS",
+      "d": "מוציא בתים גדולים לאחסון נפרד ומשאיר ב-git מצביע; מוזיל clone אבל אינו נותן פרוטוקול registry, retention או build-info",
+      "rel": [
+        "delta-compression",
+        "artifact-repository"
+      ],
+      "node": "cicd-pipe"
+    },
+    {
+      "id": "redirect-order",
+      "t": "Redirection order",
+      "he": "סדר הפניות",
+      "d": "ה-shell מבצע הפניות משמאל לימין לפני הרצת התוכנית, ו-2>&1 מעתיק את היעד הנוכחי של stdout ולא את שמו",
+      "rel": [
+        "stdout",
+        "stderr",
+        "file-descriptor"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "null-device",
+      "t": "Null device",
+      "he": "התקן האפס",
+      "d": "/dev/null בולע כל מה שנכתב אליו; > /dev/null מוותר על הפלט ואינו משתיק את stderr",
+      "rel": [
+        "stdout",
+        "redirect-order"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "short-circuit",
+      "t": "Short-circuit operators",
+      "he": "אופרטורי קיצור מסלול",
+      "d": "&& מריץ את הפקודה הבאה רק אחרי קוד יציאה 0, || רק אחרי קוד שאינו 0; שניהם קוראים את הקוד ולא את הפלט",
+      "rel": [
+        "exit-code"
+      ],
+      "node": "os"
+    },
+    {
       "id": "stdin",
       "t": "stdin",
       "he": "כניסה תקנית",
@@ -1000,6 +1160,62 @@
         "stdin",
         "stdout",
         "stderr"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "pipe",
+      "t": "Pipe",
+      "he": "צינור",
+      "d": "מחבר את stdout של פקודה ל-stdin של הבאה; שתיהן רצות במקביל כתהליכים נפרדים ו-stderr לא נכנס",
+      "rel": [
+        "stdout",
+        "stdin",
+        "pipe-buffer"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "pipe-buffer",
+      "t": "Pipe buffer",
+      "he": "חוצץ הצינור",
+      "d": "אזור זיכרון קבוע בין כותב לקורא, 64KB כברירת מחדל בלינוקס",
+      "rel": [
+        "pipe",
+        "backpressure"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "backpressure",
+      "t": "Backpressure",
+      "he": "לחץ חוזר",
+      "d": "כשהחוצץ מלא הכתיבה נחסמת עד שהקורא מפנה מקום, ולכן קצב השרשרת נקבע על ידי החוליה האיטית",
+      "rel": [
+        "pipe-buffer",
+        "pipe"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "sigpipe",
+      "t": "SIGPIPE",
+      "he": "אות צינור שבור",
+      "d": "נשלח לכותב כשהקורא סגר את קצהו; ברירת המחדל היא סיום התהליך, ולכן head עוצרת את מי שלפניה",
+      "rel": [
+        "pipe",
+        "exit-code"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "pipefail",
+      "t": "pipefail",
+      "he": "כשל שרשרת",
+      "d": "ברירת המחדל מחזירה את קוד החוליה האחרונה בלבד; set -o pipefail מחזיר את הכישלון הראשון",
+      "rel": [
+        "exit-code",
+        "pipe"
       ],
       "node": "os"
     }

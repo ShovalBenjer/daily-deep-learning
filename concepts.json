@@ -1294,6 +1294,50 @@
         "command-lookup"
       ],
       "node": "os"
+    },
+    {
+      "id": "ssh",
+      "t": "SSH",
+      "he": "מעטפת מאובטחת",
+      "d": "Secure Shell: התחברות מוצפנת ומאומתת למכונה מרוחקת, שהחליף את telnet ו-rlogin ו-rsh ו-FTP שהעבירו סיסמאות בטקסט גלוי",
+      "rel": [
+        "key-pair",
+        "known-hosts"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "key-pair",
+      "t": "Key pair",
+      "he": "זוג מפתחות",
+      "d": "ציבורי מיועד להפצה ונשמר בשרת ב-authorized_keys, פרטי לעולם אינו עוזב את המכונה שלך",
+      "rel": [
+        "ssh",
+        "fingerprint"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "fingerprint",
+      "t": "Key fingerprint",
+      "he": "טביעת אצבע של מפתח",
+      "d": "תקציר קצר של מפתח שמאפשר לאדם להשוות מפתחות בלי לקרוא אותם במלואם",
+      "rel": [
+        "key-pair",
+        "known-hosts"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "known-hosts",
+      "t": "known_hosts and TOFU",
+      "he": "אמון בשימוש ראשון",
+      "d": "מפתח השרת נשמר מקומית בפעם הראשונה ומושווה בכל התחברות; אזהרת שינוי מפתח היא בדיוק מה שהמנגנון נועד לתפוס",
+      "rel": [
+        "ssh",
+        "fingerprint"
+      ],
+      "node": "os"
     }
   ]
 }

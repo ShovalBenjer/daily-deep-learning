@@ -1,272 +1,184 @@
-# ROUTINE.md - contract for the daily page generator (הסדנה)
+# ROUTINE.md - contract for the unit generator (הסדנה)
 
-One run = one new post + one index update + one commit. Run: 06:00 Asia/Jerusalem.
+One run = one unit body + one curriculum update + one commit.
 
-## 0. Lifecycle: this system does not end at day 70
+**This contract replaced the dated-page contract on 2026-07-29.** The calendar is
+retired. There is no day number, no week number, no Saturday ritual and no Sunday
+ritual. The learner's position is the set of units he has closed, never the date.
+Read `docs/PRODUCT-MODEL-2026-07-26.md` and `docs/SYSTEM-SPEC-2026-07-26.md`
+before changing anything here.
 
-הסדנה is CONTINUAL. Time is organized as SEASONS of 10 weeks with a retro week
-between. Five streams are permanent across all seasons:
-1. עיון: the deep-course spine ROTATES per season (season 1: Deep RL + Flow
-   Matching). 2. תרגול: craft forever. 3. הסמכות: cert lane AI-103 -> AZ-104 ->
-   AZ-400. 4. מעקב: signals + corpus, forever. 5. שיקול דעת: the 17-domain
-   judgment map, a multi-year climb.
-- The syllabus SOURCE is the living corpus: the Drive folder in
-  course_plan.json -> lifecycle.corpus (mirrored locally at
-  new-recruit/Perplexity research). corpus_manifest.json records what has been
-  ingested. A weekly COUNCIL (Sunday morning, separate run) diffs the folder,
-  ingests new docs into topic_pools / ladder / paper-card queue / judgment
-  scenarios, and updates the manifest.
-- RESUME->LEDGER SYNC (council duty): the council also runs
-  `py tools/sync_resume_skills.py` — it scans the resume generator
-  (new-recruit/resumes_2026/gen.py) for technology claims and appends any
-  claimed-but-untracked skill to skills.json as resume_risk (current=1).
-  A new claim in ANY resume arm therefore becomes, within a week: a red row
-  on the ownership board + a drill target under rule 1c.1. Report new rows
-  in the commit message.
-- The spaced-review pool GROWS FOREVER: Saturday raids draw from the entire
-  history (all seasons) with widening intervals (2d / 7d / 21d / 60d), not
-  just the current week.
-- Season transition (after day 70): a retro week of synthesis pages and a
-  full-history raid; propose 3 next-season spines from the corpus + goals;
-  Shoval picks; append the new season to course_plan.seasons and continue.
-  Day numbering continues (day 71, 72, ...) - the streak never resets.
+The six dated pages under `posts/` stay readable at `#/history` and at
+`#/YYYY-MM-DD`. Never edit them. Never write a new one.
 
-## 1. Slot
+## 0. What a unit is
 
-- `day_number` = days since 2026-07-21 (day 1). `week` = ceil(day_number/7), cap 10.
-- Mon-Fri: normal day; the week's lecture (course_plan.json -> week_plan) advances
-  in sequential parts across the week's normal days.
-- Saturday: retrieval day. No new material; 5-7 spaced-recall challenges over this
-  week's pages, answers in `<details>`.
-- Sunday: repair day. Weekly synthesis + Feynman re-teach of the week's weakest
-  concept + bridge to next week.
-- Idempotency: if `posts/YYYY-MM-DD.md` exists, STOP, change nothing.
-- Verify lecture titles against the playlists; follow reality, note deviations.
+`curriculum.json` holds every unit. A unit is one teachable thing, with an id
+such as `m0-shell-terminal`. Its lesson lives at `units/<id>.md`. The app fetches
+that file when the learner opens the unit, and treats the FILE as the truth about
+whether a lesson exists.
 
-## 1b. Read the learner state (this is what makes the page personal)
+`tools/build_curriculum.py` owns which units exist. This routine never adds,
+renames or deletes a unit. It writes bodies for units that already exist.
 
-GET the sync endpoint (URL + bearer key are provided in your run instructions).
-It returns the learner's full state: `answers` (per block id: ok, attempts,
-conf 0-100, tree, date), `points`, `ranks`, `ladder`, `read`. If unreachable,
-generate without personalization and say so in one line at the top.
+## 1. Pick the unit
 
-Adaptation rules, applied every run:
-1. **Resurface**: any answer with ok=false OR conf<50 from 2 days ago and from
-   7 days ago -> write a NEW quiz on the same concept (rephrased, new id,
-   same tree) inside the matching section. 1-3 resurfaces per day, oldest first.
-   The state also carries `reviews` (the in-app recall engine: per item iv/due/
-   lapses); items with lapses>=2 are proven-leaky, prefer them for resurfaces.
-2. **Target weakness**: שיקול דעת picks its domain from the tree with the
-   lowest first-try accuracy (min 3 answers); tie -> lowest total points.
-3. **Coverage**: new quiz topics come from course_plan.json -> topic_pools,
-   preferring topics that never appeared in any previous post (grep posts/).
-4. **Depth by level**: total earned points -> level thresholds
-   0/10/25/45/70/100/140/190/250/320 (levels 1-10). Levels 1-3: intuition and
-   use; 4-6: add proof sketches and failure modes; 7-10: wire in a 2025-26
-   paper. State the level you generated for in the opening line.
-5. **One thread**: the page has ONE central concept; עיון teaches it, תרגול
-   implements it, שיקול דעת decides with it when possible; AI-103 ends with one
-   bridge line to the thread. Five unrelated sections = defect.
+1. `git pull` first. The cloud routine clones from GitHub main, and a local file
+   that was never pushed does not exist as far as this run is concerned.
+2. Read the learner state from the sync endpoint (URL and bearer key come in the
+   run instructions). It carries `unitState`, `answers`, `reviews`, `points`,
+   `ranks`, `known` and `skillLevels`. If it is unreachable, continue without
+   personalisation and say so in the commit body, never on the page.
+3. Choose the highest-priority unit whose `units/<id>.md` does NOT exist, using
+   the same ordering the app uses (`SYSTEM-SPEC` 2.1):
 
-## 1c. The mastery ledger (skills.json) drives targeting
+   `priority = goalPull * gapFactor * moscowFactor * availability`
 
-Canonical model: `docs/LEARNING-MODEL-2026-07.md` (0-5 ladder, 22-domain map,
-sourced principles). The live ledger is `skills.json`: per skill `current` vs
-`target` on the 0-5 ladder, `resume_risk` (a resume claim below level 4),
-`interview_bank`. Rules for every run:
+   - `goalPull`: max over active goals in `goals.json` that the unit lists, each
+     weighted by `weight / max(1, daysLeft/7)`.
+   - `gapFactor`: mean of `(target - current) / 5` over the unit's skills, from
+     `skills.json` with `skillLevels` overriding.
+   - `moscowFactor`: must 1.0, should 0.45, could 0.15, wont 0.
+   - `availability`: 0 unless every concept in `requires` is taught by a unit the
+     learner has already closed, or listed in `known`.
 
-1. **Resume-risk drills ≥2x/week**: at least twice a week, תרגול (or a second
-   drill) targets a `resume_risk` skill, DataLemur-register for `sql` and
-   `pandas-da` (realistic table, business question, interview phrasing).
-   Rotate through the risk list, weakest (target - current) first.
-   ARM FOCUS: if the learner state carries `armFocus` (1-7), bias these
-   drills and the basics-weave toward THAT arm's below-target skills
-   (skills.json arms field), and name the arm in the breadcrumb line.
-   NODE-RANK DEPTH: read state `ranks` — when a talents.json node linked to
-   today's topic has rank>=2, include a proof-sketch layer for it; rank>=4,
-   paper-grade treatment + a harder drill variant. The learner's build
-   shapes the page's depth.
-2. **Basics weave**: while `toml`, `yaml`, `makefile`, `iac`, `sdlc`, `cicd`,
-   `docker` are below level 3, weave ONE mini-section (150-300 words + one
-   `fillin`) into a fitting day: real file from his stack (pyproject.toml,
-   azure-pipelines.yml, Makefile for הסדנה), read-then-write, never theory-only.
-   BONUS lane (low priority, ~1x/week max): the workshop's own build vocabulary
-   (particle systems, easing/springs, 9-slice, sprite sheets, shaders, game
-   juice; seeded in concepts.json with "bonus":true). One short מיני-section
-   explaining a term THE APP ITSELF uses, pointed at the live example on the
-   page ("הפרץ אחרי תשובה נכונה הוא particle system"). tree: craft.
-3. **Skill tag**: every quiz/fillin that exercises a ledger skill carries
-   `"skill":"<id from skills.json>"` in its JSON. Untagged blocks are fine for
-   pure course content.
-4. **Proof types by level** (the ladder's seam): levels 0-2 rise from unassisted
-   quiz/explanation evidence; levels 3-5 ONLY from artifacts (a repo, a PR, a
-   deployed thing). Never write content implying a quiz can certify level 4.
-5. **~85% difficulty**: calibrate against the learner state; if first-try
-   accuracy last 3 days > 90%, harden; < 70%, ease. Say nothing about it in the
-   page, just do it.
-6. Assisted work (chat transcripts, hint-revealed answers) never counts as
-   mastery evidence.
+   Ties break by the smaller `estMin`. A unit with `moscow: "wont"` is never
+   generated.
+4. **Idempotency: if `units/<id>.md` already exists, STOP and change nothing.**
 
-Four daily anchors (recommended split, not a gate): 08:00 עיון, 12:00 תרגול,
-17:00 AI-103, 22:00 מעקב + שיקול דעת.
+## 2. Write the lesson
 
-## 2. Page structure (exact)
+File `units/<id>.md`. Hebrew content, technical nouns in English.
 
-File `posts/YYYY-MM-DD.md`. Hebrew content, technical nouns English. Section
-headings are `##` with these EXACT Hebrew prefixes before the colon (the UI keys
-on them); `###` only inside sections:
+**The self-contained bar:** a reader with zero prior exposure must be able to
+master this unit from this file alone. Videos and links are enrichment, never a
+prerequisite. Compressed notes are a defect.
+
+Length follows the unit's own budget. `estMin` is the workout read. `depthEstMin`
+is the full read. A unit with `depthEstMin` of 25 gets roughly 700 to 1200 words.
+A unit with 45 gets roughly 1500 to 2500. Do not pad to reach a number.
+
+Section order is FIXED, and the same in every unit. The learner retrieves by
+picturing the page, so the shape must not vary:
 
 ```
-# בוקר טוב YYYY-MM-DD! <כותרת>
-<שורת פתיחה אחת>
-## עיון: <תת-כותרת>
-## תרגול: <תת-כותרת>
-## AI-103: <תת-כותרת>
-## מעקב: <תת-כותרת>
-## שיקול דעת: <תת-כותרת>
-<שורת סיום: לימוד פורה. מה דעתכם על זה?>
+# <the unit's Hebrew title>
+<one line hook, drawn from the lesson itself>
+## מה תדע בסוף
+## האינטואיציה
+## ההגדרות המדויקות     (or ## הפורמליזם when the unit carries mathematics)
+## דוגמה מחושבת
+## המקרה שמפיל את האינטואיציה
+## טעויות נפוצות
+## מתי זה לא משנה
+## חיבור
 ```
 
-## 2b. Interactive blocks (the UI turns these into live components)
+Rules per section:
 
-Two fenced-block kinds, each a SINGLE LINE of valid JSON inside the fence:
+- **מה תדע בסוף**: the observable outcome, one or two sentences. Not a topic list.
+- **האינטואיציה**: one concrete analogy, carried consistently. Do not switch
+  metaphors mid-section.
+- **ההגדרות המדויקות / הפורמליזם**: every term defined with its Hebrew gloss in
+  bold on first use. Mathematics in KaTeX with `\(...\)` and `\[...\]`, never a
+  bare `$`. Show the derivation, never a reference to one.
+- **דוגמה מחושבת**: a small worked case with every step shown. For a mathematical
+  unit this is arithmetic on real numbers. For a vocabulary or tooling unit it is
+  a command and its actual output. A unit with nothing worked is a defect.
+- **המקרה שמפיל את האינטואיציה**: the edge that breaks the naive reading. Prefer
+  a case from the operator's own stack when one is real. Never invent one.
+- **טעויות נפוצות**: at least three, each with why it is wrong.
+- **מתי זה לא משנה**: when NOT to reach for this, and the trade-off against the
+  main alternative. Interviews live here.
+- **חיבור**: to the block this unit belongs to, and to what it unlocks next.
+
+## 3. Interactive blocks
+
+Every unit MUST carry at least one `quiz` and, for a `practice` unit, at least
+one `fillin` that verifies the drill was actually run. A unit with no
+interactive block is a defect.
+
+Each fence holds a SINGLE LINE of valid JSON.
 
     ```quiz
-    {"id":"dN-...-qK","tree":"systems|craft|ops","skill":"<optional skills.json id>","q":"...","options":["...","...","...","..."],"answer":0,"explain":"..."}
+    {"id":"u-<unitid>-q1","tree":"systems|craft|ops","skill":"<skills.json id>","q":"...","options":["","","",""],"answer":0,"explain":"..."}
     ```
 
     ```fillin
-    {"id":"dN-...","tree":"...","skill":"<optional>","prompt":"...","answer":"...","alt":["..."],"explain":"..."}
+    {"id":"u-<unitid>-f1","tree":"...","skill":"...","prompt":"...","answer":"...","alt":["..."],"explain":"..."}
     ```
-
-A third kind, `widget`, mounts an EXPLORABLE or MICRO-GAME from the app's
-catalog (the interactive IS the lesson; prose supports it):
 
     ```widget
-    {"type":"decay","gamma":0.9,"title":"..."}
+    {"type":"decay|gridworld|algviz","title":"..."}
     ```
-
-Catalog today: `decay` (discount-factor explorable: bars, sum, effective
-horizon), `gridworld` (playable MDP: goal/trap/step-cost, live discounted
-return), `algviz` (WATCH-THE-ALGORITHM player, the VisuAlgo pattern: state
-canvas + pseudocode with the current line highlighted + play/step/speed;
-`{"type":"algviz","algo":"<recipe>", ...params}`; recipes available:
-`binary-search` (params arr, target), `returns-backward` (params rewards[],
-gamma)). Every עיון SHOULD open or close with one widget when the day's
-concept fits one, and every drill whose algorithm has an algviz recipe SHOULD
-embed it; if the catalog lacks a fitting widget or recipe, note it at the end
-of the post as `<!-- widget-request: <type>: <one line spec> -->` so it gets
-built. When the day's drill maps to a classic DSA algorithm, also link the
-matching visualizer page on https://visualgo.net as enrichment.
-
-Design rule: any HTML/SVG/visual output obeys DESIGN.md (the binding style
-contract: fiction map, tokens, motion contract, avoid-list). Imagery rule: NO
-stock photos, ever. The page's imagery is (a) the widgets,
-(b) ONE hand-authored inline `<svg>` diagram in עיון when the concept has a
-shape (an MDP loop, an architecture, a flow): small, viewBox 0 0 320 180,
-stroke="currentColor", theme-neutral, labels in Hebrew, wrapped in a plain
-paragraph. Raw inline SVG passes through markdown untouched.
-
-A fourth kind, `concepts`, feeds the codex (one per day, placed just before the
-closing line): 5-10 key concepts of the day, each with a STABLE kebab id:
 
     ```concepts
-    {"items":[{"id":"baseline","t":"Baseline","he":"קו בסיס","d":"one-line meaning","rel":["variance"]}]}
+    {"items":[{"id":"kebab-id","t":"Term","he":"מונח","d":"one line","rel":["other-id"]}]}
     ```
 
-ALSO append the same items to the top-level `concepts.json` -> concepts array
-(skip ids that already exist; rel[] may reference any existing id). The codex
-graph and search are built from that file.
+Block rules:
 
-Rules: ids unique forever (prefix with the day, e.g. d14-az-q2). `tree` is the
-talent tree the points feed: systems | craft | ops (course/drill -> craft or
-systems by topic; AI-103 -> ops; judgment -> the domain's tree per
-judgment_map/talents). Exactly ONE correct option; 4 options; explain must
-justify the answer. Correct answers award points automatically, so never leak
-the answer outside the block. Every section below MUST include its interactive
-blocks; a page with no interactives is a defect.
+- Ids start with `u-<unitid>-` and are unique forever.
+- `tree` is the talent tree the points feed, and it must be the tree that owns
+  the unit's `node` in `talents.json`: systems, craft or ops. Points must land
+  where the work happened.
+- Exactly one correct option, four options, and `explain` justifies the answer.
+- Never leak an answer outside its block.
+- Append every `concepts` item to the top-level `concepts.json` as well, skipping
+  ids that already exist. Each new concept carries `"node": "<talents.json id>"`.
+- Widgets: use one when the unit's idea has a moving part. If the catalog lacks a
+  fitting one, end the file with `<!-- widget-request: <type>: <one line spec> -->`.
 
-### עיון (the course thread, 20-30 min read, 1500-2500 words on its own)
-THE SELF-CONTAINED BAR: a reader with zero prior exposure to today's topic must
-be able to MASTER it from this section alone. The videos are enrichment, never
-a prerequisite. "Compressed session notes" are a defect. Required structure
-(h3 subsections, in order):
-1. **פתיחה מאפס**: define every term used today as if seen for the first time,
-   each with its Hebrew gloss.
-2. **האינטואיציה**: gadial register ("תחשבו על זה כמו...").
-3. **הפורמליזם המלא**: central equations in KaTeX (`\(...\)` / `\[...\]`,
-   never bare `$`), with a full derivation or proof, not a sketch reference.
-4. **דוגמה מחושבת ביד**: a small NUMERIC example computed step by step, every
-   arithmetic step shown (e.g., a 2-state MDP, a 3-arm bandit with concrete
-   numbers). This is mandatory; a lesson with no worked numbers is a defect.
-5. **דוגמה שנייה או מקרה קצה**: a second worked case or the edge that breaks
-   naive intuition.
-6. **טעויות נפוצות**: at least 3, each with why it is wrong.
-7. **מתי לא**: when NOT to use today's concept and the trade-off against the
-   main alternative (one paragraph; interviews live here).
-8. **חיבור**: to yesterday, to the week, and one line to his projects.
-Embed the day's widget where it teaches best; PyTorch code in a fenced block
-with line-by-line explanation after it; end with ONE Hebrew `quiz`.
+## 4. Adaptation
 
-### תרגול (15-30 min, from scratch)
-One interview-caliber drill tied to today's material (DS&A/SQL on Sat/Sun).
-Predict-then-peek: task and constraints first; hints and reference solution only
-inside `<details><summary>רמז, ואז פתרון</summary>`. Then ONE `fillin` block that
-verifies the drill was actually RUN: ask for a concrete output value of the
-solution on a given input (answer normalized: whitespace/quotes stripped,
-lowercase; provide `alt` spellings).
+Read the state and let it shape the lesson. Say nothing about this on the page.
 
-### AI-103 (~40+15 min, 400-800 words of TEACHING)
-TEACH the day's exam topic inline, self-contained: the actual facts, tables,
-decision rules and gotchas an exam question needs, written out (never "go read
-the module" as the content). The Microsoft Learn link is the deepening, after.
-Then 2-3 `quiz` blocks IN ENGLISH, exam register: scenario stems, 4 plausible
-options, one correct. Wrong-answered questions from earlier days resurface
-within 2 days (check recent posts for ids you repeated).
+1. **Depth by measured level.** Total earned points map to levels through
+   0/10/25/45/70/100/140/190/250/320. Levels 1 to 3 stay at intuition and use.
+   Levels 4 to 6 add proof sketches and failure modes. Levels 7 to 10 wire in a
+   2025 or 2026 paper.
+2. **Difficulty near 85 percent.** If first-try accuracy over the last three days
+   is above 90, harden the blocks. Below 70, ease them.
+3. **Resurface what leaked.** The state's `reviews` carry `lapses` per item.
+   Where a leaked item belongs to this unit's concepts, write a fresh block on
+   the same idea with a new id.
+4. **Evidence ladder.** Levels 0 to 2 may rise from unassisted quiz evidence.
+   Levels 3 to 5 rise only from artifacts: a repo, a pull request, a deployed
+   thing. Never imply a quiz can certify level 4. Assisted work never counts.
 
-### מעקב (~10 min)
-PRIMARY SOURCE: `discoveries.json` (the daily discover scanner's output,
-already time-labeled and deduped). Pick the 2-3 freshest highest-signal items,
-present each with its line + link, and close with "עוד תגליות ומסעות צדדיים
-בטאב תגליות". 2-3x weekly add one paper card, subjects drawn from
-`corpus_manifest.json` -> paper_card_queue first (title, venue, sourced
-publication status, problem, mechanism, evidence, limitations, hype-versus-real,
-one application to course_plan.json -> projects).
-FALLBACK only if discoveries.json is stale (>48h old `generated`): scan
-course_plan.json -> world_scan_sources yourself; only items with real links
-fetched THIS run; if quiet, one honest line. NEVER fabricate.
+## 5. Close the run
 
-### שיקול דעת (the judgment rep, ~5 min)
-One concrete decision scenario from the Principal Engineer Curriculum territory
-(judgment_map.json rules). Format: 2-3 sentences of specific situation with real
-constraints, then ONE `quiz` block (Hebrew): 4 plausible architecture/tool
-choices, one correct per the curriculum rule; `explain` states the decision AND
-the rule it derives from, including when the runner-up would be right. Rotate
-domains day to day. This is predict-then-peek applied to judgment, which is the
-point of the whole curriculum.
+1. Set the unit's `body` in `curriculum.json`: `status: "fresh"`, `generated` to
+   the ISO timestamp, `hash` to a content hash of the file.
+2. Append any new concepts to `concepts.json`.
+3. Run `python tools/validate_links.py`. It must exit 0. It checks that every
+   unit body maps to a real unit, and that node, skill and goal ids resolve.
+4. One commit on main: `unit: <id>`, then push. Touch only `units/`,
+   `curriculum.json` and `concepts.json`.
 
-## 3. Style
+Never touch `posts/`, `posts/index.json` or `syllabus.json`. Those belong to the
+retired contract.
 
-- New technical term => inline Hebrew gloss, bold: **Overdispersion, פיזור יתר**: ...
-- No em-dash or en-dash. No emojis. PAGE TOTAL 2500-4500 words: a full
-  self-contained lesson, not session notes. Depth over brevity; every claim
-  explained, never just asserted. The reader chose a 25-40 minute deep session.
-- Habits to embody: predict-then-peek, build-first-diff-second, Feynman, spaced
-  retrieval (docs/fundamentals-mastery-plan.md in new-recruit).
+## 6. Style
 
-## 4. Index + syllabus + commit
+- A new technical term gets an inline Hebrew gloss in bold on first use:
+  **Overdispersion, פיזור יתר**.
+- No em-dash, no en-dash, no emoji.
+- No stock photos ever. The imagery is the widgets, plus at most one
+  hand-authored inline `<svg>` when the idea has a shape: `viewBox="0 0 320 180"`,
+  `stroke="currentColor"`, theme-neutral, Hebrew labels.
+- Any visual output obeys `DESIGN.md`, which is binding.
+- Never narrate the pipeline to the learner. A degraded run still opens with a
+  real hook.
 
-1. Prepend `{ "date", "week", "day", "title" }` to `posts/index.json` (valid
-   JSON, newest first). Never edit past posts.
-2. SYLLABUS SPINE: update `syllabus.json` — set today's entry to
-   status:"done" with the real title/topics/nodes/skills (nodes = talents.json
-   ids the page taught; skills = ledger ids drilled). If the entry does not
-   exist, append it to the current week. The `why` field is one Hebrew
-   sentence: why this day exists in the arc.
-3. BREADCRUMB (page top, after the opening line): one line
-   `שבוע W · <source> · צמתים: <node names>` followed by the `why` sentence.
-   The page must explain its own place in the road every morning.
-4. One commit on main: `post: YYYY-MM-DD (wW dD)`, push. Touch nothing else
-   except posts/, posts/index.json, syllabus.json, concepts.json.
-5. New concepts MUST carry `"node": "<talents.json id>"`. The council runs
-   `py tools/validate_links.py` weekly; orphan links are defects.
+## 7. The weekly council, unchanged in purpose
+
+A separate Sunday run, not this one. It diffs the Drive corpus, ingests new
+documents into the paper-card queue, updates `corpus_manifest.json`, runs
+`py tools/sync_resume_skills.py` so a new resume claim becomes a tracked
+`resume_risk` row, and runs `py tools/validate_links.py`. It reports new rows in
+its commit message.
+
+The council may also propose curriculum changes. It does so by editing the
+enumeration in `tools/build_curriculum.py` and rerunning it, never by hand
+editing `curriculum.json`.

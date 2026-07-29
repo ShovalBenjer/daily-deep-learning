@@ -65,7 +65,14 @@ if os.path.exists(cur_path):
         if u["volatile"] and u["staleAfterDays"] is None:
             errs.append(f"unit {u['id']}: volatile without staleAfterDays")
 
+    # A lesson file with no unit behind it is unreachable: the app only fetches
+    # units/<id>.md for ids that exist in curriculum.json.
+    udir = os.path.join(R, "units")
+    bodies = [f[:-3] for f in os.listdir(udir) if f.endswith(".md")] if os.path.isdir(udir) else []
+    for b in bodies:
+        if b not in unit_ids: errs.append(f"units/{b}.md: no unit '{b}' in curriculum.json")
+
 print(f"nodes={len(nodes)} skills={len(skill_ids)} concepts={len(concept_ids)} "
-      f"units={len(units)} errors={len(errs)}")
+      f"units={len(units)} bodies={len(bodies) if 'bodies' in dir() else 0} errors={len(errs)}")
 for e in errs: print(" !", e)
 sys.exit(1 if errs else 0)

@@ -2152,31 +2152,52 @@ function renderHome() {
   if (rec) rec.onclick = () => openReview();
 }
 
-function renderUnit(id) {
+async function renderUnit(id) {
   const u = unitById(id);
   if (!u) { location.hash = '#/'; return; }
   setTab('tab-today'); currentDay = null; paintFolio();
   const st = uState(u.id);
+  const view = $('#view');
+
+  // The FILE is the truth about whether a lesson exists. curriculum.json's
+  // body.status is the generator's bookkeeping and can lag a run; asking the
+  // network avoids showing "not written" over a lesson that is sitting there.
+  let md = null;
+  try { const r = await fetch('units/' + u.id + '.md', { cache: 'no-cache' }); if (r.ok) md = await r.text(); }
+  catch (e) { /* offline: fall through to the metadata view */ }
+
+  const art = document.createElement('article');
+  const head = document.createElement('header'); head.className = 'head';
+  head.innerHTML = `<div class="folio-line">${u.block} · ${u.title}</div><h1>${u.he}</h1>`;
+  art.appendChild(head);
+
+  if (md) {
+    const body = document.createElement('div');
+    body.innerHTML = renderMarkdown(md);
+    const h1 = body.querySelector('h1'); if (h1) h1.remove();   // the header above already carries it
+    art.appendChild(body);
+  }
+
   const objectives = (u.objectives || []).map(o => `<li>${o}</li>`).join('');
+  const foot = document.createElement('section'); foot.className = 'part';
+  foot.innerHTML = `<div class="plate">
+      ${!md && objectives ? `<h3>מה נדרש כאן</h3><ul>${objectives}</ul>` : ''}
+      ${!md ? '<p class="finish-hint">השיעור המלא ליחידה הזאת עוד לא נכתב. השלד קיים והתוכן נוצר בהמשך. אפשר לסמן שהיחידה נסגרה אם החומר כבר ידוע.</p>' : ''}
+      <div class="u-chips"><span class="chip2">~${u.estMin} דק׳</span><span class="chip2">עומק ~${u.depthEstMin} דק׳</span>
+        <span class="chip2">צומת: ${u.node}</span>${(u.skills || []).map(s => `<span class="chip2">${s}</span>`).join('')}</div>
+      <div class="u-actions">
+        ${st.closed ? `<p class="finish-hint">נסגר ב-${st.closed}.</p>`
+                    : '<button class="finish-day" id="closeUnit">סמן שנסגר</button>'}
+        <a class="u-ghost" href="#/">חזרה</a>
+      </div></div>`;
+  art.appendChild(foot);
+
+  view.innerHTML = ''; view.appendChild(art);
   $('#status').textContent = '';
-  $('#view').innerHTML = `
-    <article>
-      <header class="head">
-        <div class="folio-line">${u.block} · ${u.title}</div>
-        <h1>${u.he}</h1>
-      </header>
-      <section class="part"><div class="plate">
-        ${objectives ? `<h3>מה נדרש כאן</h3><ul>${objectives}</ul>` : ''}
-        ${u.body && u.body.status === 'pending' ? `<p class="finish-hint">השיעור המלא ליחידה הזאת עוד לא נכתב. השלד קיים, התוכן נוצר בשלב הבא. אפשר לסמן שהיחידה נסגרה אם החומר כבר ידוע.</p>` : ''}
-        <div class="u-chips"><span class="chip2">~${u.estMin} דק׳</span><span class="chip2">עומק ~${u.depthEstMin} דק׳</span>
-          <span class="chip2">צומת: ${u.node}</span>${(u.skills || []).map(s => `<span class="chip2">${s}</span>`).join('')}</div>
-        <div class="u-actions">
-          ${st.closed ? `<p class="finish-hint">נסגר ב-${st.closed}.</p>`
-                      : '<button class="finish-day" id="closeUnit">סמן שנסגר</button>'}
-          <a class="u-ghost" href="#/">חזרה</a>
-        </div>
-      </div></section>
-    </article>`;
+  upgradeBlocks(view);      // quiz, fillin, widget and concepts fences become live components
+  typeset(view);
+  window.scrollTo(0, 0);
+
   const btn = $('#closeUnit');
   if (btn) btn.onclick = () => { closeUnit(u); location.hash = '#/'; renderHome(); };
 }

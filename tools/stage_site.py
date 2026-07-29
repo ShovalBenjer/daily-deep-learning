@@ -35,7 +35,7 @@ SHIP = [
     "concepts.json", "course_plan.json", "discoveries.json", "judgment_map.json",
     "research_ladder.json", "skills.json", "syllabus.json", "talents.json",
     "curriculum.json", "goals.json",
-    "icons", "vendor", "assets", "posts", "corpus", "writing",
+    "icons", "vendor", "assets", "posts", "corpus", "writing", "units",
 ]
 
 #: Pruned from inside shipped directories. Source art is 6.8 MB of raw PNG the
@@ -44,7 +44,7 @@ SHIP = [
 PRUNE = {"assets/art/raw", "writing/drafts"}
 
 #: Entries in SHIP that may legitimately be absent (added by a later build step).
-OPTIONAL = {"curriculum.json", "goals.json"}
+OPTIONAL = {"curriculum.json", "goals.json", "units"}
 
 #: Re-checked against the staged tree. A hit means SHIP or PRUNE is wrong.
 FORBIDDEN = ["docs", "state", "tools", "tests", "daemon", "sadna-sync", "shots",

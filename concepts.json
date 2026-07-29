@@ -1218,6 +1218,82 @@
         "pipe"
       ],
       "node": "os"
+    },
+    {
+      "id": "uniq-needs-sort",
+      "t": "uniq needs sort",
+      "he": "uniq דורשת מיון",
+      "d": "uniq מכווצת רק שורות זהות סמוכות, ולכן בלי sort לפניה היא מחזירה תשובה שגויה בלי שגיאה ובקוד יציאה 0",
+      "rel": [
+        "pipe",
+        "sort-numeric"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "sort-numeric",
+      "t": "Numeric sort",
+      "he": "מיון מספרי",
+      "d": "sort ברירת מחדל משווה כטקסט ולכן 10 קודם ל-9; sort -n משווה כמספרים",
+      "rel": [
+        "uniq-needs-sort"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "tee",
+      "t": "tee",
+      "he": "פיצול זרם",
+      "d": "כותבת את מה שעובר דרכה גם לקובץ וגם הלאה בטור, ולכן מאפשרת להתבונן באמצע שרשרת בלי לשבור אותה",
+      "rel": [
+        "pipe",
+        "stdout"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "path-var",
+      "t": "PATH",
+      "he": "נתיב חיפוש",
+      "d": "רשימה מסודרת של תיקיות שה-shell סורק לפי הסדר עד ההתאמה הראשונה; הסדר הוא המידע, לא רק התוכן",
+      "rel": [
+        "shell",
+        "command-lookup"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "command-lookup",
+      "t": "Command lookup order",
+      "he": "סדר איתור פקודה",
+      "d": "alias, אחר כך builtin, ורק אז PATH תיקייה אחר תיקייה; שם עם לוכסן עוקף את כל זה",
+      "rel": [
+        "path-var",
+        "shell-builtin"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "shell-builtin",
+      "t": "Shell builtin",
+      "he": "פקודה מובנית",
+      "d": "ממומשת בתוך ה-shell ואין לה קובץ; cd חייבת להיות כזו כי תהליך נפרד לא יכול לשנות את התיקייה של ההורה",
+      "rel": [
+        "command-lookup",
+        "shell"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "command-hash",
+      "t": "Command hash table",
+      "he": "מטמון איתור",
+      "d": "bash זוכר איפה מצא כל פקודה כדי לא לחפש שוב; hash -r מנקה כשגרסה חדשה לא נתפסת",
+      "rel": [
+        "path-var",
+        "command-lookup"
+      ],
+      "node": "os"
     }
   ]
 }

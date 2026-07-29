@@ -1,0 +1,3 @@
+# writing/ moved to its own Pages project (the-bench) on 2026-07-29; the
+# learning PWA no longer ships it. 301 keeps every shared /writing link alive.
+/writing/* https://the-bench.pages.dev/:splat 301

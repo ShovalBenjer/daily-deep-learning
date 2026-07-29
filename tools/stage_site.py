@@ -32,23 +32,23 @@ ROOT = Path(__file__).resolve().parent.parent
 #: references, the sw.js precache list, and style.css url() references.
 SHIP = [
     "index.html", "style.css", "sw.js", "manifest.webmanifest", "_headers",
+    "_redirects",
     "concepts.json", "course_plan.json", "discoveries.json", "judgment_map.json",
     "research_ladder.json", "skills.json", "syllabus.json", "talents.json",
     "curriculum.json", "goals.json",
-    "icons", "vendor", "assets", "posts", "corpus", "writing", "units",
+    "icons", "vendor", "assets", "posts", "corpus", "units",
 ]
 
 #: Pruned from inside shipped directories. Source art is 6.8 MB of raw PNG the
-#: site never serves; drafts are unpublished prose sitting under a published
-#: subsite, reachable by direct URL even though nothing links them.
-PRUNE = {"assets/art/raw", "writing/drafts"}
+#: site never serves.
+PRUNE = {"assets/art/raw"}
 
 #: Entries in SHIP that may legitimately be absent (added by a later build step).
 OPTIONAL = {"curriculum.json", "goals.json", "units"}
 
 #: Re-checked against the staged tree. A hit means SHIP or PRUNE is wrong.
 FORBIDDEN = ["docs", "state", "tools", "tests", "daemon", "sadna-sync", "shots",
-             ".github", ".wrangler", "writing/drafts", "assets/art/raw"]
+             ".github", ".wrangler", "writing", "assets/art/raw"]
 
 
 def _prune(directory: str, names: list[str]) -> set[str]:

@@ -25,3 +25,15 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=daily-deep-learning --branch=main --commit-dirty=true
+      # The writing site is a separate Pages project (operator decision
+      # 2026-07-29): same account, own allowlist, own deploy. The project
+      # `the-bench` already exists and sits behind Cloudflare Access; lifting
+      # that wall is an operator action, not a workflow concern.
+      - name: Stage the writing site
+        run: python3 tools/stage_writing.py dist-writing
+      - name: Deploy writing to Cloudflare Pages (the-bench)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist-writing --project-name=the-bench --branch=main --commit-dirty=true

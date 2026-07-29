@@ -863,7 +863,7 @@ function widgetAlgviz(d) {
   const note = document.createElement('div'); note.className = 'w-readout';
   const ctr = document.createElement('div'); ctr.className = 'w-controls';
   ctr.innerHTML = `<button class="w-btn av-play">הפעל</button><button class="w-btn av-step">צעד</button>
-    <button class="w-btn av-reset">איפוס</button>מהירות <input type="range" min="1" max="8" value="3">`;
+    <button class="w-btn av-reset">איפוס</button>מהירות <input type="range" min="1" max="8" value="3" aria-label="מהירות ההדגמה">`;
   w.appendChild(cv); w.appendChild(codeEl); w.appendChild(note); w.appendChild(ctr);
   let s, timer = null;
   const speed = ctr.querySelector('input'), play = ctr.querySelector('.av-play');
@@ -892,7 +892,7 @@ function widgetDecay(d) {
   const w = widgetShell(d.title || 'מעבדה: כוחה של ההנחתה');
   const cv = document.createElement('canvas'); w.appendChild(cv);
   const ctr = document.createElement('div'); ctr.className = 'w-controls';
-  ctr.innerHTML = `γ <input type="range" min="0.50" max="0.99" step="0.01" value="${d.gamma || 0.9}"><b></b>`;
+  ctr.innerHTML = `γ <input type="range" min="0.50" max="0.99" step="0.01" value="${d.gamma || 0.9}" aria-label="מקדם הנחתה גמא"><b></b>`;
   const ro = document.createElement('div'); ro.className = 'w-readout';
   w.appendChild(ctr); w.appendChild(ro);
   const slider = ctr.querySelector('input'), val = ctr.querySelector('b');

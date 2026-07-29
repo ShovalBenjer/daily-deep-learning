@@ -1338,6 +1338,1007 @@
         "fingerprint"
       ],
       "node": "os"
+    },
+    {
+      "id": "hiring-loop",
+      "t": "Hiring Loop",
+      "he": "לולאת ראיונות",
+      "d": "סדרת הראיונות המתואמת שהמועמד עובר, כשכל תחנה נמדדת על signal אחר; אף מראיין בודד אינו מחליט, וההכרעה נופלת ב-debrief.",
+      "rel": [
+        "debrief",
+        "bar-raiser",
+        "leveling",
+        "behavioral-interview"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "debrief",
+      "t": "Debrief",
+      "he": "תחקיר גיוס",
+      "d": "הישיבה שאחרי הלולאה, שבה כל מראיין מציג את הראיות שלו לפני שהוא רואה את ציוני האחרים כדי למנוע עיגון; היא מפיקה המלצה בלבד, לא הצעה.",
+      "rel": [
+        "hiring-loop",
+        "bar-raiser"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "bar-raiser",
+      "t": "Bar Raiser",
+      "he": "מרים רף",
+      "d": "מראיין מחוץ לצוות המגייס ובעל זכות וטו, שבודק אם המועמד טוב מהחציון הקיים בתפקיד; שומר סף ארגוני ולא מומחה התוכן של הצוות.",
+      "rel": [
+        "debrief",
+        "hiring-loop",
+        "leveling"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "leveling",
+      "t": "Leveling",
+      "he": "קביעת רמה",
+      "d": "שיבוץ המועמד למדרגה בסולם כמו L4 או E5, שקובעת טווח שכר, scope ואחריות; ה-title לבדו חסר משמעות כי אינו מתורגם בין חברות.",
+      "rel": [
+        "career-ladder",
+        "comp-band",
+        "hiring-loop",
+        "scope-impact"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "behavioral-interview",
+      "t": "Behavioral Interview",
+      "he": "ראיון התנהגותי",
+      "d": "ראיון שמבקש התנהגות עבר ולא היפותזה, ונרשם במבנה STAR; הציון נקבע כמעט כולו בחלק ה-Action בגוף ראשון יחיד, ולכן תשובה בלשון רבים אינה מייצרת signal.",
+      "rel": [
+        "hiring-loop",
+        "debrief"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "req",
+      "t": "Requisition (Req)",
+      "he": "משרה מאושרת",
+      "d": "השורה התקציבית המאושרת שמתירה לגייס אדם אחד; בלי req פתוח אין גיוס גם כשיש צורך ברור, ולכן משרה שהוקפאה היא בדרך כלל מצב תקציבי ולא שינוי דעה.",
+      "rel": [
+        "headcount",
+        "backfill"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "backfill",
+      "t": "Backfill",
+      "he": "איוש מחליף",
+      "d": "req שנפתח כדי להחליף מי שעזב ולכן אינו מגדיל את ה-headcount; בהקפאת גיוס בדרך כלל מאשרים backfill וחוסמים דווקא את משרות הצמיחה.",
+      "rel": [
+        "req",
+        "headcount",
+        "layoff"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "at-will",
+      "t": "At-Will Employment",
+      "he": "העסקה לפי רצון",
+      "d": "ברירת המחדל ברוב ארצות הברית: כל צד מסיים מיד ובלי נימוק, בכפוף לאיסורי אפליה; אין תקופת הודעה מוקנית, בשונה מחוזי ישראל ואירופה.",
+      "rel": [
+        "notice-period",
+        "severance",
+        "layoff"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "notice-period",
+      "t": "Notice Period",
+      "he": "תקופת הודעה מוקדמת",
+      "d": "הזמן החוזי בין הודעת העזיבה לסיום בפועל, שבו עדיין עובדים ומקבלים שכר; garden leave הוא בדיוק אותו זמן אך בלי גישה לעבודה.",
+      "rel": [
+        "garden-leave",
+        "at-will",
+        "severance"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "garden-leave",
+      "t": "Garden Leave",
+      "he": "חופשת גן",
+      "d": "העובד מנותק ממערכות ומלקוחות אך ממשיך להיות מועסק ומשולם עד תום ההודעה; כך משיגים את אפקט ה-non-compete בלי להסתמך על אכיפתו בבית משפט.",
+      "rel": [
+        "notice-period",
+        "non-compete"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "non-compete",
+      "t": "Non-Compete",
+      "he": "סעיף אי-תחרות",
+      "d": "סעיף בחוזה שמגביל עבודה אצל מתחרה אחרי סיום ההעסקה; בארצות הברית האכיפה נקבעת ברמת המדינה, ובישראל בית הדין לעבודה אוכף רק כשקיים אינטרס לגיטימי מוגן כמו סוד מסחרי או הכשרה ייחודית, ולא עצם התחרות.",
+      "rel": [
+        "garden-leave",
+        "ip-assignment",
+        "nda"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "ip-assignment",
+      "t": "IP Assignment",
+      "he": "הסבת קניין רוחני",
+      "d": "מעביר לחברה בעלות על מה שיצרת בהקשר העבודה, ולעתים גם על פרויקטים צדדיים; רחב מ-NDA כי NDA רק אוסר לגלות ואינו לוקח בעלות.",
+      "rel": [
+        "nda",
+        "non-compete"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "nda",
+      "t": "NDA",
+      "he": "הסכם סודיות",
+      "d": "אוסר לחשוף מידע שהוגדר חסוי לתקופה נקובה; אינו מגביל היכן תעבוד ואינו מעביר בעלות, ולכן הוא הרך מבין שלושת הסעיפים בחוזה העסקה.",
+      "rel": [
+        "ip-assignment",
+        "non-compete"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "contractor-vs-employee",
+      "t": "Contractor vs Employee",
+      "he": "קבלן מול עובד",
+      "d": "הסיווג נקבע לפי מידת השליטה בעבודה בפועל ולא לפי כותרת החוזה; סיווג שגוי מייצר לחברה חבות רטרואקטיבית של מס וזכויות סוציאליות.",
+      "rel": [
+        "employer-of-record",
+        "at-will"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "employer-of-record",
+      "t": "Employer of Record (EOR)",
+      "he": "מעסיק רשום",
+      "d": "גוף שהופך למעסיק המשפטי היחיד שלך במדינה שבה לחברה אין ישות; PEO לעומתו הוא co-employment שדורש ישות מקומית קיימת ולכן אינו פותח מדינה חדשה.",
+      "rel": [
+        "contractor-vs-employee",
+        "notice-period"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "severance",
+      "t": "Severance",
+      "he": "מענק סיום",
+      "d": "תשלום בסיום ביוזמת המעסיק, כמעט תמיד תמורת חתימה על ויתור תביעות; ה-layoff הוא האירוע והסיבה, וה-severance הוא התמורה שנקנית בו.",
+      "rel": [
+        "layoff",
+        "pip",
+        "notice-period"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "layoff",
+      "t": "Layoff (RIF)",
+      "he": "פיטורי צמצום",
+      "d": "סיום קבוצתי שמנומק במבנה או בתקציב ולא בביצועים, ולכן מוצג כביטול תפקיד ולא ככשל אישי; במדינות רבות מחייב הודעה מוקדמת לרגולטור.",
+      "rel": [
+        "severance",
+        "backfill",
+        "headcount"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "perf-cycle",
+      "t": "Performance Cycle",
+      "he": "מחזור הערכה",
+      "d": "החלון הקבוע שבו נאספים משוב, דירוג והחלטות שכר; המנהל אוסף את הראיות אבל התוצאה נחתכת ב-calibration מול צוותים אחרים.",
+      "rel": [
+        "calibration",
+        "promotion-packet",
+        "pip"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "calibration",
+      "t": "Calibration",
+      "he": "כיול דירוגים",
+      "d": "ישיבה שבה מנהלים משווים עובדים בין צוותים ומיישרים דירוגים לפי scope; לכן מנהל יכול להבטיח המלצה בלבד, לעולם לא דירוג.",
+      "rel": [
+        "perf-cycle",
+        "promotion-packet",
+        "scope-impact"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "promotion-packet",
+      "t": "Promotion Packet",
+      "he": "תיק קידום",
+      "d": "אוסף ראיות שמראה שכבר עבדת ברמה הבאה במשך כמה רבעונים; הקידום מתעד ביצוע שכבר קרה, וה-calibration הוא שמכריע בין תיקים מתחרים.",
+      "rel": [
+        "calibration",
+        "leveling",
+        "career-ladder"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "pip",
+      "t": "Performance Improvement Plan (PIP)",
+      "he": "תוכנית שיפור ביצועים",
+      "d": "מסמך עם יעדים ותאריך יעד שמתעד כשל ביצועים; בפועל הוא בעיקר בניית תיעוד לקראת סיום, ולא מסלול פיתוח.",
+      "rel": [
+        "perf-cycle",
+        "severance"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "career-ladder",
+      "t": "Career Ladder",
+      "he": "סולם קריירה",
+      "d": "המסמך שמגדיר מה נדרש בכל level בשני מסלולים מקבילים, IC וניהול; מעבר למסלול הניהול הוא שינוי תפקיד ולא קידום.",
+      "rel": [
+        "leveling",
+        "promotion-packet",
+        "scope-impact"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "scope-impact",
+      "t": "Scope vs Impact",
+      "he": "היקף מול השפעה",
+      "d": "scope הוא גודל השטח שבאחריותך, impact הוא השינוי המדיד שנוצר בפועל; פרויקט ענק ללא תוצאה נופל בקידום דווקא על impact.",
+      "rel": [
+        "promotion-packet",
+        "career-ladder",
+        "kpi"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "skip-level",
+      "t": "Skip-Level",
+      "he": "שיחת דילוג",
+      "d": "שיחה עם המנהל של המנהל שלך, שקיימת כדי לתת לו signal לא מסונן; היא אינה ערוץ לגיטימי לעקוף החלטות שוטפות, ושימוש כזה בה נזכר לרעה.",
+      "rel": [
+        "escalation",
+        "perf-cycle"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "headcount",
+      "t": "Headcount",
+      "he": "תקן כוח אדם",
+      "d": "מספר המשרות המאושרות לתקופה, שנחתך בתכנון השנתי ולא לפי הצורך השוטף; זה האילוץ שממנו נגזרים req ו-backfill.",
+      "rel": [
+        "req",
+        "backfill",
+        "layoff"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "roadmap",
+      "t": "Roadmap",
+      "he": "מפת דרכים",
+      "d": "התחייבות לרצף תוצאות בטווחי זמן גסים מול בעלי עניין; backlog לעומתו הוא רק רשימה מתועדפת שאיש לא התחייב עליה.",
+      "rel": [
+        "prd",
+        "okr",
+        "buy-in"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "retro",
+      "t": "Retrospective",
+      "he": "רטרוספקטיבה",
+      "d": "פגישה מחזורית על אופן העבודה של הצוות עצמו; postmortem לעומתה נפתח סביב אירוע כשל יחיד, נכתב לקהל רחב יותר, ואינו מתוזמן מראש.",
+      "rel": [
+        "postmortem"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "prd",
+      "t": "PRD",
+      "he": "מסמך דרישות מוצר",
+      "d": "מגדיר בעיה, משתמש וקריטריון הצלחה מדיד; אינו קובע ארכיטקטורה, וזה בדיוק מה שה-RFC עושה אחריו.",
+      "rel": [
+        "rfc",
+        "roadmap",
+        "north-star-metric"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "rfc",
+      "t": "RFC (Design Doc)",
+      "he": "בקשה להערות",
+      "d": "הצעת פתרון טכני שמופצת לביקורת לפני מימוש וחייבת לכלול חלופות שנשקלו ונדחו; ה-PRD אומר מה ולמה, וה-RFC אומר איך.",
+      "rel": [
+        "prd",
+        "socialize",
+        "dri"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "dri",
+      "t": "DRI",
+      "he": "אחראי יחיד",
+      "d": "שם אחד ליד כל פריט עבודה, גם כשמעורבים בו רבים; מטריצת RACI מפזרת תפקידים בין כמה אנשים, ואילו DRI ממקד את האחריות באדם אחד.",
+      "rel": [
+        "single-threaded-owner",
+        "escalation"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "single-threaded-owner",
+      "t": "Single-Threaded Owner",
+      "he": "בעלים בחוט יחיד",
+      "d": "מנהל שכל תפקידו הוא יוזמה אחת ושולט במשאבים שהיא צורכת; ההבדל מ-DRI הוא שהוא אינו מחלק את זמנו בין יוזמות מקבילות.",
+      "rel": [
+        "dri",
+        "escalation"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "escalation",
+      "t": "Escalation Path",
+      "he": "נתיב הסלמה",
+      "d": "המסלול המוסכם להעלאת החלטה או תקלה לרמה שיש לה סמכות; הסלמה תקינה מגיעה עם ההחלטה המבוקשת ולא עם תלונה.",
+      "rel": [
+        "skip-level",
+        "sev",
+        "dri"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "okr",
+      "t": "OKR",
+      "he": "יעדים ותוצאות מפתח",
+      "d": "מנגנון מיקוד רבעוני: Objective איכותי עם שלוש עד חמש תוצאות מדידות, שמתאפס בכל רבעון; שאפתני בכוונה, ולכן שבעים אחוז נחשב הצלחה.",
+      "rel": [
+        "kpi",
+        "north-star-metric",
+        "roadmap"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "kpi",
+      "t": "KPI",
+      "he": "מדד ביצוע מרכזי",
+      "d": "מדד בריאות רציף שנמדד תמיד ואין לו תאריך יעד; OKR הוא יעד לשינוי לרבעון, ו-KPI הוא הקו שאסור שיתדרדר.",
+      "rel": [
+        "okr",
+        "north-star-metric"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "north-star-metric",
+      "t": "North Star Metric",
+      "he": "מדד הכוכב הצפוני",
+      "d": "מדד יחיד שמייצג את הערך שהמשתמש כבר קיבל ושממנו אמורה להיגזר ההכנסה; לכן הוא התנהגותי ולא כספי, בשונה מרוב ה-KPI.",
+      "rel": [
+        "kpi",
+        "okr",
+        "arr"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "incident",
+      "t": "Incident",
+      "he": "תקרית",
+      "d": "אירוע פעיל שפוגע במשתמשים ודורש תגובה בזמן אמת; ה-sev הוא רק תווית החומרה שלו, וה-postmortem הוא מה שקורה אחרי שנסגר.",
+      "rel": [
+        "sev",
+        "postmortem",
+        "oncall"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "sev",
+      "t": "Severity Level (SEV)",
+      "he": "דרגת חומרה",
+      "d": "סיווג מ-SEV1 עד SEV4 שקובע מי מוקפץ ותוך כמה זמן; זו החלטת גיוס משאבים בזמן אמת ולא הערכת הנזק הסופית.",
+      "rel": [
+        "incident",
+        "escalation",
+        "oncall"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "postmortem",
+      "t": "Postmortem",
+      "he": "תחקיר אירוע",
+      "d": "מסמך שנכתב אחרי תקרית עם ציר זמן, סיבת שורש ופעולות מעקב שלכל אחת יש בעלים ותאריך; blameless אומר שהוא שואל איזו מערכת אפשרה את הטעות, לא מי טעה.",
+      "rel": [
+        "incident",
+        "retro",
+        "sla-slo-sli"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "oncall",
+      "t": "On-Call",
+      "he": "תורנות",
+      "d": "רוטציה שבה אדם אחד מחויב להגיב להתראות בחלון זמן מוגדר; נמדדת בעומס ההתראות ולא בזמינות, כי תורנות רועשת מייצרת התעלמות.",
+      "rel": [
+        "incident",
+        "sev",
+        "runbook"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "runbook",
+      "t": "Runbook",
+      "he": "ספר הפעלה",
+      "d": "הוראות מדויקות לתרחיש ידוע אחד, כתובות כדי שתורן עייף יבצע אותן בשלוש לפנות בוקר; playbook לעומתו מותיר שיקול דעת ומכסה תרחיש רחב.",
+      "rel": [
+        "oncall",
+        "incident"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "sla-slo-sli",
+      "t": "SLA vs SLO vs SLI",
+      "he": "התחייבות מול יעד מול מדד",
+      "d": "SLI הוא המדידה עצמה, SLO הוא היעד הפנימי, ו-SLA הוא ההתחייבות החוזית שנושאת קנס; ה-SLO תמיד מחמיר מה-SLA כדי להשאיר מרווח.",
+      "rel": [
+        "error-budget",
+        "burn-rate",
+        "incident"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "yak-shaving",
+      "t": "Yak Shaving",
+      "he": "גילוח יאק",
+      "d": "שרשרת משימות עזר שכל אחת נדרשת כדי לבצע את הקודמת, עד שהמשימה המקורית נעלמת; נאמר בהומור ובביקורת עצמית, לרוב בעדכון סטטוס.",
+      "rel": [
+        "scope-creep",
+        "bike-shedding"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "bike-shedding",
+      "t": "Bike Shedding",
+      "he": "ויכוח סככת האופניים",
+      "d": "הקבוצה שורפת את הזמן על הפרט הזול שכולם מבינים ומדלגת על ההחלטה היקרה; מקור השם בחוק הטריוויאליות של פרקינסון, והוא נאמר כביקורת על ניהול הדיון.",
+      "rel": [
+        "yak-shaving",
+        "boil-the-ocean"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "boil-the-ocean",
+      "t": "Boil the Ocean",
+      "he": "להרתיח את האוקיינוס",
+      "d": "לנסות לפתור את כל הבעיה בבת אחת במקום לחתוך פרוסה; נאמר כביקורת חריפה על היקף לא מציאותי בתוכנית או במסמך, לרוב מפי מנהל בכיר.",
+      "rel": [
+        "scope-creep",
+        "yak-shaving"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "buy-in",
+      "t": "Buy-In",
+      "he": "הסכמה מחייבת",
+      "d": "התחייבות פעילה של בעל עניין לתמוך בהחלטה, ולא רק היעדר התנגדות; משיגים אותה לפני הפגישה, כי בתוך הפגישה כבר מאוחר.",
+      "rel": [
+        "socialize",
+        "disagree-and-commit",
+        "roadmap"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "socialize",
+      "t": "Socialize a Proposal",
+      "he": "הרצת הצעה",
+      "d": "להעביר טיוטה בשיחות פרטיות לפני ההצגה הרשמית כדי לאסוף התנגדויות בזול; התנגדות שמתגלה לראשונה בפגישה נחשבת לכשל תהליך של הכותב.",
+      "rel": [
+        "buy-in",
+        "rfc"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "disagree-and-commit",
+      "t": "Disagree and Commit",
+      "he": "לחלוק ולהתחייב",
+      "d": "אחרי שההחלטה נפלה מבצעים אותה במלואה גם אם התנגדת, ורושמים את ההסתייגות; הכלל אוסר במפורש ביצוע חלקי כצורת מחאה.",
+      "rel": [
+        "buy-in",
+        "bias-for-action"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "bias-for-action",
+      "t": "Bias for Action",
+      "he": "הטיה לפעולה",
+      "d": "העדפת החלטה מהירה על פני איסוף מידע נוסף, אבל רק כשההחלטה הפיכה; מהלך חד-כיווני נשאר תחת אישור מפורש.",
+      "rel": [
+        "disagree-and-commit",
+        "human-on-the-loop"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "scope-creep",
+      "t": "Scope Creep",
+      "he": "זחילת היקף",
+      "d": "תוספות שנכנסות אחרי שההיקף נסגר בלי שמשהו יצא; ההבדל משינוי מתוכנן הוא שאין החלטה מתועדת ושהתחייבות התאריך לא זזה.",
+      "rel": [
+        "roadmap",
+        "boil-the-ocean",
+        "yak-shaving"
+      ],
+      "node": "org",
+      "deck": "corporate"
+    },
+    {
+      "id": "total-comp",
+      "t": "Total Compensation (TC)",
+      "he": "חבילת תגמול כוללת",
+      "d": "סכום שכר הבסיס, בונוס היעד ושווי המניות המבשילות לשנה; השוואת הצעות נעשית ב-TC, אבל רק הבסיס הוא החלק שמובטח בפועל.",
+      "rel": [
+        "comp-band",
+        "rsu",
+        "stock-option",
+        "vesting-cliff"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "comp-band",
+      "t": "Compensation Band",
+      "he": "טווח שכר לרמה",
+      "d": "טווח מוגדר מראש לכל level ומיקום, שבתוכו למגייס יש מרחב תמרון; משא ומתן מזיז אותך בתוך הטווח או מזיז level שלם, ולא שובר את הטווח.",
+      "rel": [
+        "leveling",
+        "total-comp",
+        "exploding-offer"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "exploding-offer",
+      "t": "Exploding Offer",
+      "he": "הצעה עם תפוגה",
+      "d": "הצעה עם דדליין קצר שנועד למנוע השוואה מול הצעות אחרות; זו טקטיקת מיקוח ולא אילוץ תפעולי, ובקשת הארכה כמעט תמיד אפשרית.",
+      "rel": [
+        "comp-band",
+        "total-comp"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "vesting-cliff",
+      "t": "Vesting and Cliff",
+      "he": "הבשלה ומדרגת סף",
+      "d": "לוח ההבשלה מעביר לבעלותך מניות בהדרגה לאורך ארבע שנים, וה-cliff קובע שלפני שנה אחת אתה מקבל אפס ולא חלק יחסי.",
+      "rel": [
+        "rsu",
+        "stock-option",
+        "total-comp",
+        "double-trigger"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "rsu",
+      "t": "RSU",
+      "he": "יחידות מניה חסומות",
+      "d": "הבטחה למניות ממש ללא מחיר מימוש, ולכן הן שוות משהו גם אם המניה ירדה; אופציה לעומת זאת מתאפסת ברגע שהמניה מתחת ל-strike.",
+      "rel": [
+        "stock-option",
+        "vesting-cliff",
+        "double-trigger"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "stock-option",
+      "t": "Stock Option (ISO vs NSO)",
+      "he": "אופציה למניה",
+      "d": "זכות לקנות מניה במחיר ה-strike; ISO נהנית מיחס מס מועדף אם עומדים בתקופות ההחזקה, ו-NSO ממוסה כהכנסה רגילה על הפער כבר ברגע המימוש.",
+      "rel": [
+        "strike-price",
+        "rsu",
+        "exercise-window"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "strike-price",
+      "t": "Strike Price",
+      "he": "מחיר מימוש",
+      "d": "המחיר הקבוע שבו האופציה מאפשרת לקנות מניה, ונקבע לפי ה-409A ביום ההענקה; הרווח שלך הוא רק הפער בין שווי המניה למחיר הזה.",
+      "rel": [
+        "stock-option",
+        "valuation-409a"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "valuation-409a",
+      "t": "409A Valuation",
+      "he": "הערכת שווי 409A",
+      "d": "הערכה בלתי תלויה של שווי המניה הרגילה שקובעת strike חוקי; היא נמוכה במידה ניכרת ממחיר מניית הבכורה בסבב, כי המניה הרגילה חסרת עדיפות ונזילות.",
+      "rel": [
+        "strike-price",
+        "liquidation-preference",
+        "pre-post-money"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "double-trigger",
+      "t": "Double-Trigger Vesting",
+      "he": "הבשלה בשני טריגרים",
+      "d": "ב-RSU של חברה פרטית נדרשים שני תנאים, ותק ואירוע נזילות; בלי האירוע השני ההבשלה על הנייר אינה הופכת למניה ואינה מחייבת במס.",
+      "rel": [
+        "rsu",
+        "vesting-cliff"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "exercise-window",
+      "t": "Post-Termination Exercise Window",
+      "he": "חלון מימוש לאחר עזיבה",
+      "d": "פרק הזמן לממש אופציות שהבשילו אחרי שעוזבים, לרוב תשעים יום, ואחריו הן פוקעות; המימוש דורש מזומן ותשלום מס לפני שיש בכלל למי למכור.",
+      "rel": [
+        "stock-option",
+        "strike-price"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "cap-table",
+      "t": "Cap Table",
+      "he": "טבלת הון",
+      "d": "הרישום של מי מחזיק בכמה מניות ומאיזה סוג; אחוז ההחזקה נגזר ממנה, ומספר המניות שהוצע לך חסר משמעות בלי הכמות הכוללת.",
+      "rel": [
+        "dilution",
+        "option-pool",
+        "liquidation-preference"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "dilution",
+      "t": "Dilution",
+      "he": "דילול",
+      "d": "כל סבב מנפיק מניות חדשות ולכן האחוז שלך יורד גם כשמספר המניות שלך לא השתנה; הדילול פוגע רק אם השווי לא עלה מספיק כדי לפצות עליו.",
+      "rel": [
+        "cap-table",
+        "option-pool",
+        "pre-post-money"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "option-pool",
+      "t": "Option Pool",
+      "he": "מאגר אופציות",
+      "d": "מניות שהופרשו מראש לעובדים; כשהמאגר מוגדל לפני הסבב הוא מדלל את בעלי המניות הקיימים בלבד, ולכן מיקומו ביחס לכסף החדש הוא סעיף מיקוח.",
+      "rel": [
+        "cap-table",
+        "dilution",
+        "stock-option"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "safe-note",
+      "t": "SAFE",
+      "he": "הסכם פשוט למניות עתידיות",
+      "d": "מכשיר המרה שאינו חוב: בלי ריבית ובלי תאריך פירעון, ובגרסת post-money אחוז המשקיע ידוע מראש ואינו נשחק על ידי SAFE מאוחר יותר.",
+      "rel": [
+        "convertible-note",
+        "dilution",
+        "pre-post-money"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "convertible-note",
+      "t": "Convertible Note",
+      "he": "שטר המרה",
+      "d": "הלוואה שצוברת ריבית ויש לה תאריך פירעון, וממירה למניות בסבב הבא; אם הסבב לא הגיע בזמן, המשקיע רשאי לדרוש את הכסף בחזרה.",
+      "rel": [
+        "safe-note",
+        "dilution"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "pre-post-money",
+      "t": "Pre-Money vs Post-Money",
+      "he": "שווי לפני ואחרי",
+      "d": "post-money הוא ה-pre-money ועוד הכסף שנכנס, ואחוז המשקיע מחושב תמיד על ה-post; אותה עסקה נשמעת גדולה יותר כשמצטטים את ה-post.",
+      "rel": [
+        "dilution",
+        "cap-table",
+        "valuation-409a"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "liquidation-preference",
+      "t": "Liquidation Preference",
+      "he": "עדיפות בפירוק",
+      "d": "המשקיע מקבל את כספו בחזרה לפני בעלי המניות הרגילות באקזיט; לכן במכירה בשווי בינוני עובדים עלולים לקבל אפס למרות שהמניה נראית שווה.",
+      "rel": [
+        "cap-table",
+        "valuation-409a",
+        "rsu"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "runway",
+      "t": "Runway",
+      "he": "מסלול המראה",
+      "d": "מספר החודשים עד שהמזומן נגמר, כלומר יתרת המזומן חלקי ה-net burn החודשי; runway נמדד בחודשים ו-burn בדולרים לחודש, וזו הטעות הנפוצה.",
+      "rel": [
+        "net-burn",
+        "burn-multiple"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "net-burn",
+      "t": "Gross vs Net Burn",
+      "he": "שריפה ברוטו מול נטו",
+      "d": "gross burn הוא סך ההוצאה החודשית, ו-net burn הוא ההוצאה פחות המזומן שנכנס; רק ה-net burn נכנס לחישוב ה-runway.",
+      "rel": [
+        "runway",
+        "burn-multiple",
+        "gross-margin"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "burn-multiple",
+      "t": "Burn Multiple",
+      "he": "מכפיל שריפה",
+      "d": "net burn חלקי ה-ARR החדש נטו באותה תקופה: כמה דולרים נשרפו כדי לייצר דולר אחד של הכנסה חוזרת חדשה; נמוך יותר טוב יותר, ומעל שתיים נחשב יקר.",
+      "rel": [
+        "net-burn",
+        "arr",
+        "runway"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "arr",
+      "t": "ARR",
+      "he": "הכנסה שנתית חוזרת",
+      "d": "ההכנסה החוזרת המנורמלת לשנה נכון להיום; זהו מדד תפעולי שאינו מבוקר ואינו מופיע בדוח רווח והפסד, ולכן ARR אינו revenue.",
+      "rel": [
+        "bookings-vs-revenue",
+        "nrr",
+        "north-star-metric"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "bookings-vs-revenue",
+      "t": "Bookings vs Billings vs Revenue",
+      "he": "התחייבות מול חיוב מול הכנסה",
+      "d": "bookings הוא מה שהלקוח חתם, billings הוא מה שחויב בפועל, ו-revenue רק החלק שכבר סופק והוכר; חוזה תלת-שנתי הוא booking ענק והכנסה קטנה ברבעון.",
+      "rel": [
+        "arr",
+        "gross-margin"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "nrr",
+      "t": "Net Revenue Retention (NRR)",
+      "he": "שימור הכנסה נטו",
+      "d": "ההכנסה מקבוצת לקוחות קיימת כעבור שנה, כולל הרחבות ובניכוי נטישה; היא יכולה לעבור מאה אחוז, ולכן חברה יכולה לצמוח בלי אף לקוח חדש.",
+      "rel": [
+        "grr",
+        "arr",
+        "cac"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "grr",
+      "t": "Gross Revenue Retention (GRR)",
+      "he": "שימור הכנסה ברוטו",
+      "d": "אותו חישוב כמו NRR אך בלי הרחבות, ולכן חסום במאה אחוז; הפער בין NRR ל-GRR מגלה אם הצמיחה מגיעה מהרחבה שמכסה על נטישה כבדה.",
+      "rel": [
+        "nrr",
+        "arr"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "cac",
+      "t": "CAC",
+      "he": "עלות רכישת לקוח",
+      "d": "כל הוצאת המכירות והשיווק בתקופה חלקי מספר הלקוחות החדשים בה; הוצאת שיווק לבדה אינה CAC, וזו הסיבה שחברות מציגות מספר נמוך מדי.",
+      "rel": [
+        "ltv-cac",
+        "cac-payback",
+        "nrr"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "ltv-cac",
+      "t": "LTV to CAC",
+      "he": "יחס ערך חיים לעלות רכישה",
+      "d": "ה-LTV מחושב על רווח גולמי ולא על הכנסה, והיחס המקובל הוא לפחות שלוש לאחת; יחס גבוה מדי מסמן בדרך כלל תת-השקעה בצמיחה ולא הצלחה.",
+      "rel": [
+        "cac",
+        "gross-margin",
+        "cac-payback"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "cac-payback",
+      "t": "CAC Payback",
+      "he": "זמן החזר עלות רכישה",
+      "d": "מספר החודשים עד שהרווח הגולמי מהלקוח מחזיר את ה-CAC; זהו מדד תזרים שמשפיע ישירות על ה-runway, בעוד LTV הוא תחזית רחוקה ורכה.",
+      "rel": [
+        "cac",
+        "ltv-cac",
+        "runway"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "gross-margin",
+      "t": "Gross Margin",
+      "he": "רווח גולמי",
+      "d": "ההכנסה פחות עלות אספקת השירות, כלומר ענן, inference ותמיכה; מוצר AI עם עלות inference גבוהה נשבר בדיוק כאן ומאבד את מכפילי ההערכה של SaaS.",
+      "rel": [
+        "unit-economics",
+        "cost-attribution",
+        "arr"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "unit-economics",
+      "t": "Unit Economics",
+      "he": "כלכלת יחידה",
+      "d": "הרווח או ההפסד מלקוח בודד או מעסקה בודדת, לפני הוצאות המטה; חברה יכולה לצמוח מהר עם unit economics שלילי, וגידול ב-ARR מסתיר בדיוק את זה.",
+      "rel": [
+        "gross-margin",
+        "ltv-cac",
+        "cost-attribution"
+      ],
+      "node": "company",
+      "deck": "corporate"
+    },
+    {
+      "id": "rule-of-40",
+      "t": "Rule of 40",
+      "he": "חוק הארבעים",
+      "d": "שיעור צמיחת ההכנסה ועוד שיעור הרווחיות צריכים לעבור ארבעים; הכלל מתיר להחליף רווח בצמיחה, ולכן חברה מפסידה שצומחת מהר עדיין עוברת אותו.",
+      "rel": [
+        "arr",
+        "gross-margin",
+        "burn-multiple"
+      ],
+      "node": "company",
+      "deck": "corporate"
     }
   ]
 }

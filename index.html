@@ -650,6 +650,10 @@ const idToPostDate = id => { const m = /^d(\d+)-/.exec(id); return m ? plusDays(
 //: date turns the recall queue into a wall and the engine into a chore.
 const DECK_PER_DAY = 8;
 
+//: Human names for imported decks. A deck id is a data key; this is what the
+//: learner reads on the shelf.
+const DECK_NAMES = { corporate: 'שפת הארגון' };
+
 function deckOn(id) { return !!(S.decks && S.decks[id] && S.decks[id].on); }
 
 function seedReviews() {
@@ -2010,8 +2014,23 @@ function renderKodex() {
   paintFolio();
   const view = $('#view');
   const cs = (kodex && kodex.concepts) || [];
+  const dCounts = deckCounts();
+  const deckRows = Object.keys(dCounts).map(id => {
+    const c = dCounts[id], on = deckOn(id);
+    const days = Math.ceil(c.total / DECK_PER_DAY);
+    return `<div class="m-item">
+      <div class="m-label">${esc(DECK_NAMES[id] || id)}</div>
+      <div class="m-meta">${on ? `${c.seeded} מתוך ${c.total} בתור` : `${c.total} מושגים, ${days} ימים`}</div>
+      ${on ? '' : `<button class="u-ghost m-talk" data-deck="${esc(id)}">פתח</button>`}
+    </div>`;
+  }).join('');
+
   let html = `<div class="view-head"><h1>האוצר</h1>
     <p>המושגים שנלמדו, הקשרים ביניהם, והערות ששמרת מהמורה. גדל עם כל יום.</p></div>
+    ${deckRows ? `<div class="qhead"><h2>חפיסות</h2></div>
+      <div class="plate">${deckRows}
+      <p class="finish-hint">חפיסה נפתחת אל תוך השליפה בקצב ${DECK_PER_DAY} מושגים ביום, לא בבת אחת.</p>
+      </div>` : ''}
     <div class="set-strip" id="setStrip"></div>
     <div class="qhead"><h2>חדר החותמות</h2><span class="d">${Object.keys(S.ach || {}).length}/${ACHS.length}</span></div>
     <div class="ach-grid">` + ACHS.map(a => {
@@ -2033,6 +2052,12 @@ function renderKodex() {
   }
   view.innerHTML = html;
   $('#status').textContent = '';
+  view.querySelectorAll('[data-deck]').forEach(b => b.onclick = () => {
+    const n = (deckCounts()[b.dataset.deck] || {}).total || 0;
+    openDeck(b.dataset.deck);
+    toast(`${DECK_NAMES[b.dataset.deck] || b.dataset.deck}: ${DECK_PER_DAY} ליום`);
+    renderKodex();
+  });
   const list = $('#kList');
   // ledger rows: compact list, ONE expanded card at a time (no clone wall)
   const expanded = c => `<div class="k-card" data-x="${esc(c.id)}">

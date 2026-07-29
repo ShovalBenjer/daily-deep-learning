@@ -18,6 +18,13 @@ __pycache__/
 docs/
 writing/drafts/
 
+# Local run records: gate verdicts, review artifacts quoting source lines, e2e
+# reports, the duplicate-unit scratch file. tools/stage_site.py lists state/ as
+# FORBIDDEN, but that allowlist only governs what reaches the Pages deploy. It
+# does nothing about github.com, so without this line one `git add -A` publishes
+# 18 files of local run history to a public repository.
+state/
+
 shots/
 
 daemon/.key

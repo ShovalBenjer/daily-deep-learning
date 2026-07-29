@@ -46,7 +46,7 @@
   --panel-2: #e7dec7;
   --well: #ddd2b8;
   --ink: #2b2436;
-  --faded: #6f6553;
+  --faded: #6b6150;   /* was #6f6553: 4.37:1 on --bg and 4.28:1 on --panel-2, both under AA 4.5. Minimal hue-preserving darken, now 4.64 and 4.54. tools/contrast_pass.py */
   --gold: #8a6d34;
   --gold-hi: #6f571f;
   --green: #2e6b4f;

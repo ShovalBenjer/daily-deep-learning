@@ -168,6 +168,25 @@ figcaption{font-family:var(--mono);font-size:11.5px;color:var(--faded);margin-to
    quoted exactly, typos kept, next to what each one cost. */
 .corr{margin:30px 0;overflow-x:auto}
 .corr table{min-width:560px}
+/* On a phone a 560px table inside overflow-x:auto is clipped, not scrolled:
+   the reader sees "The river-par" and no affordance telling them there is more.
+   Worse, the page-level overflow check still passes, because the container
+   absorbs it. Below 640 the rows stack instead: quote, then what it killed,
+   then the cost, each labelled. */
+@media(max-width:640px){
+  .corr{overflow-x:visible}
+  .corr table,.corr tbody,.corr tr,.corr td{display:block;width:auto;min-width:0}
+  .corr thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .corr tr{border-top:1px solid var(--line-soft);padding:16px 0}
+  .corr tbody tr.pivot{border-top:1px solid var(--ink)}
+  .corr td{border:0;padding:0 0 8px}
+  .corr td.q{width:auto;padding-right:0;font-size:12.5px;line-height:1.7}
+  .corr td:nth-child(2)::before{content:"killed ";font-family:var(--mono);
+    font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+  .corr td:nth-child(3)::before{content:"cost ";font-family:var(--mono);
+    font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+  .corr td:nth-child(3){font-family:var(--mono);font-size:12px;color:var(--faded)}
+}
 .corr td{vertical-align:top;line-height:1.6}
 .corr td.q{font-family:var(--mono);font-size:12px;color:var(--ink);
   width:42%;padding-right:22px}

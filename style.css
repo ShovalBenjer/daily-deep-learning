@@ -211,6 +211,23 @@ main { position: relative; z-index: 1; max-width: 44rem; margin: 0 auto;
 .u-stat:last-child { border-bottom: 0; }
 .u-stat b { font-variant-numeric: tabular-nums; }
 
+/* המנטור: errata bound into the same ledger, never a second surface. The row
+   grammar IS .u-stat's, so nothing here introduces a card grid, a new radius or
+   a decorative colour. The kind label is a margin rubric, not a heading. */
+.m-group + .m-group { margin-top: 1.15rem; }
+.m-kind {
+  color: var(--faded); font-size: .78rem; letter-spacing: .06em;
+  padding-bottom: .25rem; border-bottom: 1px solid var(--line-soft);
+}
+.m-item {
+  display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+  padding: .55rem 0; border-bottom: 1px solid var(--line);
+}
+.m-item:last-child { border-bottom: 0; }
+.m-label { flex: 1 1 11rem; min-width: 0; }
+.m-meta { color: var(--faded); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.m-item .m-talk { min-height: 44px; padding: 0 .9rem; font-size: .88rem; }
+
 /* seal medallion (section marks + phase marks share it) */
 .part-head .mark, .phase-head .mark {
   display: grid; place-items: center;

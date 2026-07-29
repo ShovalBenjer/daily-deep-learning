@@ -75,7 +75,7 @@
 
 <button id="chatFab" aria-label="שיחה עם המורה" hidden>המורה</button>
 <div id="chatPane" role="dialog" aria-modal="true" aria-label="המורה" hidden>
-  <div class="cp-head"><b>המורה</b><span id="cpStatus"></span>
+  <div class="cp-head"><b id="cpName">המורה</b><span id="cpStatus"></span>
     <button class="iconbtn" id="cpClose" aria-label="סגור">✕</button></div>
   <div id="cpLog"></div>
   <form id="cpForm"><input id="cpInput" type="text" autocomplete="off" placeholder="שאל, או הדבק תשובה לדירוג...">
@@ -119,6 +119,8 @@ const store = {
     st.shieldDays = st.shieldDays || [];                  // dates covered by a shield
     st.unitState = st.unitState || {};                    // unitId -> {closed, skips}: progression, replaces daysDone
     st.known = st.known || [];                            // concept slugs proven known (placement writes here)
+    st.beliefs = st.beliefs || {};                        // המנטור ledger: id -> {believed, actual, opened, status, retest, src}
+    st.decks = st.decks || {};                            // imported vocabulary decks: deckId -> {on, started}
     return st;
   },
   save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
@@ -643,16 +645,51 @@ const DAY1 = '2026-07-21';
 const plusDays = (ds, n) => { const t = new Date(ds + 'T12:00:00'); t.setDate(t.getDate() + n); return iso(t); };
 const idToPostDate = id => { const m = /^d(\d+)-/.exec(id); return m ? plusDays(DAY1, +m[1] - 1) : null; };
 
+//: How many cards of a newly opened deck come due per day. A deck is imported
+//: all at once but must not arrive all at once: seeding 70 cards with today's
+//: date turns the recall queue into a wall and the engine into a chore.
+const DECK_PER_DAY = 8;
+
+function deckOn(id) { return !!(S.decks && S.decks[id] && S.decks[id].on); }
+
 function seedReviews() {
   const today = iso(new Date());
   Object.entries(S.answers).forEach(([id, a]) => {
     if (id.includes('@r') || S.reviews[id] || !idToPostDate(id)) return;
     S.reviews[id] = { iv: 0, due: plusDays(a.date || today, 1), lapses: 0 };
   });
+  // A concept with no `deck` is core curriculum: it was taught by a unit the
+  // learner opened, so it is due immediately, exactly as before. A concept that
+  // names a deck is imported vocabulary and stays out of the queue until that
+  // deck is opened, then drips in at DECK_PER_DAY.
+  const staged = {};
   ((kodex && kodex.concepts) || []).forEach(c => {
-    if (c.id && c.d && !S.reviews['c-' + c.id]) S.reviews['c-' + c.id] = { iv: 0, due: today, lapses: 0 };
+    if (!c.id || !c.d || S.reviews['c-' + c.id]) return;
+    if (!c.deck) { S.reviews['c-' + c.id] = { iv: 0, due: today, lapses: 0 }; return; }
+    if (!deckOn(c.deck)) return;
+    const n = staged[c.deck] = (staged[c.deck] || 0);
+    staged[c.deck]++;
+    const from = (S.decks[c.deck].started) || today;
+    S.reviews['c-' + c.id] = { iv: 0, due: plusDays(from, Math.floor(n / DECK_PER_DAY)), lapses: 0 };
   });
   store.save();
+}
+
+function deckCounts() {
+  const out = {};
+  ((kodex && kodex.concepts) || []).forEach(c => {
+    if (!c.deck) return;
+    const d = out[c.deck] = out[c.deck] || { total: 0, seeded: 0 };
+    d.total++;
+    if (S.reviews['c-' + c.id]) d.seeded++;
+  });
+  return out;
+}
+
+function openDeck(id) {
+  S.decks = S.decks || {};
+  S.decks[id] = { on: true, started: iso(new Date()) };
+  store.save(); seedReviews();
 }
 const dueReviews = () => {
   const today = iso(new Date());
@@ -973,11 +1010,16 @@ function widgetGridworld(d) {
   return w;
 }
 
+// The stored answer keeps a short copy of the question. המנטור works from state
+// alone, and a block id like u-m0-streams-q1 is not something a human recognises
+// months later. Answers written before this existed fall back to their id.
+function qLabel(t) { return String(t || '').replace(/\s+/g, ' ').trim().slice(0, 140); }
+
 function buildQuiz(d, onDone) {
   const wrap = document.createElement('div'); wrap.className = 'qz'; wrap.dataset.qid = d.id;
   const dir = isLtr(d.q) ? 'ltr' : 'rtl';
   wrap.innerHTML = `<p class="qq" dir="${dir}">${d.q}</p><div class="opts"></div>
-    <label class="conf-row">ביטחון <input type="range" min="0" max="100" step="5" value="70"><b>70%</b></label>
+    <label class="conf-row">ביטחון <input type="range" min="0" max="100" step="5" value="70" aria-label="ביטחון בתשובה, באחוזים"><b>70%</b></label>
     <div class="qz-foot"><button class="qz-check" disabled>בדיקה</button>
     <span class="qz-msg"></span><span class="qz-pts"></span></div>`;
   const confInp = wrap.querySelector('.conf-row input'), confVal = wrap.querySelector('.conf-row b');
@@ -1017,10 +1059,10 @@ function buildQuiz(d, onDone) {
     attempts++;
     const conf = +confInp.value;
     if (selected === d.answer) {
-      S.answers[d.id] = { ok: true, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
+      S.answers[d.id] = { ok: true, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, q: qLabel(d.q), date: iso(new Date()) }; store.save();
       finish(true, selected); award(d.tree, attempts === 1 ? 2 : 1, wrap, attempts === 1, d.skill);
     } else if (attempts >= 2) {
-      S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
+      S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, q: qLabel(d.q), date: iso(new Date()) }; store.save();
       combo = 0;
       finish(false, selected); shake(wrap); paintRing();
     } else {
@@ -1037,10 +1079,13 @@ function buildFillin(d, onDone) {
   const dir = isLtr(d.prompt) ? 'ltr' : 'rtl';
   wrap.innerHTML = `<p class="qq" dir="${dir}">${d.prompt}</p>
     <input class="fill" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="...">
+    <label class="conf-row">ביטחון <input type="range" min="0" max="100" step="5" value="70" aria-label="ביטחון בתשובה, באחוזים"><b>70%</b></label>
     <div class="qz-foot"><button class="qz-check">בדיקה</button>
     <span class="qz-msg"></span><span class="qz-pts"></span></div>`;
-  const inp = wrap.querySelector('input'), check = wrap.querySelector('.qz-check'),
+  const inp = wrap.querySelector('input.fill'), check = wrap.querySelector('.qz-check'),
         msg = wrap.querySelector('.qz-msg'), pts = wrap.querySelector('.qz-pts');
+  const confInp = wrap.querySelector('.conf-row input'), confVal = wrap.querySelector('.conf-row b');
+  confInp.oninput = () => confVal.textContent = confInp.value + '%';
   const norm = s => String(s).replace(/[\s'"׳]/g, '').toLowerCase();
   const good = [d.answer, ...(d.alt || [])].map(norm);
   const prior = S.answers[d.id];
@@ -1049,6 +1094,7 @@ function buildFillin(d, onDone) {
   const finish = ok => {
     wrap.classList.add('answered');
     inp.disabled = true; check.remove();
+    const cr = wrap.querySelector('.conf-row'); if (cr) cr.remove();
     if (!ok) inp.value = d.answer;
     msg.textContent = ok ? 'נכון.' : 'הפתרון הוצב בשדה.';
     msg.className = 'qz-msg ' + (ok ? 'ok' : 'no');
@@ -1057,18 +1103,19 @@ function buildFillin(d, onDone) {
       const ex = document.createElement('p'); ex.className = 'qz-explain';
       ex.dir = isLtr(d.explain) ? 'ltr' : 'rtl'; ex.textContent = d.explain; wrap.appendChild(ex);
     }
-    if (onDone) onDone({ ok, attempts, conf: null });
+    if (onDone) onDone({ ok, attempts, conf: prior ? prior.conf : +confInp.value });
   };
   if (prior) { inp.value = prior.val || d.answer; finish(prior.ok); return wrap; }
 
   check.onclick = () => {
     if (!inp.value.trim()) return;
     attempts++;
+    const conf = +confInp.value;
     if (good.includes(norm(inp.value))) {
-      S.answers[d.id] = { ok: true, attempts, val: inp.value, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
+      S.answers[d.id] = { ok: true, attempts, val: inp.value, conf, tree: d.tree, skill: d.skill, q: qLabel(d.prompt), date: iso(new Date()) }; store.save();
       finish(true); award(d.tree, attempts <= 1 ? 2 : 1, wrap, attempts <= 1, d.skill);
     } else if (attempts >= 2) {
-      S.answers[d.id] = { ok: false, attempts, tree: d.tree, skill: d.skill, date: iso(new Date()) }; store.save();
+      S.answers[d.id] = { ok: false, attempts, val: inp.value, conf, tree: d.tree, skill: d.skill, q: qLabel(d.prompt), date: iso(new Date()) }; store.save();
       combo = 0; finish(false); shake(wrap); paintRing();
     } else {
       msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no'; shake(wrap, 3);
@@ -1648,7 +1695,10 @@ function paintChat() {
   const last = chat.hist[chat.hist.length - 1];
   if (last && last.role === 'bot' && last.text.length > 40) {
     const row = document.createElement('div'); row.className = 'cp-actions';
-    row.innerHTML = `<button data-a="save">שמור לאוצר</button><button data-a="deep">העמק</button>
+    row.innerHTML = chatPersona === 'mentor'
+      ? `<button data-a="save">שמור לאוצר</button><button data-a="wrong">קראת אותי לא נכון</button>
+         <button data-a="why">למה חשבתי ככה</button><button data-a="test">תבחן אותי על זה עכשיו</button>`
+      : `<button data-a="save">שמור לאוצר</button><button data-a="deep">העמק</button>
       <button data-a="ex">דוגמה מחושבת</button><button data-a="mock">ראיין אותי על זה</button>`;
     row.onclick = e => {
       const a = e.target.dataset.a; if (!a) return;
@@ -1656,7 +1706,10 @@ function paintChat() {
         S.notes.push({ t: last.text.slice(0, 800), d: iso(new Date()), ctx: location.hash });
         store.save(); toast('נשמר לאוצר');
       } else {
-        const map = { deep: 'העמק בתשובה האחרונה: שכבה אחת יותר פורמלית, כולל מקרה קצה.', ex: 'תן דוגמה מחושבת ביד, מספר-מספר, לתשובה האחרונה.', mock: 'ראיין אותי על הנושא של התשובה האחרונה: שאלה אחת, חכה לתשובתי, ואז דרג 1-10 עם מה שחסר.' };
+        const map = { deep: 'העמק בתשובה האחרונה: שכבה אחת יותר פורמלית, כולל מקרה קצה.', ex: 'תן דוגמה מחושבת ביד, מספר-מספר, לתשובה האחרונה.', mock: 'ראיין אותי על הנושא של התשובה האחרונה: שאלה אחת, חכה לתשובתי, ואז דרג 1-10 עם מה שחסר.',
+          wrong: 'קראת אותי לא נכון. אל תתקן עדיין: תשאל אותי שאלה אחת שתברר מה באמת חשבתי.',
+          why: 'תעזור לי להבין למה חשבתי ככה מלכתחילה, לא רק מה נכון.',
+          test: 'תבחן אותי על זה עכשיו, קר, שאלה אחת בלי רמזים, ואז תגיד אם זה נשאר.' };
         sendChat(map[a], a === 'mock');
       }
     };
@@ -1665,8 +1718,22 @@ function paintChat() {
   log.scrollTop = log.scrollHeight;
 }
 function chatAvailable() { return !!(syncKey() && S.daemon_url); }
-function openChat(prefill) {
+// One pane, two personas. המורה explains and grades; המנטור works on the pattern
+// across answers and only ever handles one item at a time. They share history on
+// purpose: the mentor is allowed to have read what you asked the teacher.
+let chatPersona = 'teacher';
+function setPersona(p) {
+  chatPersona = p;
+  const pane = $('#chatPane'), name = p === 'mentor' ? 'המנטור' : 'המורה';
+  pane.setAttribute('aria-label', name);
+  $('#cpName').textContent = name;
+  $('#cpInput').placeholder = p === 'mentor'
+    ? 'תענה לו, או תגיד לו שהוא קרא את זה לא נכון...'
+    : 'שאל, או הדבק תשובה לדירוג...';
+}
+function openChat(prefill, persona) {
   $('#chatPane').hidden = false; $('#chatFab').hidden = true;
+  setPersona(persona || 'teacher');
   const form = $('#cpForm');
   let keyRow = $('#cpKeyRow');
   if (!syncKey() && !keyRow) {
@@ -1685,7 +1752,8 @@ function openChat(prefill) {
   if (prefill) { $('#cpInput').value = prefill; }
   $('#cpInput').focus();
 }
-async function sendChat(text, verify) {
+async function sendChat(text, verify, persona, mentorItem) {
+  const who = persona || chatPersona;
   chat.hist.push({ role: 'user', text }); chat.save(); paintChat();
   if (!syncKey()) { chat.hist.push({ role: 'bot', text: 'כדי לדבר איתי צריך להזין פעם אחת את מפתח הסנכרון (השדה למעלה).' }); chat.save(); paintChat(); return; }
   if (!S.daemon_url) { await pullState(); }
@@ -1695,14 +1763,25 @@ async function sendChat(text, verify) {
     const r = await fetch(S.daemon_url + '/chat', {
       method: 'POST',
       headers: { 'authorization': 'Bearer ' + syncKey(), 'content-type': 'application/json' },
-      body: JSON.stringify({ message: text, verify: !!verify, history: chat.hist.slice(-9, -1), context: { view: location.hash, latest: index[0] && index[0].date, level: level() } })
+      body: JSON.stringify({
+        message: text, verify: !!verify, persona: who,
+        history: chat.hist.slice(-9, -1),
+        context: { view: location.hash, latest: index[0] && index[0].date, level: level(),
+                   item: mentorItem || undefined }
+      })
     });
     const j = await r.json();
     chat.hist.push({ role: 'bot', text: j.reply || 'אין תשובה.' });
   } catch (e) {
-    chat.hist.push({ role: 'bot', text: 'המורה לא זמין כרגע (המחשב בבית כבוי או המנהרה נפלה). נסה שוב מאוחר יותר.' });
+    chat.hist.push({ role: 'bot', text: (who === 'mentor' ? 'המנטור' : 'המורה') + ' לא זמין כרגע (המחשב בבית כבוי או המנהרה נפלה). נסה שוב מאוחר יותר.' });
   }
   chat.save(); paintChat(); $('#cpStatus').textContent = '';
+  // המנטור writes the belief ledger through its own tools, server side. Pull it
+  // back so the record the learner just agreed to is visible without a reload.
+  if (who === 'mentor') {
+    await pullState();
+    if (location.hash === '#/mentor' && $('#chatPane').hidden) renderMentor();
+  }
 }
 $('#chatFab').onclick = () => openChat();
 $('#cpClose').onclick = () => { $('#chatPane').hidden = true; $('#chatFab').hidden = false; };
@@ -1713,6 +1792,122 @@ $('#cpForm').onsubmit = e => {
   $('#cpInput').value = '';
   sendChat(v);
 };
+
+/* ---------- המנטור: what the data says is worth talking about ---------- */
+// Four signals, all computed from state the app already writes. The split that
+// carries the whole feature is wrong-and-certain versus wrong-and-unsure: the
+// same wrong answer, but one is a belief to correct and the other is a blank to
+// fill, and they do not deserve the same conversation. Right-and-unsure is the
+// third and nothing used it before: knowing something and not trusting it is a
+// state of its own, and the answer to it is evidence, not another lesson.
+const MENTOR = { sure: 70, unsure: 40, lapseFloor: 2 };
+const MENTOR_KINDS = {
+  retest:        { he: 'זמן לבדוק אם זה נשאר', w: 0 },
+  misconception: { he: 'טעות מול ביטחון גבוה', w: 1 },
+  decay:         { he: 'דלף שוב', w: 2 },
+  imposter:      { he: 'ידעת ולא האמנת', w: 3 },
+  gap:           { he: 'פשוט לא ידעת', w: 4 }
+};
+
+function mentorLabel(id) {
+  const a = S.answers[id];
+  if (a && a.q) return a.q;
+  if (id.startsWith('c-')) {
+    const c = ((kodex && kodex.concepts) || []).find(x => x.id === id.slice(2));
+    if (c) return c.he ? c.t + ' · ' + c.he : c.t;
+  }
+  return id;
+}
+
+function mentorQueue() {
+  const today = iso(new Date()), out = [];
+  for (const [id, b] of Object.entries(S.beliefs || {})) {
+    if (b.status === 'corrected' && b.retest && b.retest <= today)
+      out.push({ kind: 'retest', id, label: b.believed || mentorLabel(id), belief: b });
+  }
+  for (const [id, a] of Object.entries(S.answers || {})) {
+    if (!a) continue;
+    if (a.ok === false && a.conf != null && a.conf >= MENTOR.sure)
+      out.push({ kind: 'misconception', id, label: mentorLabel(id), conf: a.conf, skill: a.skill, date: a.date });
+    else if (a.ok === false)
+      out.push({ kind: 'gap', id, label: mentorLabel(id), conf: a.conf, skill: a.skill, date: a.date });
+    else if (a.ok && a.attempts === 1 && a.conf != null && a.conf <= MENTOR.unsure)
+      out.push({ kind: 'imposter', id, label: mentorLabel(id), conf: a.conf, skill: a.skill, date: a.date });
+  }
+  for (const [id, r] of Object.entries(S.reviews || {})) {
+    if ((r && r.lapses || 0) >= MENTOR.lapseFloor)
+      out.push({ kind: 'decay', id, label: mentorLabel(id), lapses: r.lapses });
+  }
+  // A belief carries its own semantic id (isolation-serial), not the id of the
+  // answer that exposed it, so suppression matches on `from`. Without that the
+  // same wrong answer keeps surfacing after it has been worked through.
+  const settled = new Set();
+  for (const [k, b] of Object.entries(S.beliefs || {})) {
+    if (!b || (b.status !== 'corrected' && b.status !== 'retested')) continue;
+    for (const src of [].concat(b.from || [], k)) settled.add(src);
+  }
+  return out
+    .filter(x => x.kind === 'retest' || !settled.has(x.id))
+    .sort((a, b) => MENTOR_KINDS[a.kind].w - MENTOR_KINDS[b.kind].w ||
+                    String(b.date || '').localeCompare(String(a.date || '')));
+}
+
+function renderMentor() {
+  setTab('tab-today');
+  const view = $('#view');
+  $('#status').textContent = '';
+  const q = mentorQueue();
+  const open = Object.entries(S.beliefs || {}).filter(([, b]) => b.status === 'open' || b.status === 'relapsed');
+
+  const groups = {};
+  for (const it of q) (groups[it.kind] = groups[it.kind] || []).push(it);
+
+  const sections = Object.keys(MENTOR_KINDS).filter(k => groups[k]).map(k => `
+    <div class="m-group">
+      <div class="m-kind">${MENTOR_KINDS[k].he}</div>
+      ${groups[k].slice(0, 8).map(it => `
+        <div class="m-item">
+          <div class="m-label" dir="auto">${esc(it.label)}</div>
+          <div class="m-meta">${
+            it.kind === 'misconception' || it.kind === 'imposter' ? `ביטחון ${it.conf}%` :
+            it.kind === 'decay' ? `${it.lapses} דליפות` :
+            it.kind === 'retest' ? `נפתח ${it.belief.opened}` : 'ללא סימון ביטחון'
+          }</div>
+          <button class="u-ghost m-talk" data-id="${esc(it.id)}" data-kind="${k}">לדבר על זה</button>
+        </div>`).join('')}
+    </div>`).join('');
+
+  view.innerHTML = `
+    <section class="part">
+      <div class="part-head"><span class="mark">א</span><h2>מה שווה לדבר עליו</h2></div>
+      <div class="plate">
+        ${q.length ? sections : '<p class="finish-hint">אין כרגע סימן מדוד. זה לא אומר שהכל סגור, זה אומר שעוד לא ענית מספיק כדי שיהיה על מה לדבר.</p>'}
+      </div>
+    </section>
+    <section class="part">
+      <div class="part-head"><span class="mark">ב</span><h2>מה כבר תוקן</h2></div>
+      <div class="plate">
+        ${open.length ? open.map(([id, b]) => `
+          <div class="m-item">
+            <div class="m-label" dir="auto">${esc(b.believed || id)}</div>
+            <div class="m-meta">${b.status === 'relapsed' ? 'חזר' : 'פתוח'} · ${b.opened}</div>
+          </div>`).join('')
+        : '<p class="finish-hint">הרשומה ריקה. היא מתמלאת מהשיחות, לא מהבחנים.</p>'}
+      </div>
+    </section>`;
+
+  view.querySelectorAll('.m-talk').forEach(b => {
+    b.onclick = () => {
+      const it = q.find(x => x.id === b.dataset.id && x.kind === b.dataset.kind);
+      if (it) openMentor(it);
+    };
+  });
+}
+
+function openMentor(item) {
+  openChat(null, 'mentor');
+  sendChat(`בוא נדבר על זה: ${item.label}`, false, 'mentor', item);
+}
 
 /* ---------- הקודקס: concepts, graph, saved notes ---------- */
 /* in-app corpus reader: docs stay in the app, never a Drive redirect */
@@ -2099,6 +2294,7 @@ function renderHome() {
   const ranked = rankedUnits();
   const u = ranked.length ? ranked[0].u : null;
   const due = dueReviews().length;
+  const mq = mentorQueue();
   const must = allUnits().filter(x => x.moscow === 'must');
   const closed = must.filter(x => uState(x.id).closed).length;
   const left = must.length - closed;
@@ -2133,7 +2329,16 @@ function renderHome() {
       </div>
     </section>
     <section class="part">
-      <div class="part-head"><span class="mark">ג</span><h2>המצב</h2></div>
+      <div class="part-head"><span class="mark">ג</span><h2>המנטור</h2></div>
+      <div class="plate">
+        ${mq.length ? `<p>${mq.length} ${mq.length === 1 ? 'דבר' : 'דברים'} שהנתונים אומרים ששווה לדבר עליהם.</p>
+             <p class="finish-hint" dir="auto">${esc(mq[0].label)}</p>
+             <button class="finish-day" id="openMentor">פתח</button>`
+           : '<p class="finish-hint">אין כרגע סימן מדוד. תענה על עוד כמה בחנים ויהיה על מה לדבר.</p>'}
+      </div>
+    </section>
+    <section class="part">
+      <div class="part-head"><span class="mark">ד</span><h2>המצב</h2></div>
       <div class="plate">
         <div class="u-stat"><span>יחידות חובה שנסגרו</span><b>${closed} מתוך ${must.length}</b></div>
         <div class="u-stat"><span>נשארו</span><b>${left}</b></div>
@@ -2142,6 +2347,8 @@ function renderHome() {
       </div>
     </section>`;
 
+  const om = $('#openMentor');
+  if (om) om.onclick = () => { location.hash = '#/mentor'; };
   const start = $('#startUnit');
   if (start && u) start.onclick = () => { location.hash = '#/u/' + u.id; };
   const swap = $('#swapUnit');
@@ -2222,6 +2429,7 @@ function route() {
   if (h === '#/ladder') return renderLadder();
   if (h === '#/kodex') return renderKodex();
   if (h === '#/discover') return renderDiscover();
+  if (h === '#/mentor') return renderMentor();
   const dm = h.match(/^#\/doc\/([a-z0-9-]+)$/);
   if (dm) return renderDoc(dm[1]);
   if (h === '#/history') return renderHistory();

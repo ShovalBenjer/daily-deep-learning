@@ -767,7 +767,12 @@
       "he": "שגיאת הפרש זמני",
       "d": "δ = r + γV_φ(s') - V_φ(s): ה-Advantage המקורב שמעדכן את ה-Actor ב-Actor-Critic. כשδ>0 הפעולה עדיפה על הצפוי; כשδ<0 גרועה ממנה.",
       "day": 7,
-      "rel": ["td-learning", "actor-critic", "advantage-function", "bootstrapping"],
+      "rel": [
+        "td-learning",
+        "actor-critic",
+        "advantage-function",
+        "bootstrapping"
+      ],
       "node": "optimization"
     },
     {
@@ -776,7 +781,11 @@
       "he": "למידה אונליין",
       "d": "עדכון הפרמטרים אחרי כל צעד במקום אחרי אפיזודה שלמה. Actor-Critic מאפשר זאת כי TD error זמין מיד; REINFORCE חייב לחכות לסוף.",
       "day": 7,
-      "rel": ["actor-critic", "td-error", "reinforce"],
+      "rel": [
+        "actor-critic",
+        "td-error",
+        "reinforce"
+      ],
       "node": "ml-applied"
     },
     {
@@ -785,7 +794,11 @@
       "he": "רשת מטרה",
       "d": "עותק מוקפא של ה-Critic שמשמש כ-target יציב לעדכון; מונע מעגל שבו ה-target זזה בזמן האימון. נפוץ ב-DQN ו-SAC.",
       "day": 7,
-      "rel": ["td-error", "actor-critic", "bootstrapping"],
+      "rel": [
+        "td-error",
+        "actor-critic",
+        "bootstrapping"
+      ],
       "node": "optimization"
     },
     {
@@ -803,7 +816,11 @@
       "he": "החזר N-צעדים",
       "d": "הרחבה של TD: משתמש ב-n תגמולים אמיתיים ואז מבוטסטרפ. \\(\\hat{G}_t^{(n)} = \\sum_{k=0}^{n-1}\\gamma^k r_{t+k} + \\gamma^n V(s_{t+n})\\). n=1 הוא TD, n→∞ הוא Monte Carlo.",
       "day": 8,
-      "rel": ["td-error", "gae", "lambda-return"],
+      "rel": [
+        "td-error",
+        "gae",
+        "lambda-return"
+      ],
       "node": "optimization"
     },
     {
@@ -812,7 +829,13 @@
       "he": "אומדן Advantage מוכלל",
       "d": "ממוצע גאומטרי של כל ה-n-step advantages: \\(\\hat{A}_t^{GAE} = \\sum_{k=0}^{\\infty}(\\gamma\\lambda)^k \\delta_{t+k}\\). רקורסיה: \\(A_t = \\delta_t + \\gamma\\lambda A_{t+1}\\). λ שולט בספקטרום bias-variance.",
       "day": 8,
-      "rel": ["n-step-return", "lambda-return", "bias-variance-spectrum", "td-error", "actor-critic"],
+      "rel": [
+        "n-step-return",
+        "lambda-return",
+        "bias-variance-spectrum",
+        "td-error",
+        "actor-critic"
+      ],
       "node": "optimization"
     },
     {
@@ -821,7 +844,10 @@
       "he": "החזר למבדה",
       "d": "ממוצע גאומטרי של כל ה-n-step returns: \\(G_t^\\lambda = (1-\\lambda)\\sum_{n=1}^{\\infty}\\lambda^{n-1}\\hat{G}_t^{(n)}\\). GAE הוא ה-advantage של ה-λ-return.",
       "day": 8,
-      "rel": ["n-step-return", "gae"],
+      "rel": [
+        "n-step-return",
+        "gae"
+      ],
       "node": "optimization"
     },
     {
@@ -830,7 +856,11 @@
       "he": "ספקטרום הטיה-שונות ב-RL",
       "d": "TD (λ=0): bias גבוה מ-V_φ לא מדויק, variance נמוכה. MC (λ=1): bias=0, variance גבוהה ממסלולים ארוכים. GAE/λ שם נקודה על הספקטרום הזה.",
       "day": 8,
-      "rel": ["gae", "td-error", "advantage"],
+      "rel": [
+        "gae",
+        "td-error",
+        "advantage"
+      ],
       "node": "prob-stats"
     },
     {
@@ -841,6 +871,80 @@
       "day": 8,
       "rel": [],
       "node": "agents-loop"
+    },
+    {
+      "id": "shell",
+      "t": "Shell",
+      "he": "מעטפת",
+      "d": "תוכנית שמפרשת פקודות ומריצה תוכניות אחרות",
+      "rel": [
+        "terminal",
+        "prompt"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "terminal",
+      "t": "Terminal",
+      "he": "טרמינל",
+      "d": "החלון שמציג טקסט ומעביר הקשות, ומריץ shell אחד",
+      "rel": [
+        "shell",
+        "console"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "console",
+      "t": "Console",
+      "he": "קונסולה",
+      "d": "היסטורית הטרמינל הראשי של המכונה, היום גם כלי הדפדפן",
+      "rel": [
+        "terminal"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "prompt",
+      "t": "Prompt",
+      "he": "שורת הזמנה",
+      "d": "המחרוזת שה-shell מדפיס כדי לסמן שהוא ממתין לפקודה",
+      "rel": [
+        "shell"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "process",
+      "t": "Process",
+      "he": "תהליך",
+      "d": "מופע רץ של תוכנית, עם PID, מרחב זיכרון וירטואלי ומצב משלו",
+      "rel": [
+        "process-id",
+        "process-state",
+        "shell"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "process-id",
+      "t": "PID",
+      "he": "מזהה תהליך",
+      "d": "מספר שלם ייחודי שהקרנל מחלק לכל תהליך ברגע שנוצר",
+      "rel": [
+        "process"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "process-state",
+      "t": "Process state",
+      "he": "מצב תהליך",
+      "d": "אחד ממצבים: running, sleeping, zombie, terminated; ניתן לראות ב-ps",
+      "rel": [
+        "process"
+      ],
+      "node": "os"
     }
   ]
 }

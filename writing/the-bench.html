@@ -326,6 +326,11 @@ svg.radar text{font-family:var(--mono);font-size:9px;fill:var(--faded)}
   color:var(--faded);margin-top:6px}
 
 .tablewrap{overflow-x:auto;margin:24px 0}
+/* The cost table is two columns (Measure, Value); the base min-width forces it
+   wider than a phone and it scrolled sideways inside its container. Horizontal
+   scroll is the right pattern for a genuinely wide many-column table, not for a
+   two-column one, which should just fit and let the long value cells wrap. */
+@media(max-width:640px){.tablewrap table{min-width:0}}
 table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px;min-width:420px}
 th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line-soft)}
 th{color:var(--gold);font-weight:400;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}

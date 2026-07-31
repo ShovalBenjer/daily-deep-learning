@@ -2579,6 +2579,37 @@
         "env-vars"
       ],
       "node": "os"
+    },
+    {
+      "id": "package-manager",
+      "t": "Package Manager",
+      "he": "מנהל חבילות",
+      "d": "כלי שמוריד, מאמת ומתקין packages מ-registry, ומנהל תלויות ו-lockfiles.",
+      "rel": [
+        "virtual-env",
+        "lockfile"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "virtual-env",
+      "t": "Virtual Environment",
+      "he": "סביבת וירטואל",
+      "d": "תיקיה מבודדת עם Python interpreter ו-packages משלה, למניעת קונפליקטים בין פרויקטים.",
+      "rel": [
+        "package-manager"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "lockfile",
+      "t": "Lockfile",
+      "he": "קובץ נעילה",
+      "d": "קובץ שמתעד גרסאות מדויקות של כל תלות, מבטיח builds שניתן לשחזר.",
+      "rel": [
+        "package-manager"
+      ],
+      "node": "os"
     }
   ]
 }

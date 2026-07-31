@@ -2610,6 +2610,74 @@
         "package-manager"
       ],
       "node": "os"
+    },
+    {
+      "id": "fs-paths",
+      "t": "Filesystem path",
+      "he": "נתיב במערכת הקבצים",
+      "d": "מחרוזת שמזהה מיקום בעץ הקבצים, בנויה מרכיבים המופרדים בתו מפריד",
+      "rel": [
+        "absolute-path",
+        "relative-path",
+        "cwd",
+        "path-separator"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "absolute-path",
+      "t": "Absolute path",
+      "he": "נתיב מוחלט",
+      "d": "נתיב שמתחיל מהשורש ומזהה קובץ חד משמעית ללא תלות בתיקיית העבודה",
+      "rel": [
+        "fs-paths",
+        "relative-path"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "relative-path",
+      "t": "Relative path",
+      "he": "נתיב יחסי",
+      "d": "נתיב שנפתר ביחס לתיקיית העבודה של התהליך, ולכן מצביע על יעד אחר מכל תיקייה",
+      "rel": [
+        "fs-paths",
+        "cwd"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "cwd",
+      "t": "Current working directory",
+      "he": "תיקיית עבודה נוכחית",
+      "d": "תכונה של תהליך שכל נתיב יחסי שלו נפתר ביחס אליה; משתנה עם cd ונקראת עם pwd",
+      "rel": [
+        "fs-paths",
+        "relative-path",
+        "process"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "path-separator",
+      "t": "Path separator",
+      "he": "תו מפריד נתיב",
+      "d": "התו שמפריד רכיבי נתיב: / ב-POSIX ו-\\ ב-Windows, שמקבל גם /",
+      "rel": [
+        "fs-paths"
+      ],
+      "node": "os"
+    },
+    {
+      "id": "path-traversal",
+      "t": "Path traversal",
+      "he": "מעבר נתיב",
+      "d": "חולשה שבה קלט משתמש המכיל .. יוצא מהתיקייה המיועדת; נחסמת בפתירה לנתיב מוחלט ובדיקת הכלה",
+      "rel": [
+        "fs-paths",
+        "relative-path"
+      ],
+      "node": "os"
     }
   ]
 }

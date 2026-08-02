@@ -2678,6 +2678,28 @@
     "relative-path"
    ],
    "node": "os"
+  },
+  {
+   "id": "binding-address",
+   "t": "Binding address",
+   "he": "כתובת האזנה",
+   "d": "הכתובת שעליה שרת בוחר לקבל חיבורים; 127.0.0.1 רק מקומי, 0.0.0.0 כל הממשקים",
+   "rel": [
+    "loopback",
+    "port"
+   ],
+   "node": "os"
+  },
+  {
+   "id": "ss-command",
+   "t": "ss",
+   "he": "ss",
+   "d": "כלי שורת פקודה לינוקסי שמציג חיבורי רשת ומאזינים; ss -tlnp מציג מאזיני TCP עם פרטי תהליך",
+   "rel": [
+    "binding-address",
+    "port"
+   ],
+   "node": "os"
   }
  ],
  "items": [

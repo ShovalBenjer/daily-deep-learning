@@ -1,4 +1,4 @@
-# DESIGN.md — the binding style contract of הסדנה
+# DESIGN.md: the binding style contract of הסדנה
 
 Status: BINDING. Every UI change (human or agent) obeys this file or updates it
 first. This is the "lock-in" artifact: slop happens when each screen re-decides;
@@ -14,7 +14,7 @@ spark. Every event is performed like a game, never announced like a website.
 If a new surface can't be described in this fiction's language, it isn't
 designed yet.
 
-## Fiction map (diegetic taxonomy — classify every element)
+## Fiction map (diegetic taxonomy, classify every element)
 
 | Element | Class | Treatment |
 |---|---|---|
@@ -33,8 +33,25 @@ designed yet.
   oracle/architect/warden.
 - Rarity ramp `--r0..--r4` = LEVELS ONLY (gray→green→blue→violet→gold).
   Color is grammar, never decoration.
-- Type voices: Frank Ruhl Libre serif (display, ENGRAVED via --engrave-lo/hi;
-  body); IBM Plex Mono for data/code. No third voice.
+- Type voices (three roles, each with exactly one job):
+  1. Frank Ruhl Libre serif = DISPLAY and brand only. Wordmark, all headings,
+     the illuminated day-stamp, wax-seal letters, ritual titles and numerals,
+     the big hire numeral (.hb-count) and the ghost tier numeral
+     (.tp-tier::before). ENGRAVED via --engrave-lo/hi. This is the
+     ink-paper-rubrication anchor (docs/PRODUCT-SPEC.md section 8); it never
+     leaves the display tier.
+  2. Rubik sans = BODY and UI. Long-form reading, buttons, tabs, chips,
+     inputs, quiz options, syllabus rows, count badges, and the in-widget
+     canvas labels. Chosen for iPhone-Safari Hebrew legibility at 17.5px/1.8
+     and a lightly game-like warmth; it reaches weight 900, so UI emphasis
+     (.finish-day, .tab-badge, .qz-pts) keeps its punch after leaving the
+     serif. Weights loaded: 400 (read), 700 (label), 900 (UI display).
+  3. IBM Plex Mono = data and code. Unchanged: the code element, numeric
+     readouts, and the five monospace value labels inside the canvas widgets.
+  No fourth voice. A serif element in the body flow, or a sans heading, is a
+  bug, not a variation. The seam is in style.css: body carries Rubik; the
+  engraved display group plus (h2, h3, .wordmark, .rt-num, .mark, .pts-float)
+  re-assert the serif; .hb-count and .tp-tier::before keep it hardcoded.
 - Texture: film grain overlay (--grain-op) + baked feTurbulence parchment on
   framed surfaces. Texture over translucency, always.
 
@@ -67,6 +84,9 @@ Inter/Roboto/system-default display type · purple→blue gradients · glass
 grids · emoji as icons · stock photos · scattered random micro-interactions ·
 decorative color · centered hero with vague copy · gradient banner headers.
 These are the statistical defaults; naming them is what keeps them out.
+Exception: Rubik is the one sanctioned sans, and only in the body/UI role
+(never a display, heading, or brand face). The ban above is on sans used as
+DISPLAY type; the body/UI tier is a deliberate, contracted choice.
 
 ## Process for ANY new UI surface (agents included)
 

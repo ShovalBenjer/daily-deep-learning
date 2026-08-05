@@ -1,5 +1,5 @@
 {
- "note": "v2 (2026-07-25): 42 nodes over 5 named tiers per tree, per MASTER-PLAN. Points EARNED from answers, SPENT by choice. Tier t opens at 3*t spent in tree AND learner level >= tier_levels[t]. Ranks 4-5 on skill-linked nodes are EVIDENCE-GATED by the ledger. Old node ids preserved (S.ranks survive).",
+ "note": "v2 (2026-07-25), node count corrected 2026-07-31: 16 nodes over 5 named tiers per tree (4/4/4/3/1), 48 total. The earlier '42 per tree' was never true on disk. Points EARNED from answers, SPENT by choice. Tier t opens at 3*t spent in tree AND learner level >= tier_levels[t]. Ranks 4-5 on skill-linked nodes are EVIDENCE-GATED by the ledger. Old node ids preserved (S.ranks survive).",
  "max_rank": 5,
  "tier_gate": 3,
  "tier_levels": [
@@ -54,6 +54,11 @@
    "from": "secrets-auth",
    "to": "sec-gov",
    "note": "least privilege מתחיל בסודות"
+  },
+  {
+   "from": "frontend",
+   "to": "evals-obs",
+   "note": "juice בלי מדידה הוא ניחוש"
   }
  ],
  "trees": [
@@ -332,7 +337,16 @@
        ],
        "skills": [
         "react-next",
-        "typescript"
+        "typescript",
+        "game-ui",
+        "game-feel"
+       ],
+       "quests": [
+        "פתח את מושגי החזית באוצר וענה על הבוחן.",
+        "בחר שלושה מסכים ב-Game UI Database ותאר מה ההיררכיה המרחבית שלהם עושה: מה נקרא ראשון, מה נדחק לפריפריה, מה נעלם בזמן לחץ.",
+        "הסבר את ההבדל בין diegetic ל-non-diegetic UI, ותן דוגמה אחת מכל סוג עם הסיבה לבחירה.",
+        "ממש רכיב אחד בסדנה עם juice מדוד: easing, מצב לחיצה טקטילי, ומשוב שגיאה. הראה לפני ואחרי.",
+        "הגן: מתי juice פוגע בשימושיות? הבא מקרה מהסדנה שבו הורדת אנימציה, ומה מדדת."
        ]
       },
       {
@@ -395,7 +409,18 @@
         "fde",
         "swe"
        ],
-       "req": "frontend"
+       "skills": [
+        "render-modes",
+        "realtime-viz"
+       ],
+       "req": "frontend",
+       "quests": [
+        "פתח את מושגי חוויית ה-AI באוצר וענה על הבוחן.",
+        "הסבר את שלושת מצבי הרינדור: retained DOM, immediate mode, ו-GPU native. מה כל אחד משלם ומה כל אחד קונה.",
+        "מדוד את התקרה בפועל: כמה צמתים הסדנה מרנדרת לפני שהיא יורדת מ-60fps. אל תצטט מספר מהמסמך, תריץ.",
+        "בנה ויזואליזציה אחת בזמן אמת עם פריסה מונעת כוחות, ומדוד frame time מול הגרסה הסטטית.",
+        "הגן: מתי immediate mode הוא הבחירה הלא נכונה כאן? הסדנה היא PWA בלי bundler, מה זה אוסר."
+       ]
       },
       {
        "id": "llm-core",

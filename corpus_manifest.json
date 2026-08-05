@@ -1,5 +1,5 @@
 {
-  "note": "Living syllabus source manifest. The weekly council diffs the Drive folder against this list, ingests new docs (topic_pools, ladder items, paper cards, judgment scenarios), and records them here. Status: ingested | pending | context-only. paper_card_queue: subjects for the daily מעקב section to turn into paper cards. judgment_scenario_ideas: decision-rule seeds for שיקול דעת. review_backlog: wrong/low-confidence topics from sync state, appended weekly, drawn by Saturday raids.",
+  "note": "Living syllabus source manifest. The weekly council diffs the Drive folder against this list, ingests new docs (topic_pools, ladder items, paper cards, judgment scenarios), and records them here. Status: ingested | pending | context-only. paper_card_queue: subjects for the daily מעקב section to turn into paper cards. judgment_scenario_ideas: decision-rule seeds for שיקול דעת. review_backlog: wrong/low-confidence topics from sync state, appended weekly, drawn by Saturday raids. council_log: one entry per council run, including blocked runs — a run that could not enumerate the corpus must say so here rather than leave the history looking unbroken.",
   "drive_folder": "1gPWBY7buiDUKze_HUxRp9E1v2aK389Oc",
   "docs": [
     { "name": "the_living_codex_full_build_prompt.md", "status": "ingested", "into": "product design: quests, mastery ranks, no-guilt mechanics, starter topic pools" },
@@ -29,5 +29,17 @@
   "judgment_scenario_ideas": [
     { "idea": "זרימת תמלולי call-center לתוך סוכן: לבחור בין redaction / tokenization / pseudo-anonymization / hashing. הכלל: redaction כשהסוכן לא צריך את הערך, tokenization כשצריך להפנות בלי לראות, pseudo-anonymization כשניתוח דורש קוהרנטיות סמנטית, hashing לקורלציה בין רשומות; והאכיפה ב-gateway, לא בפרומפט", "domain": "architecture/operations", "source_doc": "MCP Sensitive Data Integration Best Practices.md" }
   ],
-  "review_backlog": []
+  "review_backlog": [],
+  "council_log": [
+    {
+      "date": "2026-07-26",
+      "slot": "day 6 of 70, week 1, season 1",
+      "result": "blocked: corpus could not be enumerated",
+      "corpus_diff": "NOT RUN. Neither corpus source was reachable from this session. (a) 'gws drive files list' on folder 1gPWBY7buiDUKze_HUxRp9E1v2aK389Oc: denied, command needs approval and the run was non-interactive. (b) local mirror 'C:/Users/shova/Downloads/new-recruit/Perplexity research': denied, outside the session working directory (Glob and ls both refused). Because zero filenames were obtained, NO doc entry was added, and no existing entry was flipped to pending — the manifest's 20 rows are unverified this week, not known-unreadable. Nothing was ingested: no topic_pools, ladder, paper_card_queue or judgment_scenario_ideas changes.",
+      "review_backlog_this_week": "left empty on evidence, not on ignorance. The sync endpoint itself was unreachable this run (reading daemon/.key and the curl to sadna-sync were both denied), but the generator runs that DID read it recorded the state in their own opening lines: posts/2026-07-23.md line 3 = both prior pages read, zero answers recorded; posts/2026-07-24.md line 3 = one recorded answer, correct, confidence 70. Under ROUTINE.md rule 1 a backlog item needs ok=false OR conf<50, so days 1-4 yield zero qualifying topics. UNVERIFIED WINDOW: days 5-6 (2026-07-25, 2026-07-26) — the day-5 generation run also had the sync endpoint network-denied (daemon/fallback.log:78) and neither post carries a state line, so any answers from those two days are unknown to this council.",
+      "season_proposals": "correctly not applicable. Season 1 runs day 1 (2026-07-21) to day 70 (2026-09-28); the last week of the season is days 64-70 (2026-09-22 to 2026-09-28). Today is day 6, so no spine proposals were drafted. The first council that must draft them is the one falling inside that window.",
+      "resume_ledger_sync": "NOT RUN. The ROUTINE.md section 0 council duty 'py tools/sync_resume_skills.py' was denied; it reads new-recruit/resumes_2026/gen.py, which is outside the working directory. skills.json is therefore unchanged and any resume claim added in the last week is still untracked.",
+      "next_action": "re-run the council with the corpus and network grants its own runner assumes. daemon/council.cmd:5 invokes claude with --dangerously-skip-permissions; this session ran with permissions enforced, which is why every out-of-directory read, the gws call, the curl, and the resume sync were all refused. Until then the corpus diff for the week of 2026-07-20 remains outstanding."
+    }
+  ]
 }

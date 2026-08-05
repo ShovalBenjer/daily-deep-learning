@@ -104,112 +104,75 @@
       {
        "day": 5,
        "date": "2026-07-25",
-       "title": "שבת: פשיטת שליפה",
-       "source": "raid",
-       "topics": [
-        "spaced retrieval",
-        "MDP",
-        "REINFORCE",
-        "advantage",
-        "behavior cloning",
-        "value functions"
-       ],
-       "nodes": [
-        "optimization",
-        "prob-stats",
-        "ml-applied"
-       ],
-       "skills": [
-        "rl"
-       ],
-       "status": "done",
-       "why": "שליפה מרווחת על כל השבוע: זה מה שהופך קריאה לזיכרון."
-      },
-      {
-       "day": 6,
-       "date": "2026-07-26",
-       "title": "ראשון: תיקון וסינתזה - Advantage, Binary Search ו-SRE",
-       "source": "repair",
-       "topics": [
-        "advantage",
-        "discounted-return",
-        "actor-critic",
-        "binary-search",
-        "RAG",
-        "error-budget",
-        "SRE"
-       ],
-       "nodes": [
-        "optimization",
-        "dsa",
-        "rag-search",
-        "sre"
-       ],
-       "skills": [
-        "rl",
-        "python",
-        "azure-foundry"
-       ],
-       "status": "done",
-       "why": "ללמד מחדש את המושג החלש של השבוע, ולגשר לשבוע הבא."
-      },
-      {
-       "day": 7,
-       "date": "2026-07-27",
-       "title": "Actor-Critic: שני ראשים, צעד אחד",
+       "title": "Actor-Critic: לשפוט צעד לפני שהמשחק נגמר",
        "source": "CS224R הרצאה 2 חלק 2",
        "topics": [
         "actor-critic",
-        "td-error",
-        "online-learning",
         "bootstrapping",
-        "keyset-pagination",
-        "yaml"
+        "TD error",
+        "semi-gradient",
+        "n-step return",
+        "moving target"
        ],
        "nodes": [
         "optimization",
-        "ml-applied"
+        "ml-applied",
+        "config-lang",
+        "azure-core",
+        "arch"
        ],
        "skills": [
         "rl",
         "pytorch",
-        "yaml"
+        "yaml",
+        "azure-foundry"
        ],
        "status": "done",
        "why": "המבקר לומד ערכים, השחקן לומד מדיניות: הארכיטקטורה שממנה הכל נבנה."
-      }
-     ]
-    },
-    {
-     "w": 2,
-     "theme": "CS224R L2: Policy gradients ו-GAE",
-     "days": [
+      },
       {
-       "day": 8,
-       "date": "2026-07-28",
-       "title": "GAE: הגשר בין TD ל-Monte Carlo",
-       "source": "CS224R הרצאה 2 (המשך)",
+       "day": 6,
+       "date": "2026-07-26",
+       "title": "TD(λ) ו-GAE: ידית אחת בין הטיה לשונות",
+       "source": "repair",
        "topics": [
-        "n-step-return",
-        "gae",
+        "spaced retrieval",
         "lambda-return",
-        "bias-variance-spectrum",
-        "eligibility-traces",
-        "sql-window-functions",
-        "multi-agent-orchestration"
+        "TD(lambda)",
+        "GAE",
+        "effective horizon",
+        "done mask",
+        "truncation vs termination"
        ],
        "nodes": [
         "optimization",
         "prob-stats",
-        "ml-applied"
+        "ml-applied",
+        "dsa",
+        "azure-core",
+        "sre"
        ],
        "skills": [
         "rl",
-        "sql",
+        "pytorch",
         "azure-foundry"
        ],
        "status": "done",
-       "why": "GAE סוגר את הפרק בין TD ל-MC: האומדן שמאחורי PPO וכל ה-RL המודרני."
+       "why": "יום תיקון: שליפה על כל השבוע, ואז הידית שמאחדת את מונטה קרלו ואת TD לאובייקט אחד שממנו שבוע 2 מתחיל."
+      },
+      {
+       "day": 7,
+       "date": "2026-07-27",
+       "title": "ראשון: תיקון וסינתזה",
+       "source": "repair",
+       "topics": [
+        "Feynman",
+        "synthesis"
+       ],
+       "nodes": [],
+       "skills": [],
+       "status": "planned",
+       "why": "ללמד מחדש את המושג החלש של השבוע, ולגשר לשבוע הבא."
       }
      ]
     }

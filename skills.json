@@ -195,6 +195,54 @@
       "resume_risk": true
     },
     {
+      "id": "game-ui",
+      "name": "Game UI patterns (HUD, skill trees, inventory)",
+      "area": "frontend",
+      "arms": [
+        2,
+        5
+      ],
+      "target": 3,
+      "current": 0,
+      "resume_risk": false
+    },
+    {
+      "id": "game-feel",
+      "name": "Game feel: juice, easing, tactile state",
+      "area": "frontend",
+      "arms": [
+        2,
+        5
+      ],
+      "target": 3,
+      "current": 0,
+      "resume_risk": false
+    },
+    {
+      "id": "render-modes",
+      "name": "Render paradigms: retained DOM, immediate mode, GPU",
+      "area": "frontend",
+      "arms": [
+        2,
+        5
+      ],
+      "target": 4,
+      "current": 0,
+      "resume_risk": false
+    },
+    {
+      "id": "realtime-viz",
+      "name": "Real-time visualization and physics-driven layout",
+      "area": "frontend",
+      "arms": [
+        2,
+        5
+      ],
+      "target": 3,
+      "current": 0,
+      "resume_risk": false
+    },
+    {
       "id": "react-next",
       "name": "React / Next.js",
       "area": "frontend",

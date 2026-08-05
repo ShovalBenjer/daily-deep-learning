@@ -1,76 +1,146 @@
 # AGENTS.md
 
-This file provides single-authority guidance to AI agents (Claude, Codex, etc.) working in this repository.
+This file provides single-authority guidance to AI agents (Claude, Codex, etc.) working in this repository. CLAUDE.md is an @AGENTS.md include.
 
-## What this repo is
+## What this is
 
-The harness itself: rules, hooks, skills, schedulers, review fabric, and the tools that check whether any of it actually works. There is no application here, nothing is served, and there is no build output. Most "code" is a verification instrument whose job is to disagree with an agent's own report.
-
-The `dot-*` trees are payload, not live config. `dot-claude/` is the committed copy of `~/.claude`, `dot-codex/` of `~/.codex`, `dot-agents/` the agent skills tree. Editing a file under `dot-claude/` changes nothing about a running session until it is deployed, and the live tree can also drift ahead of the repo. `python tools/audit/skills_sync.py check` measures that drift in both directions.
-
-## Starting a session
-
-`docs/SESSION-BOOT.md` is the boot path. Two steps in it are easy to skip and are the ones that keep failing:
-
-- Name your lane from `docs/charters.md` (harness work is lane A; the letters were renumbered from B/C/D/E on 2026-07-30 by ADR-0016, so an older row saying B means this lane) and append a claim row to `state/claims.jsonl` before starting. Doing another lane's work is the most frequently logged entry in `state/lessons.jsonl`.
-- Ground truth is git plus the files under `state/`, never a doc. `docs/analysis/` and `work-docs/` are dated snapshots and several are knowingly stale.
-
-Design decisions run `/diverge` first (charters rule 2). Work ships through a PR, not a push to main (ADR-0012).
+הסדנה: a single-user, RTL Hebrew, phone-first learning PWA deployed as a static
+Cloudflare Pages site (daily-deep-learning.pages.dev). One operator, one learner.
+A scheduled agent writes a daily Hebrew lesson; the app turns fenced JSON blocks
+inside that markdown into live quizzes, fill-ins and canvas widgets, awards XP
+into a three-tree talent board, and syncs learner state through a Cloudflare
+Worker. There is no bundler, no framework, and no root `package.json` by design.
 
 ## Commands
 
 ```bash
-python tools/gate/gate.py run --project . -v   # the full 12-domain contract
-python tools/gate/gate.py status               # last verdict from the run ledger
+# serve locally (this is what the gate's app.url expects to be already up)
+python -m http.server 8080
 
-python -m pytest tests/ -q                     # root suite, ~47s, 70 tests
-python -m pytest tests/test_codemap.py -q      # one file
-python -m pytest tests/test_codemap.py::test_name -q
-cd intent-control-plane && uv run pytest -q    # the only packaged subproject
-cd intent-control-plane && uv run ruff check . && uv run mypy   # lint/types exist only here
+# content-graph integrity: the one check CI actually runs before deploy
+python tools/validate_links.py
+
+# syntax sweep (the "types" gate domain; there is no typecheck or lint config)
+node --check sw.js && python tools/check_inline_js.py && python -m compileall -q tools
+
+# boundary tests (bun). NOT hermetic: hits the LIVE Worker and localhost:8788
+bun test tests/boundaries.test.ts
+bun test tests/boundaries.test.ts -t "worker: POST oversize"   # single test
+
+# teacher daemon (required by 4 of the 10 boundary tests, and by in-app chat)
+cd daemon && bun run server.ts
+
+# full quality gate (external, in claude-setup). RUN FROM POWERSHELL, NOT GIT BASH
+python C:/Users/shova/claude-setup/tools/gate/gate.py run --project .
+
+# screenshot the live or local site over CDP (Chrome must already be running)
+python tools/cdp.py http://localhost:8080 shots/local
+python tools/measure_shots.py shots/local      # route height in phone screens
+
+# manual deploy (pushes to main also deploy via .github/workflows/deploy.yml)
+bun x wrangler pages deploy . --project-name daily-deep-learning
 ```
 
-Every oracle carries its own selftest, and CI runs them as named steps so a regression is attributable:
+Git Bash mangles a bare `/` route argument into a Windows path before the e2e
+harness sees it, which surfaces as a bogus websocket failure. Reproduced three
+times; use PowerShell for anything that passes routes as arguments.
 
-```bash
-python tools/gate/gate.py selftest
-python tools/review/panel.py selftest
-python tools/bus/bus.py selftest
-python tools/refute/refute.py selftest
-python tools/skilleval/run.py selftest
-python tools/snapshot/snap.py selftest
-python tools/audit/skills_sync.py selftest
-python tools/audit/mutate.py --spec all        # proves those selftests can go red; slowest check
-```
+## Architecture
 
-Repo upkeep that the gate reads:
+**One file is the app.** `index.html` (~2079 lines) holds a ~113 KB inline
+`<script>` that is the entire client: state store, hash router, all view
+renderers, the quiz/fillin/widget builders, the SRS engine, the talent board and
+the chat pane. `boot()` runs `Promise.allSettled` over nine root JSON files, so
+each data source degrades independently and only `posts/index.json` is required.
+`route()` dispatches `#/map`, `#/ladder`, `#/kodex`, `#/discover`, `#/doc/{slug}`,
+`#/YYYY-MM-DD`, and otherwise renders today's post or the newest one.
 
-```bash
-python tools/map/codemap.py check              # directory purposes + map freshness
-python tools/map/codemap.py write              # regenerate after adding a directory
-python tools/map/codemap.py prior-art          # 300+ line components owe a record
-python tools/review/panel.py run --project .   # writes state/reviews/<sha>.json
-python tools/audit/pointers.py scan            # hooks and skills that are dead paths
-python tools/refute/refute.py run              # run each claim's own falsifier
-python tools/slop_lint.py <file.md>            # prose gate, exit 1 on hits
-```
+**Content is markdown plus fenced JSON.** `posts/YYYY-MM-DD.md` carries five
+`##` sections with exact Hebrew prefixes the UI keys on (עיון, תרגול, AI-103,
+מעקב, שיקול דעת). `upgradeBlocks()` replaces ` ```quiz `, ` ```fillin `,
+` ```widget ` and ` ```concepts ` fences with live components. Correct answers
+call `award(tree, pts, ...)`, which is what feeds the board, so the `tree` field
+in a block decides where points land. Full authoring contract: `ROUTINE.md`.
 
-## How verification is arranged
+**The data graph is the product model.** `talents.json` (nodes, tiers, ranks,
+quests), `skills.json` (0-5 mastery ledger, `resume_risk`, per-arm tags),
+`concepts.json` (codex graph), `syllabus.json` (day spine), `course_plan.json`
+(seasons, topic pools, scan sources), `judgment_map.json`, `research_ladder.json`,
+`discoveries.json`. Ids cross-reference between files; `tools/validate_links.py`
+is the only thing preventing orphans and it runs in CI, so any data edit should
+be followed by it.
 
-`quality-contract.json` declares the domains; `docs/QUALITY-CONTRACT.md` holds the reasoning for each scope. The contract carries no measured status on purpose, since a file that states its own result goes stale the first time somebody fixes something. A domain counts as covered only when a command exits zero or a named artifact exists for the current commit. Unconfigured is UNCOVERED, and UNCOVERED fails.
+**State crosses a network boundary twice.** The browser keeps state in
+`localStorage` under `sadna-state` and pushes it to the `sadna-sync` Cloudflare
+Worker (`sadna-sync/worker.js`, bearer `SYNC_KEY`, single KV key, 300 KB cap).
+The daily generator reads that same state to personalize the next lesson. The
+in-app teacher posts to a Bun daemon (`daemon/server.ts`, Claude Agent SDK,
+custom tools `get_state` / `get_today_page` / `save_note`) reached over a
+cloudflared quick tunnel whose URL the daemon registers into sync state. The
+daemon's bearer key lives in `daemon/.key`, gitignored, and the boundary tests
+read it directly.
 
-The layering is contract, then oracle, then that oracle's selftest, then a mutation that must turn the selftest red. `.github/workflows/ship-gate.yml` splits these across three jobs and its header comment states exactly what each job does and does not cover. Read that comment before renaming or wrapping anything in it: the `pipeline` domain greps the workflow files for a literal `gate.py run` invocation.
+**Service worker.** `sw.js` precaches the shell and vendored libraries, serves
+data files fresh and the shell network-first. Its cache constant `V` must be
+bumped when shell assets change or phones keep the old build.
 
-## Gotchas
+## Contracts that bind before you edit
 
-- `docs/CODEBASE-MAP.md` is generated. A hand edit reads as drift and fails `codemap.py check`. To change a directory's purpose, edit that directory's own `SKILL.md` or `README.md`, or its row in `docs/dir-purpose.txt`. A row beside a self-documenting directory is an error, not an override.
-- A new tracked directory with no stated purpose fails the gate. A new Python component over 300 lines owes `docs/prior-art/<name>.json` with real named alternatives and an expiry date; an empty alternatives list fails.
-- The `review` domain matches its artifact by commit sha rather than by tree, so a verdict written against a dirty tree keeps reading as current for that commit.
-- Roughly half of `dot-claude/hooks` and about a dozen `dot-claude/skills` entries are one-line stubs naming `~/.codex` paths that do not exist on this machine. A hook that cannot run fails open and reports nothing. `tools/audit/pointers.py scan` is the check for it.
-- Windows specifics, both documented in `docs/QUALITY-CONTRACT.md` and deliberately unwaived: three `intent-control-plane` tests fail on a sqlite handle still open at `TemporaryDirectory` teardown, and `tools/whatsapp/cdp_driver.py` plus `tools/setup_token_pty.py` import packages declared in no manifest, so the `build` domain does not claim those two run.
-- Prose is gated. No emoji, and `tools/slop_lint.py` fails on a spaced em or en dash used as a connector, plus a banned-phrase list.
-- `state/*.jsonl` are append-only ledgers. `state/bus.jsonl` is hash-chained and `python tools/bus/bus.py verify` checks it, so rewriting history there is visible.
+- `DESIGN.md` — BINDING for every UI change. Name the direction in the fiction's
+  language first, classify the element in the fiction map, obey the tokens in
+  `style.css :root`, one spring family, everything reduced-motion gated. The
+  avoid-list is explicit and is the point of the file.
+- `ROUTINE.md` — the daily generator's contract: slot rules, personalization
+  from learner state, per-section structure and word budgets, block JSON shapes,
+  index/syllabus/concepts updates, the commit format.
+- `docs/REQUIREMENTS-OF-RECORD-2026-07-26.md` — R1..R38, the operator's own
+  words with MET/PARTIAL/UNMET status. This is the requirement source; do not
+  invent product requirements next to it.
+- `docs/ENGINEERING-STANDARDS-2026-07-26.md` — stack justification, Google-style
+  docstrings with Purpose/Contracts/Agent-context, size budgets (function target
+  20, hard 50), the measured gap table and its fix order.
+- `docs/CODEBASE-MAP.md` — line-cited file map, kept current.
+- `quality-contract.json` — what each gate domain runs and why, with the evidence
+  from the run that produced it. Read the `_comment` fields before trusting or
+  changing a domain.
+- `docs/PRODUCT-MODEL-2026-07-26.md` and `docs/SYSTEM-SPEC-2026-07-26.md` are
+  SPECIFIED, not built. Do not read them as descriptions of running code.
 
-## Where the rest lives
+## Non-goals (stated so they stop being re-proposed)
 
-`CLAUDE-OS.md` is the spine (layers L0 to L8, the deep-work protocol, the supersession table). `docs/INDEX.md` indexes the PRDs, specs, and 15 ADRs; the ones that bind day-to-day work are 0005 enforcement over prose, 0010 disk is memory, 0012 autonomy ships only via the PR gate, and 0013 the lane topology. `TODO.md` is the single ticket list and `tools/selfimprove/scan.py` ranks what to pick up next.
+No bundler, no framework, no npm at the root: a build step regresses the
+offline-first posture. No native app, no multi-user, no auth beyond the existing
+bearer keys, no server-side rendering. Libraries are vendored into `vendor/`
+(KaTeX, marked, DOMPurify plus fonts) rather than loaded from a CDN.
+
+## Known traps
+
+- **Deploy the staged tree, never the repo root.** `wrangler pages deploy` has
+  no ignore-file mechanism, so `pages deploy .` publishes `docs/`, `state/` and
+  `writing/drafts/`. `tools/stage_site.py` builds `dist/` from a default-deny
+  allowlist (`SHIP`) and exits non-zero if a forbidden path reaches it; both
+  workflows run it. A new runtime asset must be added to `SHIP` or the deployed
+  app 404s on it.
+- **The GitHub remote is PUBLIC**, and the Pages allowlist does not protect it.
+  Anything committed is published on github.com/ShovalBenjer/daily-deep-learning
+  regardless of what the site serves. Planning documents under `docs/` are
+  deliberately untracked for this reason. Never commit personal data (grades,
+  transcripts, PII, private message drafts), and never commit a document that
+  enumerates security exposure in other repositories.
+- **The gate depends on untracked files.** `git ls-files tools/` returns 7 of the
+  15 scripts present; `tools/check_inline_js.py` is required by the types domain
+  and is not tracked, so CI cannot reproduce that domain today.
+- **The local server does not apply `_headers`.** CSP and the security headers
+  are only real on a deploy, so header-dependent behavior cannot be verified at
+  localhost:8080.
+- **`tree3d.js` is dead.** Nothing loads it; its only footholds are the `sw.js`
+  precache list and the types gate, and its jsdelivr import is the sole reason
+  CSP allows jsdelivr.
+- **Known, dated debt:** the 113 KB inline script exceeds every module budget.
+  Splitting it needs either the rejected bundler or ES modules, which changes
+  the CSP and service-worker story.
+- **Content style:** Hebrew body with English technical nouns, inline Hebrew
+  gloss on first use, no em-dash or en-dash, no emoji, KaTeX delimiters `\(...\)`
+  and `\[...\]` and never bare `$`. No stock photos anywhere in the product.
+- Never edit past posts. A day's file is written once; if
+  `posts/YYYY-MM-DD.md` exists the generator stops and changes nothing.

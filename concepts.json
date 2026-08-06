@@ -2993,6 +2993,29 @@
     "c-prefill-decode"
    ],
    "node": "llm-core"
+  },
+  {
+   "id": "topn-per-group",
+   "t": "Top-N per group",
+   "he": "N ראשונים לכל קבוצה",
+   "d": "תבנית CTE+ROW_NUMBER לחילוץ N השורות בעלות הערך הגבוה ביותר לכל ערך partition",
+   "rel": [
+    "c-row-number",
+    "c-rank-dense-rank",
+    "c-window-function"
+   ],
+   "node": "sql-core"
+  },
+  {
+   "id": "ntile",
+   "t": "NTILE(n)",
+   "he": "חלוקה לדליים",
+   "d": "מחלק שורות ל-n קבוצות שוות ומחזיר מספר קבוצה; שימושי לאחוזונים",
+   "rel": [
+    "c-rank-dense-rank",
+    "topn-per-group"
+   ],
+   "node": "sql-core"
   }
  ]
 }

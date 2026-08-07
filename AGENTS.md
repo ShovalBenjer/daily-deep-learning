@@ -30,15 +30,22 @@ bun test tests/boundaries.test.ts -t "worker: POST oversize"   # single test
 # teacher daemon (required by 4 of the 10 boundary tests, and by in-app chat)
 cd daemon && bun run server.ts
 
-# full quality gate (external, in claude-setup). RUN FROM POWERSHELL, NOT GIT BASH
+# full quality gate (external, in claude-setup). Both trees exist as of
+# 2026-08-07; the WSL one is authoritative since the estate moved there.
+python3 /home/shov/claude-setup/tools/gate/gate.py run --project .
+# Windows-side equivalent. RUN FROM POWERSHELL, NOT GIT BASH (see below).
 python C:/Users/shova/claude-setup/tools/gate/gate.py run --project .
 
 # screenshot the live or local site over CDP (Chrome must already be running)
 python tools/cdp.py http://localhost:8080 shots/local
 python tools/measure_shots.py shots/local      # route height in phone screens
 
-# manual deploy (pushes to main also deploy via .github/workflows/deploy.yml)
-bun x wrangler pages deploy . --project-name daily-deep-learning
+# manual deploy (pushes to main also deploy via .github/workflows/deploy.yml).
+# STAGE FIRST. `pages deploy .` publishes docs/, state/ and writing/drafts/,
+# which is the repo's own first Known trap; this block used to hand you exactly
+# that command. Corrected 2026-08-07.
+python3 tools/stage_site.py dist
+bun x wrangler pages deploy dist --project-name daily-deep-learning
 ```
 
 Git Bash mangles a bare `/` route argument into a Windows path before the e2e
@@ -47,20 +54,32 @@ times; use PowerShell for anything that passes routes as arguments.
 
 ## Architecture
 
-**One file is the app.** `index.html` (~2079 lines) holds a ~113 KB inline
+**One file is the app.** `index.html` (2567 lines) holds a ~139 KB inline
 `<script>` that is the entire client: state store, hash router, all view
 renderers, the quiz/fillin/widget builders, the SRS engine, the talent board and
-the chat pane. `boot()` runs `Promise.allSettled` over nine root JSON files, so
-each data source degrades independently and only `posts/index.json` is required.
-`route()` dispatches `#/map`, `#/ladder`, `#/kodex`, `#/discover`, `#/doc/{slug}`,
-`#/YYYY-MM-DD`, and otherwise renders today's post or the newest one.
+the chat pane. `boot()` runs `Promise.allSettled` over eleven root JSON files
+(index.html:2525), so each data source degrades independently and boot survives
+as long as EITHER `posts/index.json` or `curriculum.json` arrives. `route()`
+dispatches `#/map`, `#/ladder`, `#/kodex`, `#/discover`, `#/mentor`,
+`#/doc/{slug}`, `#/history`, `#/u/{unit-id}` and `#/YYYY-MM-DD`, and otherwise
+renders the home screen off `curriculum.json`.
 
-**Content is markdown plus fenced JSON.** `posts/YYYY-MM-DD.md` carries five
-`##` sections with exact Hebrew prefixes the UI keys on (עיון, תרגול, AI-103,
-מעקב, שיקול דעת). `upgradeBlocks()` replaces ` ```quiz `, ` ```fillin `,
-` ```widget ` and ` ```concepts ` fences with live components. Correct answers
-call `award(tree, pts, ...)`, which is what feeds the board, so the `tree` field
-in a block decides where points land. Full authoring contract: `ROUTINE.md`.
+**The unit is the content model; the dated post is an archive.** The daily
+generator writes `units/<id>.md` plus a `curriculum.json` entry and commits as
+`unit: <id>`; `ROUTINE.md` is its binding contract and is current. `curriculum.json`
+holds every unit and `tools/build_curriculum.py` owns which units exist. The home
+screen proposes exactly one next unit from `rankedUnits()` with a swap, so there
+is no date anywhere in the boot path. The eight `posts/YYYY-MM-DD.md` files,
+ending 2026-07-28, are reachable only at `#/history`; a session that reads
+`posts/` alone will wrongly conclude the daily agent stopped ten days ago.
+
+**Both formats are markdown plus fenced JSON.** A post carries five `##` sections
+with exact Hebrew prefixes the UI keys on (עיון, תרגול, AI-103, מעקב, שיקול דעת).
+`upgradeBlocks()` replaces ` ```quiz `, ` ```fillin `, ` ```widget ` and
+` ```concepts ` fences with live components in both. Correct answers call
+`award(tree, pts, ...)`, which is what feeds the board; for a unit the tree is
+resolved from the unit's own node by `treeOfNode()` (index.html:2303) rather than
+from a `tree` field, so points land where the work was done.
 
 **The data graph is the product model.** `talents.json` (nodes, tiers, ranks,
 quests), `skills.json` (0-5 mastery ledger, `resume_risk`, per-arm tags),
@@ -127,20 +146,25 @@ bearer keys, no server-side rendering. Libraries are vendored into `vendor/`
   deliberately untracked for this reason. Never commit personal data (grades,
   transcripts, PII, private message drafts), and never commit a document that
   enumerates security exposure in other repositories.
-- **The gate depends on untracked files.** `git ls-files tools/` returns 7 of the
-  15 scripts present; `tools/check_inline_js.py` is required by the types domain
-  and is not tracked, so CI cannot reproduce that domain today.
+- ~~**The gate depends on untracked files.**~~ Closed 2026-08-07. `git ls-files
+  tools/` now returns all 19 scripts present, `tools/check_inline_js.py` among
+  them, so CI can reproduce the types domain. Measured: `node --check sw.js`,
+  `python3 tools/check_inline_js.py` (prints `inline script #0 (136878 bytes):
+  ok`) and `python3 -m compileall -q tools` all exit 0.
 - **The local server does not apply `_headers`.** CSP and the security headers
   are only real on a deploy, so header-dependent behavior cannot be verified at
   localhost:8080.
 - **`tree3d.js` is dead.** Nothing loads it; its only footholds are the `sw.js`
   precache list and the types gate, and its jsdelivr import is the sole reason
   CSP allows jsdelivr.
-- **Known, dated debt:** the 113 KB inline script exceeds every module budget.
+- **Known, dated debt:** the inline script exceeds every module budget and is
+  still growing. 113 KB when this line was written, 139 KB measured 2026-08-07.
   Splitting it needs either the rejected bundler or ES modules, which changes
   the CSP and service-worker story.
 - **Content style:** Hebrew body with English technical nouns, inline Hebrew
   gloss on first use, no em-dash or en-dash, no emoji, KaTeX delimiters `\(...\)`
   and `\[...\]` and never bare `$`. No stock photos anywhere in the product.
-- Never edit past posts. A day's file is written once; if
-  `posts/YYYY-MM-DD.md` exists the generator stops and changes nothing.
+- Never rewrite a lesson that exists. The idempotency rule moved with the
+  content model: `ROUTINE.md` step 4 stops the generator dead if
+  `units/<id>.md` already exists, the same way the old rule stopped it on an
+  existing `posts/YYYY-MM-DD.md`. The eight past posts are frozen archive.

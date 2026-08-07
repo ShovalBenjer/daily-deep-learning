@@ -1,4 +1,4 @@
-const V = 'sadna-v40';
+const V = 'sadna-v41';
 const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest',
   'vendor/katex.min.css', 'vendor/katex.min.js', 'vendor/auto-render.min.js', 'vendor/marked.min.js', 'vendor/purify.min.js',
   'assets/ui/frame-plate.svg', 'assets/ui/frame-hero.svg', 'assets/ui/frame-plate-light.svg', 'assets/ui/frame-hero-light.svg',
@@ -7,7 +7,7 @@ const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest',
 const FRESH = ['/posts/', '/units/', 'judgment_map.json', 'research_ladder.json', 'course_plan.json', 'talents.json', 'corpus_manifest.json', 'concepts.json', 'discoveries.json', 'skills.json', 'syllabus.json', 'curriculum.json', 'goals.json'];
 // The shell itself is NETWORK-FIRST so an open with connectivity always gets
 // the latest app (staleness burned us repeatedly); cache is the offline fallback.
-const NETFIRST_SHELL = ['index.html', 'style.css', 'tree3d.js', 'sw.js'];
+const NETFIRST_SHELL = ['index.html', 'style.css', 'sw.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

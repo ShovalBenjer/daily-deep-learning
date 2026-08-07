@@ -154,9 +154,12 @@ bearer keys, no server-side rendering. Libraries are vendored into `vendor/`
 - **The local server does not apply `_headers`.** CSP and the security headers
   are only real on a deploy, so header-dependent behavior cannot be verified at
   localhost:8080.
-- **`tree3d.js` is dead.** Nothing loads it; its only footholds are the `sw.js`
-  precache list and the types gate, and its jsdelivr import is the sole reason
-  CSP allows jsdelivr.
+- **`tree3d.js` was dead and is gone.** Deleted 2026-08-07: nothing loaded it,
+  its only footholds were the `sw.js` precache list and the types gate. Its
+  jsdelivr import was the sole reason CSP allowed jsdelivr; that allowance
+  (`https://cdn.jsdelivr.net` in `_headers`' `script-src`) was removed with it,
+  so `script-src` is now `'self' 'unsafe-inline'` only. A future dependency on
+  jsdelivr needs its CSP entry re-added, not assumed present.
 - **Known, dated debt:** the inline script exceeds every module budget and is
   still growing. 113 KB when this line was written, 139 KB measured 2026-08-07.
   Splitting it needs either the rejected bundler or ES modules, which changes

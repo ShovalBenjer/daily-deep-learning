@@ -382,6 +382,12 @@ const sfx = (() => {
   };
 })();
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+// sndToggle exists in the DOM already (script sits at the bottom of <body>);
+// set its aria-pressed here, synchronously, so the attribute does not wait on
+// the async boot chain (Promise.allSettled fetches, pullState network round
+// trip). The .off visual class keeps its existing later timing, so appearance
+// is unchanged; this line only makes the ARIA state readable at DOM-read time.
+$('#sndToggle')?.setAttribute('aria-pressed', sfx.isOn() ? 'true' : 'false');
 
 /* ember motes: the workshop's ambient depth layer (idle-killed, motion-gated) */
 function mountMotes() {
@@ -564,6 +570,7 @@ const applyTheme = t => {
   document.documentElement.dataset.theme = t;
   $('#sunIcon').style.display = t === 'dark' ? '' : 'none';
   $('#moonIcon').style.display = t === 'dark' ? 'none' : '';
+  $('#themeToggle').setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
 };
 applyTheme(localStorage.getItem('sadna-theme2') || 'dark');
 $('#themeToggle').onclick = () => {
@@ -2542,8 +2549,9 @@ addEventListener('scroll', () => {
   mountExplainLens();
   const st = $('#sndToggle');
   if (st) {
-    st.classList.toggle('off', !sfx.isOn());
-    st.onclick = () => { const on = sfx.toggle(); st.classList.toggle('off', !on); toast(on ? 'צליל פועל' : 'צליל כבוי'); if (on) sfx.coin(); };
+    const applySndState = on => { st.classList.toggle('off', !on); st.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+    applySndState(sfx.isOn());
+    st.onclick = () => { const on = sfx.toggle(); applySndState(on); toast(on ? 'צליל פועל' : 'צליל כבוי'); if (on) sfx.coin(); };
   }
 })();
 if ('serviceWorker' in navigator) {

@@ -29,16 +29,20 @@ ROOT = Path(__file__).resolve().parent.parent
 SHIP = {
     "writing/index.html": "index.html",
     "writing/the-bench.html": "the-bench.html",
-    "writing/the-bench-v5.html": "the-bench-v5.html",
     "writing/media": "media",
     "_headers": "_headers",
 }
 
 #: SHIP sources that may legitimately be absent.
-OPTIONAL = {"writing/the-bench-v5.html"}
+OPTIONAL: set[str] = set()
 
 #: Re-checked against the staged tree. A hit means SHIP is wrong.
-FORBIDDEN = ["drafts", "v5_build.py", "docs", "state", "tools", "daemon"]
+#: the-bench-v5.html is the retired magenta/teal reskin (operator decision
+#: 2026-08-07, restoring the 2026-07-29 reframe). It stays in the repo as the
+#: record of a direction that was tried; it is named here so removing it from
+#: SHIP cannot be silently undone by a later copy step.
+FORBIDDEN = ["drafts", "v5_build.py", "the-bench-v5.html",
+             "docs", "state", "tools", "daemon"]
 
 
 def stage(out: Path) -> tuple[list[str], int]:

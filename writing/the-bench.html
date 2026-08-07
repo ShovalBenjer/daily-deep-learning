@@ -795,6 +795,16 @@ page_key = <span class="fn">PBKDF2HMAC</span>(SHA256, length=<span class="n">32<
       d.innerHTML='<div class="v">'+v+c.s+'</div><div class="k">'+c.k+'</div>';
       cw.appendChild(d);});}
 
+  // Both call sites were deleted with the count-up animation on 2026-08-07 and
+  // the loss was invisible: .counters is a bordered grid, so an empty one paints
+  // as a hairline strip rather than as nothing, and the entire cost readout was
+  // gone from the page while the section around it still read as intact.
+  counters("corpuscount",[{v:78406,s:"",d:0,k:"messages"},{v:597,s:"",d:0,k:"conversations"},
+    {v:4,s:" yrs",d:0,k:"span"},{v:49,s:" MB",d:0,k:"decrypted"},
+    {v:8852,s:"",d:0,k:"in the one thread"},{v:42,s:"",d:0,k:"the web client showed"}]);
+  counters("counters",[{v:10.5,s:"h",d:1,k:"wall clock"},{v:446.6,s:"M",d:1,k:"tokens"},
+    {v:12,s:"",d:0,k:"places checked"},{v:5,s:"",d:0,k:"wrong answers"},
+    {v:287,s:"",d:0,k:"shell commands"},{v:1,s:"",d:0,k:"bench"}]);
 })();
 </script>
 

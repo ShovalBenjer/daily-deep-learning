@@ -30,6 +30,19 @@
   --board-ink-dim: #c1b69e;
   --board-faded: #948a75;
   --board-gold-hi: #e8c988;
+  /* fixed gold/dark-ink "selected chip" face, used where dark text sits on
+     a small gold gradient badge (.arm-chip.on). --gold/--gold-hi invert their
+     light/dark relationship between themes (dark theme: hi is lighter than
+     gold; light theme: hi is DARKER), so the shared token pair genuinely
+     fails contrast for #14101a text in light theme (measured ~2.7-3.1:1,
+     not a checker artifact). Same class of problem the primary .finish-day
+     button gradient already has (see the --gold comment under
+     [data-theme="light"]) and the same reason it is not fixed by touching
+     --gold/--gold-hi themselves: that needs the full --btn-face pass named
+     there. This is the narrow, scoped fix for the one small selected-chip
+     badge, reusing dark theme's already-good pairing as fixed literals. */
+  --chip-face-hi: #e8c988;
+  --chip-face: #c9a86a;
   --green: #79b791;
   --red: #c96a5e;
   --line: #332e44;
@@ -1037,8 +1050,15 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
 .arm-chip { flex: none; min-height: 42px; padding: 0 .8rem; font-size: .78rem; font-weight: 700;
   background: var(--panel); border: 1px solid var(--line); color: var(--faded);
   border-radius: 999px; cursor: pointer; font-family: inherit; }
-.arm-chip.on { color: #14101a; border-color: var(--gold);
-  background: linear-gradient(180deg, var(--gold-hi), var(--gold)); }
+.arm-chip.on { color: #14101a; border-color: var(--chip-face);
+  /* was var(--gold)/var(--gold-hi): real sub-4.5 contrast in light theme
+     (see --chip-face-hi/--chip-face comment in :root) plus a checker gap
+     (background-image alone leaves computed backgroundColor transparent,
+     so the a11y scan attributed body bg instead of the gradient at all).
+     background-color is the solid fallback the checker reads; the gradient
+     image paints over it identically, zero visible change. */
+  background-color: var(--chip-face);
+  background-image: linear-gradient(180deg, var(--chip-face-hi), var(--chip-face)); }
 
 /* focused-arm nodes: the build for the job you are hunting */
 .tnode.focus .frame { outline: 2px dashed color-mix(in oklab, var(--gold-hi) 75%, transparent); outline-offset: 5px; }

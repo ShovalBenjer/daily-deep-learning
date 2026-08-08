@@ -17,6 +17,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       # build domain of quality-contract.json
       - name: Validate the content graph
@@ -32,6 +35,20 @@ jobs:
 
       - name: Curriculum budget against the deadline
         run: python3 tools/curriculum_budget.py
+
+      # unit domain of quality-contract.json, hermetic slice only. These five
+      # files read index.html and daemon/server_parse.ts directly (server_parse
+      # has zero imports of its own) and open no network connection, so they
+      # are safe to run on any runner with no secret. tests/boundaries.test.ts
+      # is deliberately excluded here, not deleted from the suite: it opens a
+      # live round trip to the sadna-sync Worker, which needs a SYNC_KEY this
+      # repo has no secret for (`gh secret list` shows only
+      # CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLAUDE_CODE_OAUTH_TOKEN),
+      # and 5 of its 10 tests also need a local daemon on :8788 that this
+      # runner cannot start. Full tests/boundaries.test.ts stays a local-only
+      # check; see quality-contract.json domains.pipeline for the remainder.
+      - name: Unit tests, hermetic slice
+        run: bun test tests/mentor.test.ts tests/decks.test.ts tests/contract.test.ts tests/fuzz.test.ts tests/mutation.test.ts
 
       # Fails if any forbidden path reaches the upload, so the publication
       # boundary is enforced by CI rather than by remembering.

@@ -19,7 +19,7 @@ jobs:
           node-version: '22'
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: '1.3.14'
 
       # build domain of quality-contract.json
       - name: Validate the content graph

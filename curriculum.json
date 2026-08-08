@@ -9232,6 +9232,1227 @@
    }
   },
   {
+   "id": "s5-hud-hierarchy",
+   "title": "HUD hierarchy: what is read first and what is pushed to the periphery",
+   "he": "היררכיית HUD",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "hud-hierarchy"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-hud-hierarchy-drill",
+   "title": "HUD hierarchy: what is read first and what is pushed to the periphery: drill",
+   "he": "היררכיית HUD: תרגול",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 5,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "hud-hierarchy"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 12,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-diegetic-ui",
+   "title": "Diegetic versus non-diegetic UI, and the cost of each",
+   "he": "ממשק דיאגטי מול לא-דיאגטי",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "diegetic-ui"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-skill-tree-layout",
+   "title": "Skill and talent tree layouts: gating, legibility, regret",
+   "he": "פריסת עצי כישרון",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "skill-tree-layout"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-skill-tree-layout-drill",
+   "title": "Skill and talent tree layouts: gating, legibility, regret: drill",
+   "he": "פריסת עצי כישרון: תרגול",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 5,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "skill-tree-layout"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 12,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-inventory-grids",
+   "title": "Inventory grids, slots and spatial constraint as a mechanic",
+   "he": "רשתות מלאי",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "inventory-grids"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-progression-feedback",
+   "title": "Progression feedback: XP, levels, and why the curve is visible",
+   "he": "משוב התקדמות",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "progression-feedback"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-progression-feedback-drill",
+   "title": "Progression feedback: XP, levels, and why the curve is visible: drill",
+   "he": "משוב התקדמות: תרגול",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 5,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "progression-feedback"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 12,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-map-navigation",
+   "title": "Maps and navigation: fog, markers, and orientation cost",
+   "he": "מפות וניווט",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "map-navigation"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-onboarding-tutorial",
+   "title": "Onboarding without a tutorial wall",
+   "he": "כניסה למשחק בלי קיר הדרכה",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "onboarding-tutorial"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-juice-easing",
+   "title": "Juice: easing curves, anticipation, follow-through",
+   "he": "juice ועקומות האטה",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "juice-easing"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-juice-easing-drill",
+   "title": "Juice: easing curves, anticipation, follow-through: drill",
+   "he": "juice ועקומות האטה: תרגול",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 5,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "juice-easing"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 12,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-tactile-state",
+   "title": "Tactile state machines: idle, hover, press, success, failure",
+   "he": "מכונת מצבים טקטילית",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "tactile-state"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-tactile-state-drill",
+   "title": "Tactile state machines: idle, hover, press, success, failure: drill",
+   "he": "מכונת מצבים טקטילית: תרגול",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 5,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "tactile-state"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 12,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-error-feedback",
+   "title": "Failure feedback that does not punish",
+   "he": "משוב כישלון שלא מעניש",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "error-feedback"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-reduced-motion",
+   "title": "Reduced motion and accessibility as a design constraint",
+   "he": "תנועה מופחתת ונגישות",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "reduced-motion"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s5-rtl-game-ui",
+   "title": "RTL and Hebrew in interfaces designed left to right",
+   "he": "RTL ועברית בממשקים",
+   "block": "S5",
+   "moscow": "should",
+   "tree": "between",
+   "node": "frontend",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 4,
+   "skills": [
+    "game-ui",
+    "game-feel"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "rtl-game-ui"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "Game UI Database screen-type taxonomy, gameuidatabase.com"
+   },
+   "estMin": 8,
+   "depthEstMin": 25,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-retained-dom",
+   "title": "Retained mode: the DOM, reflow, and where its ceiling actually is",
+   "he": "מצב שמור: ה-DOM ותקרת הביצועים",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "retained-dom"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-retained-dom-drill",
+   "title": "Retained mode: the DOM, reflow, and where its ceiling actually is: drill",
+   "he": "מצב שמור: ה-DOM ותקרת הביצועים: תרגול",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 7,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "retained-dom"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 14,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-immediate-mode",
+   "title": "Immediate mode: rebuilt per frame, and what that buys",
+   "he": "מצב מיידי",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "immediate-mode"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-immediate-mode-drill",
+   "title": "Immediate mode: rebuilt per frame, and what that buys: drill",
+   "he": "מצב מיידי: תרגול",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 7,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "immediate-mode"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 14,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-gpu-native",
+   "title": "GPU native: uniforms, shaders, and zero-copy transfer",
+   "he": "רינדור נייטיב על GPU",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "gpu-native"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-frame-budget",
+   "title": "The frame budget: 16ms, and how to measure yours",
+   "he": "תקציב הפריים",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "frame-budget"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-frame-budget-drill",
+   "title": "The frame budget: 16ms, and how to measure yours: drill",
+   "he": "תקציב הפריים: תרגול",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 7,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "frame-budget"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 14,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-layout-engines",
+   "title": "Layout: reflow versus post-order traversal versus force-directed",
+   "he": "מנועי פריסה",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "layout-engines"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-force-directed",
+   "title": "Force-directed graph layout and its convergence failures",
+   "he": "פריסה מונעת כוחות",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "force-directed"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-force-directed-drill",
+   "title": "Force-directed graph layout and its convergence failures: drill",
+   "he": "פריסה מונעת כוחות: תרגול",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 7,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "force-directed"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 14,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-canvas-vs-dom",
+   "title": "Canvas versus DOM for dense views, measured not assumed",
+   "he": "Canvas מול DOM",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "canvas-vs-dom"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-canvas-vs-dom-drill",
+   "title": "Canvas versus DOM for dense views, measured not assumed: drill",
+   "he": "Canvas מול DOM: תרגול",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 7,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "canvas-vs-dom"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 14,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-text-rendering",
+   "title": "Text rendering outside the DOM: shaping, kerning, fallback",
+   "he": "רינדור טקסט מחוץ ל-DOM",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "text-rendering"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-animation-loop",
+   "title": "The animation loop: rAF, delta time, and frame pacing",
+   "he": "לולאת האנימציה",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "animation-loop"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-animation-loop-drill",
+   "title": "The animation loop: rAF, delta time, and frame pacing: drill",
+   "he": "לולאת האנימציה: תרגול",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "practice",
+   "status": "active",
+   "difficulty": 7,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [],
+   "requires": [
+    "animation-loop"
+   ],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 14,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
+   "id": "s6-streaming-ui",
+   "title": "Streaming UI: partial output, trust, and the waiting state",
+   "he": "ממשק זורם ומצב המתנה",
+   "block": "S6",
+   "moscow": "should",
+   "tree": "between",
+   "node": "aiux",
+   "kind": "concept",
+   "status": "active",
+   "difficulty": 6,
+   "skills": [
+    "render-modes",
+    "realtime-viz"
+   ],
+   "goals": [
+    "hire-2026-09-30"
+   ],
+   "teaches": [
+    "streaming-ui"
+   ],
+   "requires": [],
+   "objectives": [],
+   "volatile": false,
+   "staleAfterDays": null,
+   "source": {
+    "kind": "index",
+    "name": "retained/immediate/GPU paradigm matrix, egui and wgpu published docs"
+   },
+   "estMin": 10,
+   "depthEstMin": 30,
+   "body": {
+    "status": "pending",
+    "generated": null,
+    "hash": null
+   }
+  },
+  {
    "id": "c2-la-vector-spaces",
    "title": "Vector spaces",
    "he": "מרחבים וקטוריים",

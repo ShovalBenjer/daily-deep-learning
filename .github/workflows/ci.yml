@@ -13,7 +13,11 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
+      # depth 2, not 1: the call-site delta check below grades HEAD~1..HEAD,
+      # and a shallow clone has no HEAD~1 to compare against.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -35,6 +39,18 @@ jobs:
 
       - name: Curriculum budget against the deadline
         run: python3 tools/curriculum_budget.py
+
+      # types domain, second half. Syntax checks cannot see this class: a cut
+      # that removes a function's last caller leaves valid JS and a container
+      # still in the DOM, so `node --check` and check_inline_js.py both pass
+      # while the feature stops rendering. Measured against this repo's own
+      # history: 8a917e3 orphaned counters() in writing/the-bench.html and it
+      # stayed broken through 2008446 until e79d5b4 restored the two calls.
+      # Hermetic, no secret, no browser, which is why it can run here at all.
+      - name: Call-site delta
+        run: |
+          python3 tools/check_callsites.py --selftest
+          python3 tools/check_callsites.py
 
       # unit domain of quality-contract.json, hermetic slice only. These five
       # files read index.html and daemon/server_parse.ts directly (server_parse

@@ -26,7 +26,18 @@ writing/drafts/
 # and planning stay ignored by the `docs/*` line above. Publishing an ADR does not
 # put it on the site: tools/stage_site.py's SHIP list is default-deny and does not
 # name docs/, so this affects github.com only.
+#
+# Narrowed 2026-08-10 after Kilo flagged it on PR #3: `!docs/adr/` alone
+# un-ignores the whole directory, so any file that later lands in it is public
+# by default. On a repo whose first Known trap is "the GitHub remote is PUBLIC",
+# default-allow inside a re-included directory is the wrong direction. The three
+# lines below re-include the directory (git will not descend into an excluded
+# one, so this step is required), then exclude its contents again, then allow
+# markdown only. A screenshot, an export or a PDF dropped in docs/adr/ now stays
+# ignored and has to be un-ignored deliberately.
 !docs/adr/
+docs/adr/*
+!docs/adr/*.md
 
 # Local run records: gate verdicts, review artifacts quoting source lines, e2e
 # reports, the duplicate-unit scratch file. tools/stage_site.py lists state/ as

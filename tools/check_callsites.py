@@ -94,17 +94,76 @@ def inline_scripts(html: str) -> str:
     return "\n".join(p.blocks)
 
 
+def _body_spans(script: str, name: str) -> list[tuple[int, int]]:
+    """Character ranges of each ``function name(...) { ... }`` body.
+
+    Brace-matched from the declaration's opening brace, skipping braces inside
+    quotes and comments. Known limit: a regex literal containing an unbalanced
+    brace would confuse the scan. None exists in either target file today, and
+    the failure mode is a wrong span rather than a crash, so it is named here
+    rather than solved with a JS parser this repo has no dependency for.
+    """
+    spans = []
+    for m in re.finditer(rf"^[ \t]*(?:async[ \t]+)?function[ \t]+{re.escape(name)}\b",
+                         script, re.M):
+        open_at = script.find("{", m.end())
+        if open_at < 0:
+            continue
+        depth, i, n = 0, open_at, len(script)
+        quote = None
+        while i < n:
+            c = script[i]
+            if quote:
+                if c == "\\":
+                    i += 2
+                    continue
+                if c == quote:
+                    quote = None
+            elif c in "\"'`":
+                quote = c
+            elif c == "/" and i + 1 < n and script[i + 1] == "/":
+                i = script.find("\n", i)
+                if i < 0:
+                    break
+            elif c == "/" and i + 1 < n and script[i + 1] == "*":
+                i = script.find("*/", i)
+                if i < 0:
+                    break
+                i += 1
+            elif c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    spans.append((m.start(), i + 1))
+                    break
+            i += 1
+    return spans
+
+
 def uses(script: str, name: str) -> int:
-    """Count references to ``name`` that are not its own declaration.
+    """Count references to ``name`` from OUTSIDE its own body.
 
     Counts bare identifier references, not just ``name(``, so a function passed
-    to addEventListener or stored in a table still reads as used. Overcounting
-    is the safe direction here: it can only suppress a red, never invent one.
+    to addEventListener or stored in a table still reads as used.
+
+    References inside the function's own body do not count, which Kilo caught on
+    PR #3 and which matters in both directions. The dangerous one is the false
+    NEGATIVE: a recursive function that loses its last external caller still
+    shows one reference from its own recursive call, so the orphan this checker
+    exists to find would be invisible for exactly the functions most likely to
+    have a single caller. The false positive Kilo named (removing a recursive
+    call from a function that had no external caller anyway) cannot fire either,
+    because such a function's external count was already 0 and ``orphans``
+    requires ``was > 0``.
     """
-    total = len(re.findall(rf"\b{re.escape(name)}\b", script))
-    declared = len(re.findall(rf"^[ \t]*(?:async[ \t]+)?function[ \t]+{re.escape(name)}\b",
-                              script, re.M))
-    return total - declared
+    spans = _body_spans(script, name)
+    total = 0
+    for m in re.finditer(rf"\b{re.escape(name)}\b", script):
+        if any(lo <= m.start() < hi for lo, hi in spans):
+            continue
+        total += 1
+    return total
 
 
 def orphans(before: str, after: str) -> list[tuple[str, int]]:
@@ -185,7 +244,32 @@ def selftest() -> int:
         print("selftest FAILED: parser pulled in an external script's src")
         return 1
 
-    print("selftest ok: 1 planted defect caught, 2 false-positive shapes "
+    # Recursion, both directions, from Kilo's review of PR #3.
+    # The dangerous half: a recursive function that loses its last EXTERNAL
+    # caller must still go red. Counting the self-call would hide it.
+    rec_before = """
+      function walk(n) { if (n) walk(n - 1); }
+      function boot() { walk(3); }
+    """
+    rec_after = """
+      function walk(n) { if (n) walk(n - 1); }
+      function boot() { }
+    """
+    if [n for n, _ in orphans(rec_before, rec_after)] != ["walk"]:
+        print("selftest FAILED: a recursive function that lost its only "
+              "external caller must go red")
+        return 1
+
+    # The half Kilo named: a function with no external caller, whose recursive
+    # call is then removed, is not a new orphan. Its external count was already
+    # zero, so `was > 0` must keep it green.
+    self_only = "function walk(n) { if (n) walk(n - 1); }\n"
+    if orphans(self_only, "function walk(n) { return n; }\n"):
+        print("selftest FAILED: dropping recursion from an already-uncalled "
+              "function is not an orphaning")
+        return 1
+
+    print("selftest ok: 2 planted defects caught, 3 false-positive shapes "
           "rejected, extractor survives 2 tags that defeat a regex")
     return 0
 

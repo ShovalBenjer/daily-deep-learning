@@ -199,7 +199,12 @@ def _is_definition(script: str, after_name: int) -> bool:
     from the left).
     """
     i, n = after_name, len(script)
-    while i < n and script[i] in " \t":
+    # Newlines too, not just spaces and tabs. A name and its parenthesis split
+    # across lines is unusual but legal, and the review of PR #4 was right that
+    # stopping at " \t" would read such a definition as a call. Neither target
+    # file has one; taking it anyway because the whole point of this function is
+    # to not miscount a definition.
+    while i < n and script[i] in " \t\r\n":
         i += 1
     if i >= n or script[i] != "(":
         return False

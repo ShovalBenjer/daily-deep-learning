@@ -277,7 +277,16 @@ def uses(script: str, name: str) -> int:
     returns no span for a name, every reference counts as external, which fails
     toward a missed orphan rather than a false alarm.
     """
-    script = _mask_comments(script)
+    return _uses_masked(_mask_comments(script), name)
+
+
+def _uses_masked(script: str, name: str) -> int:
+    """``uses`` over a script whose comments are already blanked.
+
+    Split out because ``orphans`` walks every name in the file and masking is
+    O(len(script)) each time; on index.html that was 96 names times two versions
+    times 139 KB. Claude Code Review flagged the redundancy on PR #4.
+    """
     spans = _body_spans(script, name)
     total = 0
     for m in re.finditer(rf"\b{re.escape(name)}\b", script):
@@ -289,14 +298,43 @@ def uses(script: str, name: str) -> int:
     return total
 
 
+def ambiguous(script: str) -> list[str]:
+    """Names declared more than once, which this checker cannot reason about.
+
+    Everything here is keyed by NAME, not by declaration, so two local functions
+    that share one keeps the other's orphaning invisible: their references pool
+    into a single count and both bodies get excluded. index.html has four such
+    names today (``step`` x3, ``summary`` x3, ``next`` x2, ``reset`` x2), and
+    Claude Code Review traced it on PR #4: deleting ``openConceptQuiz``'s only
+    call to its local ``step()`` at index.html:2048 leaves the count above zero
+    because two unrelated ``step()`` functions elsewhere still have callers.
+
+    Separating them needs real scope analysis, which needs a JS parser this repo
+    does not carry. So they are excluded from the check and COUNTED OUT LOUD by
+    the caller instead. A checker that silently covers 92 of 96 names reads as
+    covering all of them, which is the same shape of invisible gap the tool
+    exists to catch.
+    """
+    counts: dict[str, int] = {}
+    for name in _DEF.findall(_mask_comments(script)):
+        counts[name] = counts.get(name, 0) + 1
+    return sorted(n for n, c in counts.items() if c > 1)
+
+
 def orphans(before: str, after: str) -> list[tuple[str, int]]:
-    """Functions defined in both versions that lost every reference."""
-    defs_before = set(_DEF.findall(before))
-    defs_after = set(_DEF.findall(after))
+    """Functions defined in both versions that lost every reference.
+
+    Names declared more than once in either version are skipped; see
+    ``ambiguous`` for why, and call it to report what was skipped.
+    """
+    mb, ma = _mask_comments(before), _mask_comments(after)
+    skip = set(ambiguous(before)) | set(ambiguous(after))
     found = []
-    for name in sorted(defs_before & defs_after):
-        was = uses(before, name)
-        now = uses(after, name)
+    for name in sorted(set(_DEF.findall(mb)) & set(_DEF.findall(ma))):
+        if name in skip:
+            continue
+        was = _uses_masked(mb, name)
+        now = _uses_masked(ma, name)
         if was > 0 and now == 0:
             found.append((name, was))
     return found
@@ -442,8 +480,45 @@ def selftest() -> int:
               "caller goes")
         return 1
 
-    print("selftest ok: 4 planted defects caught, 3 false-positive shapes "
-          "rejected, extractor survives 2 tags that defeat a regex")
+    # Same-named local functions, the High finding on PR #4's third review.
+    # Two functions called step() pool into one name-keyed count, so deleting
+    # the only caller of one leaves the other's callers holding the count above
+    # zero. This cannot be resolved without scope analysis, so the contract is
+    # that such a name is EXCLUDED and reported, never silently half-checked.
+    # Declarations go on their own lines because _DEF anchors to line start; a
+    # `function` mid-line is not seen as a declaration at all, which is a
+    # separate conservative limit (such a function is simply never checked).
+    dup_before = """
+      function quiz() {
+        function step() { a(); }
+        step();
+      }
+      function deck() {
+        function step() { b(); }
+        step();
+      }
+    """
+    dup_after = """
+      function quiz() {
+        function step() { a(); }
+      }
+      function deck() {
+        function step() { b(); }
+        step();
+      }
+    """
+    if orphans(dup_before, dup_after):
+        print("selftest FAILED: a name with two declarations must be excluded, "
+              "not guessed at")
+        return 1
+    if ambiguous(dup_before) != ["step"]:
+        print(f"selftest FAILED: ambiguous() must name step, got "
+              f"{ambiguous(dup_before)}")
+        return 1
+
+    print("selftest ok: 4 planted defects caught, 4 false-positive shapes "
+          "rejected, extractor survives 2 tags that defeat a regex, "
+          "duplicate names excluded and reported")
     return 0
 
 
@@ -498,11 +573,21 @@ def main() -> int:
                 continue
 
         measured += 1
-        found = orphans(inline_scripts(before_html), inline_scripts(after_html))
+        b_js, a_js = inline_scripts(before_html), inline_scripts(after_html)
+        found = orphans(b_js, a_js)
         for name, was in found:
             failures.append(f"{rel}: {name}() had {was} reference(s) at "
                             f"{args.base} and has none now, but its definition "
                             f"is still there")
+
+        # Say what was NOT covered. A silent skip reads as coverage, which is
+        # the exact shape of gap this tool exists to catch.
+        skipped = sorted(set(ambiguous(b_js)) | set(ambiguous(a_js)))
+        if skipped:
+            total_names = len(set(_DEF.findall(_mask_comments(a_js))))
+            print(f"{rel}: not covered, {len(skipped)} of {total_names} names are "
+                  f"declared more than once and cannot be told apart without "
+                  f"scope analysis: {', '.join(skipped)}")
 
     if measured == 0:
         print("could not measure: no target file readable at both ends")

@@ -1,0 +1,32 @@
+# Where this product finds the harness (claude-setup).
+#
+# Written 2026-08-09, on the operator's approval, to replace the unpinned
+# environment-variable fallback this repository used. The pattern is copied from
+# new-recruit, which built it on 2026-07-31; the resolver itself was promoted
+# into claude-setup/tools/harness/harness.py on 2026-08-09 so that consumers
+# reference it rather than each inventing their own.
+#
+# claude-setup/tools/harness/harness.py is the resolver, and AGENTS.md there
+# documents the order: $CLAUDE_HARNESS, then self-detection, then this file,
+# then a vendored copy. $CLAUDE_HARNESS overrides everything here, and a wrong
+# value there RAISES rather than falling through, on purpose: an explicit
+# override that gets silently ignored is worse than a crash.
+#
+# On the sha: it is a marker, not a lock. Drift fails `harness.py check` and
+# deliberately does NOT fail resolution, because refusing to resolve would turn
+# a stale pin into an outage and this product must still be able to run its gate
+# against a harness that moved ahead. Expect drift to be normal. Re-pin
+# deliberately, after reading what changed.
+
+repo = https://github.com/ShovalBenjer/claude-setup.git
+sha  = 98bb64da6fa5e0d630bcbc498b42f9e4a115b0ba
+
+# Search order. WSL first: it is the authoritative tree. /home/shov/claude-setup
+# is a symlink to the first entry rather than a second clone, and is listed only
+# because tooling and settings refer to it by that name. The Windows path is a
+# genuinely separate checkout.
+path = /home/shov/work/repos/claude-setup
+path = /home/shov/claude-setup
+path = /mnt/c/Users/shova/claude-setup
+path = ../claude-setup
+path = ../../claude-setup

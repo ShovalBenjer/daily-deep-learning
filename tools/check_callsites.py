@@ -94,50 +94,158 @@ def inline_scripts(html: str) -> str:
     return "\n".join(p.blocks)
 
 
+def _match(script: str, start: int, opener: str, closer: str) -> int:
+    """Index just past the ``closer`` matching the ``opener`` at ``start``.
+
+    Skips quotes, template literals and both comment forms. Returns -1 when the
+    delimiter never balances, which callers must treat as "no span" rather than
+    guessing; `node --check` in the same gate domain already fails on genuinely
+    unbalanced source, so reaching -1 means this scanner lost track, not that
+    the file is broken.
+    """
+    depth, i, n, quote = 0, start, len(script), None
+    while i < n:
+        c = script[i]
+        if quote:
+            if c == "\\":
+                i += 2
+                continue
+            if c == quote:
+                quote = None
+        elif c in "\"'`":
+            quote = c
+        elif c == "/" and i + 1 < n and script[i + 1] == "/":
+            i = script.find("\n", i)
+            if i < 0:
+                return -1
+        elif c == "/" and i + 1 < n and script[i + 1] == "*":
+            i = script.find("*/", i)
+            if i < 0:
+                return -1
+            i += 1
+        elif c == opener:
+            depth += 1
+        elif c == closer:
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return -1
+
+
+def _mask_comments(script: str) -> str:
+    """Blank out comment bodies, preserving every character offset.
+
+    A name written in prose is not a call. index.html has three comments that
+    say the word "ritual" in English, plus one method literally named ``ritual``
+    on the ``sfx`` object, and each of those counted as a reference to the
+    ``ritual`` function. Verifying PR #4's own fix end to end is what surfaced
+    this: the reviewer predicted that deleting all five of ``ritual``'s callers
+    would leave the checker green, the body-span fix was supposed to close that,
+    and the scenario STILL came back green because the three prose mentions kept
+    the count above zero. One cause was fixed and a second was sitting behind it.
+
+    String literals are deliberately NOT masked. This codebase builds markup in
+    template literals and dispatches by name through string tables, so a name
+    inside a string is often a real use. Masking them would trade a missed
+    orphan for a false alarm, and a false alarm on a required gate domain is the
+    more expensive error.
+    """
+    out = list(script)
+    i, n, quote = 0, len(script), None
+    while i < n:
+        c = script[i]
+        if quote:
+            if c == "\\":
+                i += 2
+                continue
+            if c == quote:
+                quote = None
+        elif c in "\"'`":
+            quote = c
+        elif c == "/" and i + 1 < n and script[i + 1] == "/":
+            while i < n and script[i] != "\n":
+                out[i] = " "
+                i += 1
+            continue
+        elif c == "/" and i + 1 < n and script[i + 1] == "*":
+            end = script.find("*/", i + 2)
+            end = n if end < 0 else end + 2
+            for j in range(i, end):
+                if out[j] != "\n":
+                    out[j] = " "
+            i = end
+            continue
+        i += 1
+    return "".join(out)
+
+
+def _is_definition(script: str, after_name: int) -> bool:
+    """True when the name at this position is being DEFINED, not called.
+
+    Object-literal method shorthand (``ritual() { ... }`` on the ``sfx`` object
+    in index.html) is a different function that happens to share a name, and
+    counting it as a reference kept ``ritual`` above zero even with all five of
+    its real callers deleted. That was the third and last cause of the false
+    negative Claude Code Review predicted on PR #4; the body-span fix and the
+    comment mask each removed one, and this one was sitting behind both.
+
+    The test is that the matching ``)`` is immediately followed by ``{``. A call
+    can never be: ``ritual({...})`` puts the brace INSIDE the parentheses, and
+    ``ritual()`` followed by a bare block is legal JS that nobody writes. So
+    this errs toward reporting an orphan only when the name has no real use
+    left, without the false-alarm risk of matching on the preceding character
+    (``, ritual(x)`` as a second argument looks exactly like method shorthand
+    from the left).
+    """
+    i, n = after_name, len(script)
+    while i < n and script[i] in " \t":
+        i += 1
+    if i >= n or script[i] != "(":
+        return False
+    close = _match(script, i, "(", ")")
+    if close < 0:
+        return False
+    while close < n and script[close] in " \t\r\n":
+        close += 1
+    return close < n and script[close] == "{"
+
+
 def _body_spans(script: str, name: str) -> list[tuple[int, int]]:
     """Character ranges of each ``function name(...) { ... }`` body.
 
-    Brace-matched from the declaration's opening brace, skipping braces inside
-    quotes and comments. Known limit: a regex literal containing an unbalanced
-    brace would confuse the scan. None exists in either target file today, and
-    the failure mode is a wrong span rather than a crash, so it is named here
-    rather than solved with a JS parser this repo has no dependency for.
+    The parameter list is paren-matched first, THEN the body is brace-matched.
+    Taking the first ``{`` after the name looked equivalent and was not: Claude
+    Code Review caught it on PR #4 with two live cases in this checker's own
+    target file, ``countUp`` (index.html:276) and ``ritual`` (index.html:490),
+    both of which destructure their first parameter. For ``ritual`` the span
+    collapsed to the 52 characters of the destructuring pattern, so
+    ``sfx.ritual()`` inside its real body at index.html:494 counted as an
+    external reference. All five of its real callers could have been deleted
+    with this checker staying green, which is the exact false negative the
+    own-body exclusion was added to remove.
+
+    Known limit: a regex literal holding an unbalanced brace or paren would
+    confuse the scan. Neither target file has one, and the failure mode is a
+    wrong or missing span rather than a crash. A JS parser is a dependency this
+    repo does not carry.
     """
     spans = []
     for m in re.finditer(rf"^[ \t]*(?:async[ \t]+)?function[ \t]+{re.escape(name)}\b",
                          script, re.M):
-        open_at = script.find("{", m.end())
+        paren_at = script.find("(", m.end())
+        if paren_at < 0:
+            continue
+        after_params = _match(script, paren_at, "(", ")")
+        if after_params < 0:
+            continue
+        open_at = script.find("{", after_params)
         if open_at < 0:
             continue
-        depth, i, n = 0, open_at, len(script)
-        quote = None
-        while i < n:
-            c = script[i]
-            if quote:
-                if c == "\\":
-                    i += 2
-                    continue
-                if c == quote:
-                    quote = None
-            elif c in "\"'`":
-                quote = c
-            elif c == "/" and i + 1 < n and script[i + 1] == "/":
-                i = script.find("\n", i)
-                if i < 0:
-                    break
-            elif c == "/" and i + 1 < n and script[i + 1] == "*":
-                i = script.find("*/", i)
-                if i < 0:
-                    break
-                i += 1
-            elif c == "{":
-                depth += 1
-            elif c == "}":
-                depth -= 1
-                if depth == 0:
-                    spans.append((m.start(), i + 1))
-                    break
-            i += 1
+        end = _match(script, open_at, "{", "}")
+        if end < 0:
+            continue
+        spans.append((m.start(), end))
     return spans
 
 
@@ -156,11 +264,21 @@ def uses(script: str, name: str) -> int:
     call from a function that had no external caller anyway) cannot fire either,
     because such a function's external count was already 0 and ``orphans``
     requires ``was > 0``.
+
+    "Its own body" is only as accurate as ``_body_spans``. That was a real
+    qualifier and not a hedge until PR #4: the first version located the body by
+    taking the next ``{`` after the name, so for a destructured parameter list
+    the span covered the parameters instead of the body. When ``_body_spans``
+    returns no span for a name, every reference counts as external, which fails
+    toward a missed orphan rather than a false alarm.
     """
+    script = _mask_comments(script)
     spans = _body_spans(script, name)
     total = 0
     for m in re.finditer(rf"\b{re.escape(name)}\b", script):
         if any(lo <= m.start() < hi for lo, hi in spans):
+            continue
+        if _is_definition(script, m.end()):
             continue
         total += 1
     return total
@@ -269,7 +387,57 @@ def selftest() -> int:
               "function is not an orphaning")
         return 1
 
-    print("selftest ok: 2 planted defects caught, 3 false-positive shapes "
+    # Destructured parameters, from Claude Code Review on PR #4. Modelled on the
+    # real index.html:490 shape, `function ritual({ ... }, onclose)`, with a
+    # same-named call inside its own body. If the span stops at the parameter
+    # list's closing brace, that self-call reads as external and the orphaning
+    # is missed. The version this replaced scored ritual's real body at 52
+    # characters and would have stayed green with all five callers deleted.
+    des_before = """
+      function ritual({ kicker, title, tier = 0 }, onclose) {
+        celebrate(kicker, onclose);
+        sfx.ritual();
+      }
+      function boot() { ritual({ kicker: "x", title: "y" }, null); }
+    """
+    des_after = """
+      function ritual({ kicker, title, tier = 0 }, onclose) {
+        celebrate(kicker, onclose);
+        sfx.ritual();
+      }
+      function boot() { }
+    """
+    if [n for n, _ in orphans(des_before, des_after)] != ["ritual"]:
+        print("selftest FAILED: a destructured-parameter function that lost its "
+              "only external caller must go red; the body span is probably "
+              "stopping at the parameter list")
+        return 1
+
+    # Name collision with an object-literal method, the third and last cause of
+    # the false negative Claude Code Review predicted on PR #4. Modelled on the
+    # real `sfx = { ..., ritual() { ... } }` in index.html. A same-named method
+    # is a different function, and counting it as a reference kept the real
+    # function above zero even with every caller gone. Comments too, since a
+    # name written in prose is not a call.
+    col_before = """
+      const sfx = { tone() { }, ritual() { beep(); } };
+      /* the ritual is fixed; never perform a ritual during boot */
+      function ritual(o) { sfx.ritual(); }
+      function boot() { ritual({ k: 1 }); }
+    """
+    col_after = """
+      const sfx = { tone() { }, ritual() { beep(); } };
+      /* the ritual is fixed; never perform a ritual during boot */
+      function ritual(o) { sfx.ritual(); }
+      function boot() { }
+    """
+    if [n for n, _ in orphans(col_before, col_after)] != ["ritual"]:
+        print("selftest FAILED: a function whose name is also an object method "
+              "and appears in comments must still go red when its last real "
+              "caller goes")
+        return 1
+
+    print("selftest ok: 4 planted defects caught, 3 false-positive shapes "
           "rejected, extractor survives 2 tags that defeat a regex")
     return 0
 

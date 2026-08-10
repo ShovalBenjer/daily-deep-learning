@@ -40,6 +40,22 @@ jobs:
             - Tiered depth: Critical/High get code snippets; Low gets one line.
             - Max 5 nits; count the rest in the summary.
             - Do not report style that CI already enforces.
+          # claude_args is a literal block passed straight to the CLI, so a `#`
+          # line inside it is an argument, not a comment. Rationale lives here,
+          # outside the block, on purpose.
+          #
+          # --max-turns was 10, raised 2026-08-10 because 10 could only ever
+          # review a trivial diff. On PR #3 the action failed twice with
+          # "Execution failed: Reached maximum number of turns (10)", both times
+          # at the same point: the progress checklist showed "Gather context"
+          # ticked and "Read tools/check_callsites.py" still open, so it spent
+          # every turn reading and never reached the step that posts the review.
+          # The prompt above asks for five ordered passes over the diff; the only
+          # run that ever completed was 2026-07-30, on a one-line workflow
+          # change. A reviewer that cannot finish is not an allowance, and
+          # merges-are-the-operators requires every reviewer to allow before the
+          # operator merges, so this cap was silently blocking that rule rather
+          # than enforcing a budget.
           claude_args: |
             --model claude-sonnet-5
-            --max-turns 10
+            --max-turns 40

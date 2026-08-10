@@ -12,6 +12,10 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    # Pin the default GITHUB_TOKEN to read-only; nothing here writes to
+    # the repo (CodeQL actions/missing-workflow-permissions).
+    permissions:
+      contents: read
     steps:
       # depth 2, not 1: the call-site delta check below grades HEAD~1..HEAD,
       # and a shallow clone has no HEAD~1 to compare against.
@@ -74,6 +78,10 @@ jobs:
   preview:
     needs: checks
     runs-on: ubuntu-latest
+    # Cloudflare auth comes from its own secrets, so GITHUB_TOKEN needs
+    # nothing beyond reading the checkout.
+    permissions:
+      contents: read
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4

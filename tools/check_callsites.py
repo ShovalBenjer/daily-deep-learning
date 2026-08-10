@@ -40,18 +40,58 @@ import argparse
 import re
 import subprocess
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 
 # Files carrying an inline <script> that this repo hand-edits.
 TARGETS = ("index.html", "writing/the-bench.html")
 
-_SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", re.S | re.I)
 _DEF = re.compile(r"^[ \t]*(?:async[ \t]+)?function[ \t]+([A-Za-z_$][\w$]*)", re.M)
+
+
+class _ScriptCollector(HTMLParser):
+    """Collect the text of every inline <script>, skipping ones with src=.
+
+    A regex was the obvious way to do this and it is what tools/check_inline_js.py
+    still uses. CodeQL's py/bad-tag-filter flagged it here as high severity and
+    it was right to, for a reason that matters more than the XSS framing suggests
+    (nothing here renders anything, the input is this repo's own markup). A regex
+    of the shape `<script[^>]*>` mis-parses a `>` inside a quoted attribute and
+    anything inside an HTML comment, so it can silently return the wrong script
+    body. This checker exists to catch a defect that hides behind checks that
+    pass, so a parser that can quietly miss a block is the one thing it must not
+    be built on. The stdlib parser handles script as CDATA and costs no
+    dependency.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.blocks: list[str] = []
+        self._depth = 0
+        self._keep = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag != "script":
+            return
+        self._depth += 1
+        self._keep = not any(k.lower() == "src" for k, _ in attrs)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script":
+            self._depth = max(0, self._depth - 1)
+            self._keep = False
+
+    def handle_data(self, data: str) -> None:
+        if self._depth and self._keep:
+            self.blocks.append(data)
 
 
 def inline_scripts(html: str) -> str:
     """Concatenate every inline script block in a document."""
-    return "\n".join(m.group(1) for m in _SCRIPT.finditer(html))
+    p = _ScriptCollector()
+    p.feed(html)
+    p.close()
+    return "\n".join(p.blocks)
 
 
 def uses(script: str, name: str) -> int:
@@ -128,7 +168,25 @@ def selftest() -> int:
         print("selftest FAILED: a newly added uncalled function is not an orphan")
         return 1
 
-    print("selftest ok: 1 planted defect caught, 2 false-positive shapes rejected")
+    # The extractor itself needs a red case, because a parser that silently
+    # returns the wrong script body would make every check above pass on
+    # nothing. Both shapes below defeat the `<script[^>]*>` regex this used to
+    # use: a `>` inside a quoted attribute truncates the opening tag, and an
+    # external script has no body to take.
+    tricky = (
+        '<script src="app.js"></script>'
+        '<script data-x="a>b" type="text/javascript">function kept(){}</script>'
+    )
+    got = inline_scripts(tricky)
+    if "function kept(){}" not in got:
+        print(f"selftest FAILED: parser lost a script body, got {got!r}")
+        return 1
+    if "app.js" in got:
+        print("selftest FAILED: parser pulled in an external script's src")
+        return 1
+
+    print("selftest ok: 1 planted defect caught, 2 false-positive shapes "
+          "rejected, extractor survives 2 tags that defeat a regex")
     return 0
 
 

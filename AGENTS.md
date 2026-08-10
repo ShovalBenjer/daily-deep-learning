@@ -57,8 +57,9 @@ times; use PowerShell for anything that passes routes as arguments.
 **One file is the app.** `index.html` (2567 lines) holds a ~139 KB inline
 `<script>` that is the entire client: state store, hash router, all view
 renderers, the quiz/fillin/widget builders, the SRS engine, the talent board and
-the chat pane. `boot()` runs `Promise.allSettled` over eleven root JSON files
-(index.html:2525), so each data source degrades independently and boot survives
+the chat pane. `boot()` runs `Promise.allSettled` over nine root JSON files
+(eleven until 2026-08-10, when `syllabus.json` and `course_plan.json` lost their
+last client reader), so each data source degrades independently and boot survives
 as long as EITHER `posts/index.json` or `curriculum.json` arrives. `route()`
 dispatches `#/map`, `#/ladder`, `#/kodex`, `#/discover`, `#/mentor`,
 `#/doc/{slug}`, `#/history`, `#/u/{unit-id}` and `#/YYYY-MM-DD`, and otherwise
@@ -69,7 +70,14 @@ generator writes `units/<id>.md` plus a `curriculum.json` entry and commits as
 `unit: <id>`; `ROUTINE.md` is its binding contract and is current. `curriculum.json`
 holds every unit and `tools/build_curriculum.py` owns which units exist. The home
 screen proposes exactly one next unit from `rankedUnits()` with a swap, so there
-is no date anywhere in the boot path. The eight `posts/YYYY-MM-DD.md` files,
+is no date anywhere in the boot path. That ordering is `goalPull * gapFactor *
+moscowFactor * availability` (ROUTINE 1.3), and it only discriminates as well as
+its inputs: a unit listing no ACTIVE goal scores zero and is never proposed,
+which `tools/validate_links.py` now fails on for must and should. Ties are wide
+by nature (56 units at one value on 2026-08-10), so the tiebreak is deliberate:
+finish the block already started, then take the shorter unit. Reproduce any
+claim about the queue with `tests/ordering.test.ts`, which runs the lifted
+engine over the real `curriculum.json`. The eight `posts/YYYY-MM-DD.md` files,
 ending 2026-07-28, are reachable only at `#/history`; a session that reads
 `posts/` alone will wrongly conclude the daily agent stopped ten days ago.
 
@@ -83,9 +91,11 @@ from a `tree` field, so points land where the work was done.
 
 **The data graph is the product model.** `talents.json` (nodes, tiers, ranks,
 quests), `skills.json` (0-5 mastery ledger, `resume_risk`, per-arm tags),
-`concepts.json` (codex graph), `syllabus.json` (day spine), `course_plan.json`
-(seasons, topic pools, scan sources), `judgment_map.json`, `research_ladder.json`,
-`discoveries.json`. Ids cross-reference between files; `tools/validate_links.py`
+`concepts.json` (codex graph), `judgment_map.json`, `research_ladder.json`,
+`discoveries.json`. `syllabus.json` (day spine) and `course_plan.json` (seasons,
+topic pools, scan sources) are GENERATOR inputs, not client data: the app stopped
+fetching both on 2026-08-10 and neither is staged. Ids cross-reference between
+files; `tools/validate_links.py`
 is the only thing preventing orphans and it runs in CI, so any data edit should
 be followed by it.
 

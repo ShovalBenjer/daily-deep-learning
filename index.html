@@ -90,7 +90,7 @@
 const $ = s => document.querySelector(s);
 const iso = d => d.toISOString().slice(0, 10);
 const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
-let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null, disco = null, skills = null, syl = null;
+let index = [], jmap = null, ladder = null, talents = null, kodex = null, disco = null, skills = null;
 let curriculum = null, goalDefs = null;
 let pageBlocks = [];
 const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
@@ -1636,38 +1636,29 @@ function renderLadder() {
         </div>`;
       }).join('') + `</details>`;
   }
-  if (syl && syl.seasons) {
-    const season = syl.seasons[0];
-    const today = iso(new Date());
-    html += `<details class="syllabus" open><summary>הסילבוס: ${esc(season.name)}</summary>` +
-      season.weeks.map(w => `<details class="syl-week" ${w.days.some(x => x.status !== 'done') ? 'open' : ''}>
-        <summary>שבוע ${w.w}: ${esc(w.theme)}</summary>` +
-        w.days.map(dd => {
-          const st = dd.date === today ? 'today' : dd.status;
-          const title = dd.status === 'done' ? `<a href="#/${esc(dd.date)}">${esc(dd.title)}</a>` : esc(dd.title);
-          const nodeChips = (dd.nodes || []).map(nid => { const nn = talentNode(nid); return nn ? `<a class="chip2" href="#/map">${esc(nn.name)}</a>` : ''; }).join('');
-          return `<div class="syl-day ${st}"><span class="syl-d">יום ${dd.day}</span>
-            <div class="syl-body"><div class="syl-t">${title}</div>
-            ${dd.why ? `<div class="syl-why">${esc(dd.why)}</div>` : ''}
-            <div class="syl-chips">${(dd.topics || []).slice(0, 4).map(t => `<span class="chip2" dir="auto">${esc(t)}</span>`).join('')}${nodeChips}</div>
-            </div></div>`;
-        }).join('') + `</details>`).join('') + `</details>`;
-  }
-  if (plan && plan.week_plan) {
-    const start = new Date(plan.start_date);
-    html += `<details class="syllabus"><summary>הסילבוס המלא: 10 שבועות, 70 ימים</summary>` +
-      plan.week_plan.map(wp => {
-        let dots = '';
-        for (let d = 1; d <= 7; d++) {
-          const dt = new Date(start); dt.setDate(start.getDate() + (wp.week - 1) * 7 + (d - 1));
-          const ds = iso(dt);
-          const cls = S.daysDone.includes(ds) ? 'sy-dot done' : index.some(p => p.date === ds) ? 'sy-dot has' : 'sy-dot';
-          dots += `<span class="${cls}"></span>`;
-        }
+  // The calendar is retired (ROUTINE preamble): the learner's position is the
+  // set of units he has closed, never a date. Two panels used to stand here and
+  // contradict that, one reading syllabus.json and one reading
+  // course_plan.week_plan, and between them they rendered a 70-day spine whose
+  // day entries stopped advancing when the dated posts did on 2026-07-28. Same
+  // dot vocabulary, re-keyed from days to units, which is the thing that moves.
+  if (curriculum && curriculum.units) {
+    const blocks = new Map();
+    curriculum.units.forEach(u => {
+      if (!MOSCOW_W[u.moscow]) return;                 // wont is never proposed, so never shown
+      if (!blocks.has(u.block)) blocks.set(u.block, []);
+      blocks.get(u.block).push(u);
+    });
+    html += `<details class="syllabus" open><summary>התקדמות בבלוקים</summary>` +
+      [...blocks.entries()].map(([b, us]) => {
+        const node = talentNode(us[0].node);
+        const closed = us.filter(u => uState(u.id).closed).length;
+        const dots = us.map(u =>
+          `<span class="sy-dot ${uState(u.id).closed ? 'done' : u.body ? 'has' : ''}"></span>`).join('');
         return `<div class="sy-week"><div class="sy-dots">${dots}</div>
-          <div class="sy-t"><b>שבוע ${wp.week}</b> · <span dir="ltr">${wp.primary}</span>${wp.secondary ? `<br><small dir="ltr">${wp.secondary}</small>` : ''}</div></div>`;
+          <div class="sy-t"><b>${esc(node ? node.name : b)}</b> · <span dir="ltr">${closed}/${us.length}</span></div></div>`;
       }).join('') +
-      `<p class="sy-note">כל יום: עיון, תרגול, AI-103, מעקב, שיקול דעת. שבת חזרה, ראשון תיקון. מדור מעקב מזרים מאמרים חדשים מהסריקה היומית אל הדפים.</p></details>`;
+      `<p class="sy-note">נקודה מלאה: יחידה שסגרת. נקודה חלקית: השיעור כתוב וממתין לך. הסדר נקבע לפי היעדים הפעילים ולפי הפער שנמדד, לא לפי תאריך.</p></details>`;
   }
   html += `<p class="view-head" style="margin-top:1rem"><span style="color:var(--faded);font-size:.88rem">סדר הלימוד מהמסמכים שלך. פריט אחד פתוח בכל רגע: זה שלמטה.</span></p>`;
   if (next) {
@@ -2269,9 +2260,16 @@ const daysTo = ds => Math.round((new Date(ds + 'T12:00:00') - new Date()) / 864e
 // has no horizon to compress, so it sits at a constant middling pull.
 const urgency = g => g.deadline ? 1 / Math.max(1, daysTo(g.deadline) / 7) : 0.6;
 
+// Two deadlines pulling on one unit must outrank one deadline. Math.max threw
+// the second away, and on this dataset that silenced the tighter one entirely:
+// measured 2026-08-10, hire-2026-09-30 scored 1.0 * 1/(51/7) = 0.137 and
+// ai103-sit scored 0.7 * 1/(36/7) = 0.136, so max() returned the hire pull and
+// the twenty AI-103 units ranked identically to units serving neither goal,
+// five weeks before the exam. Combining saturating keeps the range at [0,1)
+// while letting a second pull actually move the unit.
 function goalPull(u) {
   const gs = ((goalDefs && goalDefs.goals) || []).filter(g => g.active && (u.goals || []).includes(g.id));
-  return gs.reduce((m, g) => Math.max(m, g.weight * urgency(g)), 0);
+  return 1 - gs.reduce((acc, g) => acc * (1 - Math.min(1, g.weight * urgency(g))), 1);
 }
 
 const ledgerRow = id => (skills && skills.skills.find(x => x.id === id)) || null;
@@ -2306,10 +2304,23 @@ function priority(u, known) {
   return base * Math.pow(0.6, uState(u.id).skips || 0) + reviewDebt();
 }
 
+// A module is the id prefix: m2-joins and m2-ctes are one block, and the
+// lesson's own closing section teaches toward that block.
+const moduleOf = id => String(id).split('-')[0];
+const startedModules = () => new Set(allUnits().filter(u => uState(u.id).closed).map(u => moduleOf(u.id)));
+
 function rankedUnits() {
   const known = knownConcepts();
+  const started = startedModules();
+  const inStarted = u => started.has(moduleOf(u.id)) ? 1 : 0;
+  // Ties are wide here, not rare: measured 2026-08-10, the top band held 76
+  // units at one value. With length as the ONLY tiebreak the shortest unit in
+  // any module always won, so the spine skimmed the cheapest item across four
+  // half-built blocks and finished none of them. A half-built block is the
+  // worst state for retrieval, which is what ROUTINE's fixed section order
+  // exists to serve. Finish the block you are inside; length breaks what is left.
   return allUnits().map(u => ({ u, p: priority(u, known) })).filter(x => x.p > 0)
-    .sort((a, b) => b.p - a.p || a.u.estMin - b.u.estMin);   // ties: the cheapest real move
+    .sort((a, b) => b.p - a.p || inStarted(b.u) - inStarted(a.u) || a.u.estMin - b.u.estMin);
 }
 
 // talents.json still ships systems/craft/ops; the pvp/between/pve rename is a
@@ -2537,15 +2548,19 @@ addEventListener('scroll', () => {
 (async function boot() {
   // Each resource degrades independently; only the post index is required.
   const j = u => fetch(u, { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; return r.json(); });
+  // Nine, down from eleven on 2026-08-10. syllabus.json and course_plan.json
+  // were fetched on every boot and read by exactly one panel between them, the
+  // retired 70-day calendar. Both files stay in the repo: they are the daily
+  // generator's spine and its season contract, and neither is client data.
   const rs = await Promise.allSettled([
     j('posts/index.json'), j('judgment_map.json'), j('research_ladder.json'),
-    j('talents.json'), j('course_plan.json'), j('concepts.json'), j('discoveries.json'),
-    j('skills.json'), j('syllabus.json'), j('curriculum.json'), j('goals.json')
+    j('talents.json'), j('concepts.json'), j('discoveries.json'),
+    j('skills.json'), j('curriculum.json'), j('goals.json')
   ]);
   const val = i => rs[i].status === 'fulfilled' ? rs[i].value : null;
   index = val(0) || []; jmap = val(1); ladder = val(2); talents = val(3);
-  plan = val(4); kodex = val(5); disco = val(6); skills = val(7); syl = val(8);
-  curriculum = val(9); goalDefs = val(10);
+  kodex = val(4); disco = val(5); skills = val(6);
+  curriculum = val(7); goalDefs = val(8);
   // The home screen runs off curriculum.json, so posts are no longer required to boot.
   if (!index.length && !curriculum) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
   await pullState();

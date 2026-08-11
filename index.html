@@ -212,6 +212,18 @@ function award(tree, pts, el, firstTry, skillTag) {
     combo++;
     if (combo >= 3 && combo % 3 === 0) { S.points[tree].earned += 1; toast('קומבו x' + combo + '! בונוס +1'); }
   } else if (firstTry === false) combo = 0;
+  if (firstTry && skillTag && skills && skills.skills) {
+    const sk = skills.skills.find(s => s.id === skillTag);
+    if (sk) {
+      (S.skillEvidence[skillTag] = S.skillEvidence[skillTag] || []).push(
+        { t: 'תרגיל נכון' + (firstTry === true ? ', ניסיון ראשון' : ''), d: iso(new Date()) });
+      const eff = S.skillLevels[sk.id] ?? sk.current ?? 0;
+      if (eff < 1) {
+        S.skillLevels[sk.id] = 1;
+        toast(sk.name.split(' (')[0] + ': רמה 1 (שולף)');
+      }
+    }
+  }
   store.save();
   // performed, not announced: number + burst on the object, scaled by magnitude
   if (el) { burst(el, 14 + pts * 8 + (firstTry ? 10 : 0)); ptsFloat(el, pts); }

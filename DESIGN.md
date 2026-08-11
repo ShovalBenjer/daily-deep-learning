@@ -12,7 +12,11 @@ docs/DESIGN-RESEARCH-NEXTGEN-2026-07.md (28 sourced claims). Approved direction
 glass. A scribe's desk: parchment, ink, gold line-work, wax seals, one living
 spark. Every event is performed like a game, never announced like a website.
 If a new surface can't be described in this fiction's language, it isn't
-designed yet.
+designed yet. The direction is material-derived, not a generatable identity:
+the un-fakeable material IS the spine (the learner's own errors, answers, and
+progress arcs), and the model's confident prose is demoted to the thing being
+corrected. Real artifacts (raw terminal output, actual quiz answers) cannot
+look generated and are denser than any figure that re-tells them.
 
 ## Fiction map (diegetic taxonomy, classify every element)
 
@@ -61,10 +65,18 @@ designed yet.
    entrances/settles (ease-out allowed for exits/fades only).
 2. Events are PERFORMED: motion + counted numbers + particles (+ sound later)
    fired together, scaled by magnitude (`award()` → burst size + ptsFloat).
+   Count-up numerals resolve "live data" perception; never show a static number
+   where a performed tally fits.
 3. ONE fixed celebration ritual (`ritual()`); magnitude lives in the frame
    tier (`#overlay[data-tier]`, streak tiers 3/7/14/30). Never a second ritual.
 4. Squash-stretch on every tappable; wrong answers shake; the spark reacts.
+   Every microinteraction resolves under 300 ms; longer motion carries meaning
+   (celebration, transition), never decoration.
 5. Everything gated on `prefers-reduced-motion`. No exceptions.
+6. Motion communicates a state change. Gratuitous loops, idle parallax, and
+   ambient shimmer that carries no information are cognitive load, not polish.
+7. Three visibility tiers: immediate (always visible), disclosed (tap/expand),
+   deep (route change). Status is ambient (ring, badge), never a popup.
 
 ## Frames and assets
 

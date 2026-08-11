@@ -129,7 +129,7 @@ island_start | island_end
 שלוש ריצות: {101-103}, {106-107}, {110}. הפערים: {104,105} ו-{108,109}.
 
 ```widget
-{"type":"algviz","title":"id - ROW_NUMBER: צפה כיצד grp נשאר קבוע בתוך כל אי וקופץ בכל פער"}
+{"type":"algviz","algo":"gaps-islands","title":"id - ROW_NUMBER: צפה כיצד grp נשאר קבוע בתוך כל אי וקופץ בכל פער"}
 ```
 
 ## המקרה שמפיל את האינטואיציה

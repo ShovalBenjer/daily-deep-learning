@@ -942,6 +942,61 @@ const ALGS = {
       x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
       x.fillText('G (מהסוף להתחלה ←)', W / 2, 128);
     }
+  },
+  'gaps-islands': {
+    name: 'id − ROW_NUMBER (Gaps & Islands)',
+    code: ['ORDER BY id', 'rn = ROW_NUMBER()', 'grp = id - rn', 'GROUP BY grp → islands'],
+    init(p) {
+      const ids = p.ids || [1, 2, 3, 7, 8, 12, 13, 14, 15, 20];
+      return { ids, pos: 0, rows: [] };
+    },
+    step(s) {
+      if (s.pos >= s.ids.length) {
+        const islands = new Set(s.rows.map(r => r.grp)).size;
+        return { done: true, line: 3, note: 'סיימנו: ' + islands + ' איים' };
+      }
+      const id = s.ids[s.pos], rn = s.pos + 1, grp = id - rn;
+      s.rows.push({ id, rn, grp });
+      const prev = s.rows.length > 1 ? s.rows[s.rows.length - 2].grp : null;
+      s.pos++;
+      return { line: 2, note: prev !== null && grp !== prev
+        ? `grp = ${id} - ${rn} = ${grp} — פער, קבוצה חדשה`
+        : `grp = ${id} - ${rn} = ${grp}` };
+    },
+    draw(s, cv) {
+      const W = cv.clientWidth || 320, H = 180, dpr = Math.min(devicePixelRatio, 2);
+      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const cols = [themeC('--gold'), themeC('--green'), themeC('--oracle'), themeC('--architect'), themeC('--warden')];
+      const grps = [...new Set(s.rows.map(r => r.grp))];
+      const cw = Math.min(36, (W - 60) / s.ids.length), rh = 15, x0 = 54;
+      x.font = '11px "IBM Plex Mono"'; x.textBaseline = 'middle';
+      x.fillStyle = themeC('--faded'); x.textAlign = 'center';
+      x.fillText('id', x0 - 30, 10); x.fillText('rn', x0 - 10, 10); x.fillText('grp', x0 + 12, 10);
+      s.rows.forEach((r, i) => {
+        const y = 22 + i * rh, ci = grps.indexOf(r.grp) % cols.length;
+        const cur = i === s.rows.length - 1 && s.pos <= s.ids.length;
+        x.fillStyle = cols[ci]; x.globalAlpha = cur ? .5 : .2;
+        x.fillRect(0, y - 1, 48, rh); x.globalAlpha = 1;
+        x.fillStyle = cur ? themeC('--gold') : themeC('--ink'); x.textAlign = 'right';
+        x.fillText(r.id, x0 - 28, y + rh / 2);
+        x.fillText(r.rn, x0 - 8, y + rh / 2);
+        x.fillStyle = cols[ci]; x.fillText(r.grp, x0 + 14, y + rh / 2);
+      });
+      const bw = cw - 2, by = H - 28;
+      s.ids.forEach((id, i) => {
+        const px = x0 + 30 + i * cw, row = s.rows.find(r => r.id === id);
+        const ci = row ? grps.indexOf(row.grp) % cols.length : -1;
+        x.fillStyle = ci >= 0 ? cols[ci] : themeC('--panel');
+        x.globalAlpha = row ? .7 : .15;
+        x.fillRect(px, by, bw, 20); x.globalAlpha = 1;
+        x.fillStyle = row ? '#14101a' : themeC('--faded');
+        x.font = '10px "IBM Plex Mono"'; x.textAlign = 'center';
+        x.fillText(id, px + bw / 2, by + 11);
+      });
+      x.fillStyle = themeC('--faded'); x.font = '10px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.textAlign = 'center'; x.fillText('ids', x0 + 30 + s.ids.length * cw / 2, H - 2);
+    }
   }
 };
 

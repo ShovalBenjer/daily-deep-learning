@@ -3192,6 +3192,28 @@
     "c-kv-cache"
    ],
    "node": "llm-core"
+  },
+  {
+   "id": "c-anti-join",
+   "t": "Anti-join",
+   "he": "צירוף שלילי",
+   "d": "LEFT JOIN WHERE right_id IS NULL: מחזיר שורות שאין להן התאמה בטבלה הימנית",
+   "rel": [
+    "c-left-join",
+    "c-null-in-join"
+   ],
+   "node": "sql-core"
+  },
+  {
+   "id": "c-join-fanout",
+   "t": "Join fanout",
+   "he": "כפל שורות",
+   "d": "צירוף על עמודה שאינה PRIMARY KEY מכפיל שורות; SUM לאחר מכן גדל שלא כדין",
+   "rel": [
+    "c-inner-join",
+    "c-left-join"
+   ],
+   "node": "sql-core"
   }
  ]
 }

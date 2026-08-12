@@ -3214,6 +3214,49 @@
     "c-left-join"
    ],
    "node": "sql-core"
+  },
+  {
+   "id": "two-pointers",
+   "t": "Two Pointers",
+   "he": "שני מצביעים",
+   "d": "Pattern שבו שני אינדקסים זזים לפי חוק, מכסים O(n) מצבים במקום O(n²). דורש מונוטוניות (בד\"כ מיון).",
+   "rel": [
+    "complement-lookup",
+    "sliding-window",
+    "binary-search"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "converging-pointers",
+   "t": "Converging Pointers",
+   "he": "מצביעים מתנגשים",
+   "d": "Two Pointers מהקצות פנימה; מבטל שורה שלמה בכל צעד בזכות מונוטוניות.",
+   "rel": [
+    "two-pointers"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "fast-slow-pointers",
+   "t": "Fast/Slow Pointers",
+   "he": "מצביע מהיר ואיטי",
+   "d": "שני מצביעים באותו כיוון; slow מסמן גבול הקטע הנקי, fast סורק קדימה. שימוש: in-place dedup, partition, cycle detection.",
+   "rel": [
+    "two-pointers"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "sliding-window",
+   "t": "Sliding Window",
+   "he": "חלון מחליק",
+   "d": "הרחבה של fast/slow לחלונות גמישים על מחרוזות ומערכים; גם כאן O(n).",
+   "rel": [
+    "two-pointers",
+    "fast-slow-pointers"
+   ],
+   "node": "dsa"
   }
  ]
 }

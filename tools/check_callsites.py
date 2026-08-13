@@ -94,27 +94,247 @@ def inline_scripts(html: str) -> str:
     return "\n".join(p.blocks)
 
 
+def _match(script: str, start: int, opener: str, closer: str) -> int:
+    """Index just past the ``closer`` matching the ``opener`` at ``start``.
+
+    Skips quotes, template literals and both comment forms. Returns -1 when the
+    delimiter never balances, which callers must treat as "no span" rather than
+    guessing; `node --check` in the same gate domain already fails on genuinely
+    unbalanced source, so reaching -1 means this scanner lost track, not that
+    the file is broken.
+    """
+    depth, i, n, quote = 0, start, len(script), None
+    while i < n:
+        c = script[i]
+        if quote:
+            if c == "\\":
+                i += 2
+                continue
+            if c == quote:
+                quote = None
+        elif c in "\"'`":
+            quote = c
+        elif c == "/" and i + 1 < n and script[i + 1] == "/":
+            i = script.find("\n", i)
+            if i < 0:
+                return -1
+        elif c == "/" and i + 1 < n and script[i + 1] == "*":
+            i = script.find("*/", i)
+            if i < 0:
+                return -1
+            i += 1
+        elif c == opener:
+            depth += 1
+        elif c == closer:
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return -1
+
+
+def _mask_comments(script: str) -> str:
+    """Blank out comment bodies, preserving every character offset.
+
+    A name written in prose is not a call. index.html has three comments that
+    say the word "ritual" in English, plus one method literally named ``ritual``
+    on the ``sfx`` object, and each of those counted as a reference to the
+    ``ritual`` function. Verifying PR #4's own fix end to end is what surfaced
+    this: the reviewer predicted that deleting all five of ``ritual``'s callers
+    would leave the checker green, the body-span fix was supposed to close that,
+    and the scenario STILL came back green because the three prose mentions kept
+    the count above zero. One cause was fixed and a second was sitting behind it.
+
+    String literals are deliberately NOT masked. This codebase builds markup in
+    template literals and dispatches by name through string tables, so a name
+    inside a string is often a real use. Masking them would trade a missed
+    orphan for a false alarm, and a false alarm on a required gate domain is the
+    more expensive error.
+    """
+    out = list(script)
+    i, n, quote = 0, len(script), None
+    while i < n:
+        c = script[i]
+        if quote:
+            if c == "\\":
+                i += 2
+                continue
+            if c == quote:
+                quote = None
+        elif c in "\"'`":
+            quote = c
+        elif c == "/" and i + 1 < n and script[i + 1] == "/":
+            while i < n and script[i] != "\n":
+                out[i] = " "
+                i += 1
+            continue
+        elif c == "/" and i + 1 < n and script[i + 1] == "*":
+            end = script.find("*/", i + 2)
+            end = n if end < 0 else end + 2
+            for j in range(i, end):
+                if out[j] != "\n":
+                    out[j] = " "
+            i = end
+            continue
+        i += 1
+    return "".join(out)
+
+
+def _is_definition(script: str, after_name: int) -> bool:
+    """True when the name at this position is being DEFINED, not called.
+
+    Object-literal method shorthand (``ritual() { ... }`` on the ``sfx`` object
+    in index.html) is a different function that happens to share a name, and
+    counting it as a reference kept ``ritual`` above zero even with all five of
+    its real callers deleted. That was the third and last cause of the false
+    negative Claude Code Review predicted on PR #4; the body-span fix and the
+    comment mask each removed one, and this one was sitting behind both.
+
+    The test is that the matching ``)`` is immediately followed by ``{``. A call
+    can never be: ``ritual({...})`` puts the brace INSIDE the parentheses, and
+    ``ritual()`` followed by a bare block is legal JS that nobody writes. So
+    this errs toward reporting an orphan only when the name has no real use
+    left, without the false-alarm risk of matching on the preceding character
+    (``, ritual(x)`` as a second argument looks exactly like method shorthand
+    from the left).
+    """
+    i, n = after_name, len(script)
+    # Newlines too, not just spaces and tabs. A name and its parenthesis split
+    # across lines is unusual but legal, and the review of PR #4 was right that
+    # stopping at " \t" would read such a definition as a call. Neither target
+    # file has one; taking it anyway because the whole point of this function is
+    # to not miscount a definition.
+    while i < n and script[i] in " \t\r\n":
+        i += 1
+    if i >= n or script[i] != "(":
+        return False
+    close = _match(script, i, "(", ")")
+    if close < 0:
+        return False
+    while close < n and script[close] in " \t\r\n":
+        close += 1
+    return close < n and script[close] == "{"
+
+
+def _body_spans(script: str, name: str) -> list[tuple[int, int]]:
+    """Character ranges of each ``function name(...) { ... }`` body.
+
+    The parameter list is paren-matched first, THEN the body is brace-matched.
+    Taking the first ``{`` after the name looked equivalent and was not: Claude
+    Code Review caught it on PR #4 with two live cases in this checker's own
+    target file, ``countUp`` (index.html:276) and ``ritual`` (index.html:490),
+    both of which destructure their first parameter. For ``ritual`` the span
+    collapsed to the 52 characters of the destructuring pattern, so
+    ``sfx.ritual()`` inside its real body at index.html:494 counted as an
+    external reference. All five of its real callers could have been deleted
+    with this checker staying green, which is the exact false negative the
+    own-body exclusion was added to remove.
+
+    Known limit: a regex literal holding an unbalanced brace or paren would
+    confuse the scan. Neither target file has one, and the failure mode is a
+    wrong or missing span rather than a crash. A JS parser is a dependency this
+    repo does not carry.
+    """
+    spans = []
+    for m in re.finditer(rf"^[ \t]*(?:async[ \t]+)?function[ \t]+{re.escape(name)}\b",
+                         script, re.M):
+        paren_at = script.find("(", m.end())
+        if paren_at < 0:
+            continue
+        after_params = _match(script, paren_at, "(", ")")
+        if after_params < 0:
+            continue
+        open_at = script.find("{", after_params)
+        if open_at < 0:
+            continue
+        end = _match(script, open_at, "{", "}")
+        if end < 0:
+            continue
+        spans.append((m.start(), end))
+    return spans
+
+
 def uses(script: str, name: str) -> int:
-    """Count references to ``name`` that are not its own declaration.
+    """Count references to ``name`` from OUTSIDE its own body.
 
     Counts bare identifier references, not just ``name(``, so a function passed
-    to addEventListener or stored in a table still reads as used. Overcounting
-    is the safe direction here: it can only suppress a red, never invent one.
+    to addEventListener or stored in a table still reads as used.
+
+    References inside the function's own body do not count, which Kilo caught on
+    PR #3 and which matters in both directions. The dangerous one is the false
+    NEGATIVE: a recursive function that loses its last external caller still
+    shows one reference from its own recursive call, so the orphan this checker
+    exists to find would be invisible for exactly the functions most likely to
+    have a single caller. The false positive Kilo named (removing a recursive
+    call from a function that had no external caller anyway) cannot fire either,
+    because such a function's external count was already 0 and ``orphans``
+    requires ``was > 0``.
+
+    "Its own body" is only as accurate as ``_body_spans``. That was a real
+    qualifier and not a hedge until PR #4: the first version located the body by
+    taking the next ``{`` after the name, so for a destructured parameter list
+    the span covered the parameters instead of the body. When ``_body_spans``
+    returns no span for a name, every reference counts as external, which fails
+    toward a missed orphan rather than a false alarm.
     """
-    total = len(re.findall(rf"\b{re.escape(name)}\b", script))
-    declared = len(re.findall(rf"^[ \t]*(?:async[ \t]+)?function[ \t]+{re.escape(name)}\b",
-                              script, re.M))
-    return total - declared
+    return _uses_masked(_mask_comments(script), name)
+
+
+def _uses_masked(script: str, name: str) -> int:
+    """``uses`` over a script whose comments are already blanked.
+
+    Split out because ``orphans`` walks every name in the file and masking is
+    O(len(script)) each time; on index.html that was 96 names times two versions
+    times 139 KB. Claude Code Review flagged the redundancy on PR #4.
+    """
+    spans = _body_spans(script, name)
+    total = 0
+    for m in re.finditer(rf"\b{re.escape(name)}\b", script):
+        if any(lo <= m.start() < hi for lo, hi in spans):
+            continue
+        if _is_definition(script, m.end()):
+            continue
+        total += 1
+    return total
+
+
+def ambiguous(script: str) -> list[str]:
+    """Names declared more than once, which this checker cannot reason about.
+
+    Everything here is keyed by NAME, not by declaration, so two local functions
+    that share one keeps the other's orphaning invisible: their references pool
+    into a single count and both bodies get excluded. index.html has four such
+    names today (``step`` x3, ``summary`` x3, ``next`` x2, ``reset`` x2), and
+    Claude Code Review traced it on PR #4: deleting ``openConceptQuiz``'s only
+    call to its local ``step()`` at index.html:2048 leaves the count above zero
+    because two unrelated ``step()`` functions elsewhere still have callers.
+
+    Separating them needs real scope analysis, which needs a JS parser this repo
+    does not carry. So they are excluded from the check and COUNTED OUT LOUD by
+    the caller instead. A checker that silently covers 92 of 96 names reads as
+    covering all of them, which is the same shape of invisible gap the tool
+    exists to catch.
+    """
+    counts: dict[str, int] = {}
+    for name in _DEF.findall(_mask_comments(script)):
+        counts[name] = counts.get(name, 0) + 1
+    return sorted(n for n, c in counts.items() if c > 1)
 
 
 def orphans(before: str, after: str) -> list[tuple[str, int]]:
-    """Functions defined in both versions that lost every reference."""
-    defs_before = set(_DEF.findall(before))
-    defs_after = set(_DEF.findall(after))
+    """Functions defined in both versions that lost every reference.
+
+    Names declared more than once in either version are skipped; see
+    ``ambiguous`` for why, and call it to report what was skipped.
+    """
+    mb, ma = _mask_comments(before), _mask_comments(after)
+    skip = set(ambiguous(before)) | set(ambiguous(after))
     found = []
-    for name in sorted(defs_before & defs_after):
-        was = uses(before, name)
-        now = uses(after, name)
+    for name in sorted(set(_DEF.findall(mb)) & set(_DEF.findall(ma))):
+        if name in skip:
+            continue
+        was = _uses_masked(mb, name)
+        now = _uses_masked(ma, name)
         if was > 0 and now == 0:
             found.append((name, was))
     return found
@@ -185,8 +405,120 @@ def selftest() -> int:
         print("selftest FAILED: parser pulled in an external script's src")
         return 1
 
-    print("selftest ok: 1 planted defect caught, 2 false-positive shapes "
-          "rejected, extractor survives 2 tags that defeat a regex")
+    # Recursion, both directions, from Kilo's review of PR #3.
+    # The dangerous half: a recursive function that loses its last EXTERNAL
+    # caller must still go red. Counting the self-call would hide it.
+    rec_before = """
+      function walk(n) { if (n) walk(n - 1); }
+      function boot() { walk(3); }
+    """
+    rec_after = """
+      function walk(n) { if (n) walk(n - 1); }
+      function boot() { }
+    """
+    if [n for n, _ in orphans(rec_before, rec_after)] != ["walk"]:
+        print("selftest FAILED: a recursive function that lost its only "
+              "external caller must go red")
+        return 1
+
+    # The half Kilo named: a function with no external caller, whose recursive
+    # call is then removed, is not a new orphan. Its external count was already
+    # zero, so `was > 0` must keep it green.
+    self_only = "function walk(n) { if (n) walk(n - 1); }\n"
+    if orphans(self_only, "function walk(n) { return n; }\n"):
+        print("selftest FAILED: dropping recursion from an already-uncalled "
+              "function is not an orphaning")
+        return 1
+
+    # Destructured parameters, from Claude Code Review on PR #4. Modelled on the
+    # real index.html:490 shape, `function ritual({ ... }, onclose)`, with a
+    # same-named call inside its own body. If the span stops at the parameter
+    # list's closing brace, that self-call reads as external and the orphaning
+    # is missed. The version this replaced scored ritual's real body at 52
+    # characters and would have stayed green with all five callers deleted.
+    des_before = """
+      function ritual({ kicker, title, tier = 0 }, onclose) {
+        celebrate(kicker, onclose);
+        sfx.ritual();
+      }
+      function boot() { ritual({ kicker: "x", title: "y" }, null); }
+    """
+    des_after = """
+      function ritual({ kicker, title, tier = 0 }, onclose) {
+        celebrate(kicker, onclose);
+        sfx.ritual();
+      }
+      function boot() { }
+    """
+    if [n for n, _ in orphans(des_before, des_after)] != ["ritual"]:
+        print("selftest FAILED: a destructured-parameter function that lost its "
+              "only external caller must go red; the body span is probably "
+              "stopping at the parameter list")
+        return 1
+
+    # Name collision with an object-literal method, the third and last cause of
+    # the false negative Claude Code Review predicted on PR #4. Modelled on the
+    # real `sfx = { ..., ritual() { ... } }` in index.html. A same-named method
+    # is a different function, and counting it as a reference kept the real
+    # function above zero even with every caller gone. Comments too, since a
+    # name written in prose is not a call.
+    col_before = """
+      const sfx = { tone() { }, ritual() { beep(); } };
+      /* the ritual is fixed; never perform a ritual during boot */
+      function ritual(o) { sfx.ritual(); }
+      function boot() { ritual({ k: 1 }); }
+    """
+    col_after = """
+      const sfx = { tone() { }, ritual() { beep(); } };
+      /* the ritual is fixed; never perform a ritual during boot */
+      function ritual(o) { sfx.ritual(); }
+      function boot() { }
+    """
+    if [n for n, _ in orphans(col_before, col_after)] != ["ritual"]:
+        print("selftest FAILED: a function whose name is also an object method "
+              "and appears in comments must still go red when its last real "
+              "caller goes")
+        return 1
+
+    # Same-named local functions, the High finding on PR #4's third review.
+    # Two functions called step() pool into one name-keyed count, so deleting
+    # the only caller of one leaves the other's callers holding the count above
+    # zero. This cannot be resolved without scope analysis, so the contract is
+    # that such a name is EXCLUDED and reported, never silently half-checked.
+    # Declarations go on their own lines because _DEF anchors to line start; a
+    # `function` mid-line is not seen as a declaration at all, which is a
+    # separate conservative limit (such a function is simply never checked).
+    dup_before = """
+      function quiz() {
+        function step() { a(); }
+        step();
+      }
+      function deck() {
+        function step() { b(); }
+        step();
+      }
+    """
+    dup_after = """
+      function quiz() {
+        function step() { a(); }
+      }
+      function deck() {
+        function step() { b(); }
+        step();
+      }
+    """
+    if orphans(dup_before, dup_after):
+        print("selftest FAILED: a name with two declarations must be excluded, "
+              "not guessed at")
+        return 1
+    if ambiguous(dup_before) != ["step"]:
+        print(f"selftest FAILED: ambiguous() must name step, got "
+              f"{ambiguous(dup_before)}")
+        return 1
+
+    print("selftest ok: 4 planted defects caught, 4 false-positive shapes "
+          "rejected, extractor survives 2 tags that defeat a regex, "
+          "duplicate names excluded and reported")
     return 0
 
 
@@ -241,11 +573,21 @@ def main() -> int:
                 continue
 
         measured += 1
-        found = orphans(inline_scripts(before_html), inline_scripts(after_html))
+        b_js, a_js = inline_scripts(before_html), inline_scripts(after_html)
+        found = orphans(b_js, a_js)
         for name, was in found:
             failures.append(f"{rel}: {name}() had {was} reference(s) at "
                             f"{args.base} and has none now, but its definition "
                             f"is still there")
+
+        # Say what was NOT covered. A silent skip reads as coverage, which is
+        # the exact shape of gap this tool exists to catch.
+        skipped = sorted(set(ambiguous(b_js)) | set(ambiguous(a_js)))
+        if skipped:
+            total_names = len(set(_DEF.findall(_mask_comments(a_js))))
+            print(f"{rel}: not covered, {len(skipped)} of {total_names} names are "
+                  f"declared more than once and cannot be told apart without "
+                  f"scope analysis: {', '.join(skipped)}")
 
     if measured == 0:
         print("could not measure: no target file readable at both ends")

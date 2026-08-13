@@ -2914,6 +2914,39 @@
     "c-date-trunc"
    ],
    "node": "sql-core"
+  },
+  {
+   "id": "foundry-hub",
+   "t": "Azure AI Foundry Hub",
+   "he": "Hub של Foundry",
+   "d": "משאב Azure המחזיק compute, connections ומדיניות IAM משותפת לכמה Projects.",
+   "rel": [
+    "foundry",
+    "foundry-project"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "foundry-project",
+   "t": "Azure AI Foundry Project",
+   "he": "פרויקט Foundry",
+   "d": "namespace מבודד בתוך Hub עם storage, managed identity ו-deployments משלו; נקודת הכניסה בקוד.",
+   "rel": [
+    "foundry-hub",
+    "deployment-types"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "model-catalog",
+   "t": "Azure AI Foundry Model Catalog",
+   "he": "קטלוג מודלים",
+   "d": "ממשק ב-Foundry לסינון והשוואת מודלים מ-Azure OpenAI, שותפים (Meta, Mistral, Cohere, Phi) ו-Hugging Face לפני פריסה.",
+   "rel": [
+    "foundry",
+    "deployment-types"
+   ],
+   "node": "azure-core"
   }
  ],
  "items": [

@@ -33,8 +33,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SHIP = [
     "index.html", "style.css", "sw.js", "manifest.webmanifest", "_headers",
     "_redirects",
-    "concepts.json", "course_plan.json", "discoveries.json", "judgment_map.json",
-    "research_ladder.json", "skills.json", "syllabus.json", "talents.json",
+    "concepts.json", "discoveries.json", "judgment_map.json",
+    "research_ladder.json", "skills.json", "talents.json",
     "curriculum.json", "goals.json",
     "icons", "vendor", "assets", "posts", "corpus", "units",
 ]

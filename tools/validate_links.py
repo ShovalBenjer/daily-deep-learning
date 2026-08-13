@@ -65,6 +65,20 @@ if os.path.exists(cur_path):
         if u["volatile"] and u["staleAfterDays"] is None:
             errs.append(f"unit {u['id']}: volatile without staleAfterDays")
 
+    # A unit the spine can never propose. priority() multiplies by goalPull(),
+    # which is zero when a unit lists no ACTIVE goal, so rankedUnits() filters
+    # it out entirely: enumerated, counted in every progress total, and
+    # unreachable. Measured 2026-08-10: 33 units are in that state, all could or
+    # wont, and for those it is a choice. For must and should it is a defect, so
+    # only that half fails the run. Written after the ordering fix that made the
+    # rest of the formula discriminate; this guards the input the formula reads.
+    active_goals = {g["id"] for g in J("goals.json")["goals"] if g.get("active")}
+    unreachable = [u for u in units if not (set(u.get("goals", [])) & active_goals)]
+    for u in unreachable:
+        if u["moscow"] in ("must", "should"):
+            errs.append(f"unit {u['id']}: moscow '{u['moscow']}' but no active goal, "
+                        f"so the spine can never propose it")
+
     # A lesson file with no unit behind it is unreachable: the app only fetches
     # units/<id>.md for ids that exist in curriculum.json.
     udir = os.path.join(R, "units")
@@ -73,6 +87,7 @@ if os.path.exists(cur_path):
         if b not in unit_ids: errs.append(f"units/{b}.md: no unit '{b}' in curriculum.json")
 
 print(f"nodes={len(nodes)} skills={len(skill_ids)} concepts={len(concept_ids)} "
-      f"units={len(units)} bodies={len(bodies) if 'bodies' in dir() else 0} errors={len(errs)}")
+      f"units={len(units)} bodies={len(bodies) if 'bodies' in dir() else 0} "
+      f"goalless={len(unreachable) if 'unreachable' in dir() else 0} errors={len(errs)}")
 for e in errs: print(" !", e)
 sys.exit(1 if errs else 0)

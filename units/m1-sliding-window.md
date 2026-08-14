@@ -145,7 +145,7 @@ right=3: sum=2>k → left++ → sum=1=k → best=3
 נראה נכון - אבל נסה `arr = [2, -1, 2]`, `k = 3`:
 
 ```
-right=0: sum=2<3, right=1: sum=1<3, right=2: sum=3=k → best=3 ✓
+right=0: sum=2<3, right=1: sum=1<3, right=2: sum=3=k → best=3  (נכון)
 ```
 
 ועכשיו `arr = [2, -1, 2, -2, 3]`, `k = 3`:

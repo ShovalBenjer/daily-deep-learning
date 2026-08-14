@@ -3290,6 +3290,40 @@
     "fast-slow-pointers"
    ],
    "node": "dsa"
+  },
+  {
+   "id": "fixed-window",
+   "t": "Fixed Window",
+   "he": "חלון קבוע",
+   "d": "Sliding Window בגודל k קבוע; בכל צעד מוסיפים איבר ימני ומסירים שמאלי. O(n).",
+   "rel": [
+    "sliding-window",
+    "variable-window"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "variable-window",
+   "t": "Variable Window",
+   "he": "חלון גמיש",
+   "d": "Sliding Window שמתרחב עם right ומתכווץ עם left לפי תנאי; O(n) כשה-state מונוטוני.",
+   "rel": [
+    "sliding-window",
+    "fixed-window",
+    "two-pointers"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "window-invariant",
+   "t": "Window Invariant",
+   "he": "אינווריאנט החלון",
+   "d": "התכונה שהחלון מקיים בין כל צעד לצעד. פגיעה בה מפעילה את הכיווץ (left++).",
+   "rel": [
+    "sliding-window",
+    "variable-window"
+   ],
+   "node": "dsa"
   }
  ]
 }

@@ -2989,6 +2989,37 @@
     "binary-search"
    ],
    "node": "dsa"
+  },
+  {
+   "id": "c-stack",
+   "t": "Stack",
+   "he": "מחסנית",
+   "d": "מבנה LIFO: push ו-pop מהראש בלבד, O(1) לשתי הפעולות",
+   "rel": [
+    "c-lifo",
+    "c-monotonic-stack"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "c-lifo",
+   "t": "LIFO",
+   "he": "אחרון נכנס ראשון יוצא",
+   "d": "תכונת מחסנית: האחרון שנוסף הוא הראשון שיוסר",
+   "rel": [
+    "c-stack"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "c-monotonic-stack",
+   "t": "Monotonic stack",
+   "he": "מחסנית מונוטונית",
+   "d": "stack שמשמר סדר ערכים עולה/יורד; פותר בעיות next-greater ב-O(n)",
+   "rel": [
+    "c-stack"
+   ],
+   "node": "dsa"
   }
  ],
  "items": [

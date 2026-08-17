@@ -3020,6 +3020,39 @@
     "c-stack"
    ],
    "node": "dsa"
+  },
+  {
+   "id": "ai-cd-pipeline",
+   "t": "AI CI/CD Pipeline",
+   "he": "צינור שילוב ופריסה ל-AI",
+   "d": "רצף אוטומטי של בדיקות ופריסה שמוציא מודל AI מ-dev ל-prod, בדרך כלל דרך GitHub Actions עם azure/login ו-az ml CLI.",
+   "rel": [
+    "environment-stage",
+    "foundry-project"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "model-endpoint-swap",
+   "t": "Traffic Split and Blue-Green",
+   "he": "פיצול תעבורה ו-blue-green",
+   "d": "שתי deployments על endpoint אחד עם חלוקת אחוזים; swap מיידי ל-100% הוא blue-green עם rollback בלחיצה אחת.",
+   "rel": [
+    "ai-cd-pipeline",
+    "deployment-types"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "environment-stage",
+   "t": "Environment Stage Isolation",
+   "he": "בידוד שלבי סביבה",
+   "d": "Foundry Project נפרד לכל שלב (dev/staging/prod) כך שקוטה, תעבורה ו-connection strings של סביבות לא מתנגשות.",
+   "rel": [
+    "foundry-project",
+    "ai-cd-pipeline"
+   ],
+   "node": "azure-core"
   }
  ],
  "items": [

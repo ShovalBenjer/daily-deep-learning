@@ -212,3 +212,5 @@ def removeElements(head, val):
 **דפוסים שחוזרים**: שלושת המצביעים (`prev`, `curr`, `nxt`) וה-dummy head מופיעים כמות שהם בשאלות tree ו-graph. הבנתם כאן חוסכת פיתרון מחדש.
 
 **הבא ברצף**: `m1-linked-list-drill` לאימון פרקטי, ואחריו `m1-tree-traversal` שמרחיב את לוגיקת הצמתים לעצים.
+
+<!-- audited -->

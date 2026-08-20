@@ -3515,6 +3515,78 @@
     "rbac-role-assignment"
    ],
    "node": "azure-core"
+  },
+  {
+   "id": "c-binary-tree-node",
+   "t": "TreeNode",
+   "he": "צומת עץ בינארי",
+   "d": "מבנה עם val, left ו-right. הבסיס של כל בעיות עץ ב-LeetCode.",
+   "rel": [
+    "c-preorder-traversal",
+    "c-inorder-traversal",
+    "c-postorder-traversal",
+    "c-level-order-traversal"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "c-preorder-traversal",
+   "t": "Pre-order Traversal",
+   "he": "סריקת קדם-סדר",
+   "d": "DFS: שורש, שמאל, ימין. שימושי לשיחזור עץ.",
+   "rel": [
+    "c-binary-tree-node",
+    "c-inorder-traversal",
+    "c-tree-dfs-stack"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "c-inorder-traversal",
+   "t": "In-order Traversal",
+   "he": "סריקת אמצע-סדר",
+   "d": "DFS: שמאל, שורש, ימין. ב-BST נותן ערכים בסדר עולה.",
+   "rel": [
+    "c-binary-tree-node",
+    "c-preorder-traversal",
+    "c-postorder-traversal"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "c-postorder-traversal",
+   "t": "Post-order Traversal",
+   "he": "סריקת אחר-סדר",
+   "d": "DFS: שמאל, ימין, שורש. שימושי להערכת ביטויים ו-DP על עצים.",
+   "rel": [
+    "c-binary-tree-node",
+    "c-inorder-traversal",
+    "c-tree-dfs-stack"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "c-level-order-traversal",
+   "t": "Level-order Traversal",
+   "he": "סריקת רמות (BFS)",
+   "d": "BFS על עץ. משתמש ב-queue; מבקר כל הצמתים ברמה לפני ירידה לרמה הבאה.",
+   "rel": [
+    "c-binary-tree-node",
+    "c-tree-dfs-stack"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "c-tree-dfs-stack",
+   "t": "DFS with Stack",
+   "he": "DFS עם מחסנית",
+   "d": "גרסה איטרטיבית של DFS על עץ. stack מחליפה את ה-call stack של הרקורסיה; נמנעת מ-RecursionError בעצים נטויים.",
+   "rel": [
+    "c-preorder-traversal",
+    "c-postorder-traversal",
+    "c-level-order-traversal"
+   ],
+   "node": "dsa"
   }
  ]
 }

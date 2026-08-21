@@ -3053,6 +3053,38 @@
     "ai-cd-pipeline"
    ],
    "node": "azure-core"
+  },
+  {
+   "id": "rai-evaluator",
+   "t": "RAI Evaluator",
+   "he": "מעריך בטיחות",
+   "d": "ריצת batch על מערך שיחות שנשמר; מחשב pass rate של קטגוריות harm ומדדי איכות.",
+   "rel": [
+    "content-filter",
+    "groundedness"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "content-blocklist",
+   "t": "Content Blocklist",
+   "he": "רשימת חסימה",
+   "d": "רשימת מחרוזות או regex הנבדקת לפני ה-LLM; כל התאמה מחזירה reject ללא inference.",
+   "rel": [
+    "content-filter"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "rai-policy",
+   "t": "RAI Policy",
+   "he": "מדיניות בטיחות",
+   "d": "הגדרת ספי חסימה לפי קטגוריה וכיוון (input/output), גלישת blocklists ו-Prompt Shields, מחוברת ל-deployment.",
+   "rel": [
+    "content-filter",
+    "prompt-shields"
+   ],
+   "node": "azure-core"
   }
  ],
  "items": [

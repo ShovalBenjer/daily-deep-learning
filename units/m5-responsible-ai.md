@@ -68,3 +68,5 @@ Content filter לא פותר hallucinations. אם המודל ממציא עובד
 יחידה זו שייכת לבלוק M5 שמכסה את ה-production stack של Azure AI Foundry. היא נפתחת לאחר foundry-sdk-apps (כדי שיהיה deployment להגדיר עליו policy) ומאפשרת את eval-fabrication (להריץ batch evals על תוצאות אמיתיות). ב-AI-103, שתי קטגוריות בוחן שלמות עוסקות ב-Responsible AI וב-Content Safety; הגדרות ה-threshold וה-Prompt Shields הן שאלות נפוצות.
 
 <!-- widget-request: severity-filter: visualize content filter severity scale 0-7 with four color bands (Safe/Low/Medium/High) and a draggable threshold slider per category (violence/hate/sexual/self-harm) on input vs output axes -->
+
+<!-- audited -->

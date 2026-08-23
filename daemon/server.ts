@@ -276,7 +276,16 @@ console.log('sadna daemon v2 (agent-sdk) on :' + PORT);
 
 // --- quick tunnel + registration ---
 async function tunnel() {
-  const proc = Bun.spawn(['C:/Users/shova/bin/cloudflared.exe', 'tunnel', '--url', 'http://localhost:' + PORT],
+  // The estate moved to WSL (AGENTS.md, 2026-08-07); the old hardcoded Windows
+  // path made the tunnel ENOENT there while /chat kept answering, so the break
+  // was silent. PATH first, Windows exe as the fallback for a Windows-side run.
+  const candidates = [Bun.which('cloudflared'), 'C:/Users/shova/bin/cloudflared.exe'].filter(Boolean) as string[];
+  const bin = candidates.find(p => { try { return !!Bun.spawnSync([p, '--version']).success; } catch { return false; } });
+  if (!bin) {
+    console.error('tunnel unavailable: no working cloudflared (tried ' + candidates.join(', ') + '); daemon is local-only');
+    return;
+  }
+  const proc = Bun.spawn([bin, 'tunnel', '--url', 'http://localhost:' + PORT],
     { stdout: 'pipe', stderr: 'pipe' });
   const reader = proc.stderr.getReader();
   const dec = new TextDecoder();

@@ -57,3 +57,19 @@ cite { display: block; font-family: "IBM Plex Mono", monospace; font-size: .72re
 code { font-family: "IBM Plex Mono", monospace; font-size: .85em; }
 ol { padding-inline-start: 1.2rem; margin: 0; }
 ol li { margin: .3rem 0; font-size: .92rem; }
+
+/* guided holes */
+.holes .hole-row { border-top: 1px solid var(--line); padding: .5rem 0; }
+.holes .hole-row:first-of-type { border-top: none; }
+.hole-chip { display: inline-block; font-weight: 700; color: var(--red); border: 1px solid var(--red); border-radius: 999px; padding: .1rem .7rem; font-size: .85rem; }
+.hole-chip.ok { color: var(--green); border-color: var(--green); }
+.hole-msg { margin: .4rem 0 0; font-size: .92rem; }
+.hole-msg pre { background: #0b0a10; padding: .5rem .7rem; border-radius: 3px; margin: .4rem 0; color: var(--ink); }
+.hole-more { min-height: 36px; font-size: .8rem; margin-top: .3rem; }
+.praise { color: var(--green); margin: .2rem 0; }
+
+/* book shelf options */
+.opts { flex-direction: column; align-items: stretch; }
+.opt-btn { font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: .82rem; text-align: left; white-space: normal; padding: .5rem .8rem; }
+.opt-btn.ok { border-color: var(--green); color: var(--green); }
+.opt-btn.bad { border-color: var(--red); color: var(--red); opacity: .6; }

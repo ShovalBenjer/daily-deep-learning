@@ -9,6 +9,22 @@
  * Story text is authored here; it references the seeded dataset only.
  */
 
+/**
+ * A hole is one gap in the starter SQL with its own teaching ladder:
+ * check() greps the student's SQL for a satisfying shape; the ladder is
+ * nudge (words), diagnostic (a runnable helper query, the coach's move),
+ * then reveal (the fragment itself). Praise fires the moment a hole is
+ * satisfied, because the buzzer-only version was unplayable.
+ */
+export interface Hole {
+  label: string;
+  check: (sql: string) => boolean;
+  nudge: string;
+  diagnostic?: string;
+  reveal: string;
+  praise: string;
+}
+
 export interface SqlDrill {
   kind: 'sql';
   id: string;
@@ -18,6 +34,7 @@ export interface SqlDrill {
   prediction: string;
   starter: string;
   reference: string;
+  holes: Hole[];
   verbalQ: string;
   verbalA: string;
   analystRead: string;
@@ -63,6 +80,25 @@ export const drills: Drill[] = [
       "FROM transactions t JOIN merchants m ON m.merchant_id = t.merchant_id " +
       "WHERE t.txn_ts >= '2026-07-01' AND t.txn_ts < '2026-08-01' " +
       'GROUP BY m.name HAVING COUNT(*) >= 50 ORDER BY approval_rate',
+    holes: [
+      {
+        label: 'האחוז',
+        check: sql => /case\s+when[\s\S]*status\s*=\s*'approved'/i.test(sql) && /\b(avg|sum)\s*\(/i.test(sql),
+        nudge: 'תרגם כל שורה ל-1 (approved) או 0 (כל השאר), ואז שאל: איזו אגרגציה הופכת רצף של אפסים ואחדים לאחוז?',
+        diagnostic: 'SELECT DISTINCT status FROM transactions;',
+        reveal: "AVG(CASE WHEN t.status = 'approved' THEN 1.0 ELSE 0 END)",
+        praise: 'החור הקשה נסגר: conditional aggregation, הלחם והחמאה של ראיונות אנליטיקה.',
+      },
+      {
+        label: 'חלון הזמן',
+        check: sql => (/txn_ts\s*>=\s*'2026-07-01'/i.test(sql) && /txn_ts\s*<\s*'2026-08-01'/i.test(sql))
+          || (/year\s*\(\s*t?\.?txn_ts\s*\)\s*=\s*2026/i.test(sql) && /month\s*\([^)]*\)\s*=\s*7/i.test(sql)),
+        nudge: 'יולי הוא טווח: מתחילת החודש ועד לפני תחילת הבא. אפשר גם year()+month() על העמודה, אבל טווח ידידותי יותר לאינדקסים.',
+        diagnostic: 'SELECT MIN(txn_ts), MAX(txn_ts) FROM transactions;',
+        reveal: "t.txn_ts >= '2026-07-01' AND t.txn_ts < '2026-08-01'",
+        praise: 'חלון הזמן נקי, ובצורה שמקצוענים מעדיפים.',
+      },
+    ],
     verbalQ:
       'ב-30 שניות, כמו למראיין: למה הסף של 50 חייב לשבת ב-HAVING ולא ב-WHERE?',
     verbalA:
@@ -92,6 +128,23 @@ export const drills: Drill[] = [
       "SELECT DATE_TRUNC('month', t.txn_ts) AS month, COUNT(*) AS num_txn, SUM(t.amount) AS total_amount " +
       "FROM transactions t JOIN merchants m ON m.merchant_id = t.merchant_id " +
       "WHERE m.name = 'Aurora Jewels' AND t.status = 'approved' GROUP BY 1 ORDER BY 1",
+    holes: [
+      {
+        label: 'הסכום',
+        check: sql => /sum\s*\(\s*t?\.?amount\s*\)/i.test(sql),
+        nudge: 'מספר הטרנזקציות כבר נספר; לסכום הכסף יש אגרגציה משלו.',
+        reveal: 'SUM(t.amount)',
+        praise: 'הסכום במקום.',
+      },
+      {
+        label: 'הסינון',
+        check: sql => /aurora jewels/i.test(sql) && /status\s*=\s*'approved'/i.test(sql),
+        nudge: 'שני תנאים חיים כאן יחד: הסוחר האחד, ורק השורות שאושרו. שניהם מסנני שורות, אז שניהם ב-WHERE.',
+        diagnostic: 'SELECT name FROM merchants;',
+        reveal: "m.name = 'Aurora Jewels' AND t.status = 'approved'",
+        praise: 'סינון מדויק, וזו בדיוק ההזדמנות לומר בראיון למה הוא ב-WHERE ולא ב-CASE.',
+      },
+    ],
     verbalQ:
       "ב-30 שניות: מה ההבדל בין WHERE status='approved' כאן לבין ספירה מותנית כמו בדריל הקודם? מתי כל גישה נכונה?",
     verbalA:
@@ -121,6 +174,23 @@ export const drills: Drill[] = [
       "JOIN merchants m ON m.merchant_id = t.merchant_id WHERE t.status = 'approved' AND " +
       "t.txn_ts >= '2026-07-01' AND t.txn_ts < '2026-08-01' GROUP BY 1, 2) " +
       'SELECT category, name, total_amount FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY total_amount DESC) AS rn FROM sums) WHERE rn = 1 ORDER BY category',
+    holes: [
+      {
+        label: 'הסינון',
+        check: sql => /status\s*=\s*'approved'/i.test(sql) && /2026-07-01/.test(sql),
+        nudge: 'אותו חלון יולי מהדריל הראשון, ועוד תנאי אחד: רק approved נכנסות לסכום.',
+        reveal: "t.status = 'approved' AND t.txn_ts >= '2026-07-01' AND t.txn_ts < '2026-08-01'",
+        praise: 'הבסיס נקי; עכשיו החלק שהראיון באמת בודק.',
+      },
+      {
+        label: 'החלון',
+        check: sql => /partition\s+by\s+category/i.test(sql) && /order\s+by\s+total_amount\s+desc/i.test(sql) && /\b(row_number|rank)\s*\(/i.test(sql),
+        nudge: 'window function פותחת חלון נפרד לכל קבוצה: PARTITION BY קובע את הקבוצה, ORDER BY את מי מדרגים ראשון, והפונקציה נותנת את המספר.',
+        diagnostic: "SELECT category, COUNT(DISTINCT name) FROM merchants GROUP BY 1;",
+        reveal: 'ROW_NUMBER() OVER (PARTITION BY category ORDER BY total_amount DESC)',
+        praise: 'זה הדפוס ששואלים עליו בכל ראיון דאטה שני. עכשיו הוא שלך.',
+      },
+    ],
     verbalQ:
       'ב-30 שניות: ROW_NUMBER מול RANK מול DENSE_RANK, ולמה כאן דווקא ROW_NUMBER בסדר?',
     verbalA:

@@ -611,7 +611,11 @@ function typeset(el) {
     ], throwOnError: false });
   } else setTimeout(() => typeset(el), 120);
 }
-const setTab = id => document.querySelectorAll('.tabs a').forEach(a => a.classList.toggle('active', a.id === id));
+const setTab = id => document.querySelectorAll('.tabs a').forEach(a => {
+  const on = a.id === id;
+  a.classList.toggle('active', on);
+  if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+});
 const isLtr = s => /^[\x00-\x7F]*$/.test(s.replace(/\s/g, ''));
 
 /* ---------- interactive blocks ---------- */
@@ -1611,8 +1615,8 @@ function renderLadder() {
   html += `<div class="ledger-art" aria-hidden="true"></div>`;
   // arm focus: choosing a resume variation is choosing your build
   html += `<div class="arm-strip">` + Object.entries(ARMS).map(([k, v]) =>
-    `<button class="arm-chip ${S.armFocus === +k ? 'on' : ''}" data-arm="${k}" dir="ltr">${v}</button>`).join('') +
-    `<button class="arm-chip ${!S.armFocus ? 'on' : ''}" data-arm="0">בלי מוקד</button></div>`;
+    `<button class="arm-chip ${S.armFocus === +k ? 'on' : ''}" aria-pressed="${S.armFocus === +k}" data-arm="${k}" dir="ltr">${v}</button>`).join('') +
+    `<button class="arm-chip ${!S.armFocus ? 'on' : ''}" aria-pressed="${!S.armFocus}" data-arm="0">בלי מוקד</button></div>`;
   if (skills && skills.skills) {
     const cur = s => S.skillLevels[s.id] ?? s.current;
     const F = S.armFocus;

@@ -124,6 +124,14 @@ bumped when shell assets change or phones keep the old build.
   changing a domain.
 - `docs/PRODUCT-MODEL-2026-07-26.md` and `docs/SYSTEM-SPEC-2026-07-26.md` are
   SPECIFIED, not built. Do not read them as descriptions of running code.
+- `docs/` is local-only by design (gitignored; the remote is public) and is
+  therefore INVISIBLE to default ripgrep and to any session that only greps
+  tracked files. Before design or product work: read `docs/INDEX.md` (every
+  doc, statused) and `docs/BACKLOG.md` (every open intention, sourced), and
+  search docs/ recursively, never top-level-only. `tools/check_docs_index.py`
+  fails the local gate when a doc is untriaged or the backlog malforms; it
+  exists because a complete research file once sat unread while the wrong
+  direction got built (2026-08-24).
 
 ## Non-goals (stated so they stop being re-proposed)
 

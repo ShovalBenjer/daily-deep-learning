@@ -16,7 +16,8 @@ header { padding: .7rem 1rem .3rem; text-align: center; }
 h1 { font-family: "Frank Ruhl Libre", serif; font-weight: 900; color: var(--gold-hi); margin: 0; font-size: 1.6rem; }
 .sub { margin: 0; color: var(--faded); font-size: .8rem; letter-spacing: .12em; }
 .muted { color: var(--faded); font-size: .85rem; margin: .2rem 0; }
-#city { flex: 1; width: 100%; min-height: 0; touch-action: none; outline: none; }
+#city { flex: 1; width: 100%; min-height: 0; touch-action: none; }
+#city:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 
 #sheet {
   position: fixed; inset-inline: 0; bottom: 0; max-height: 76vh; overflow-y: auto;

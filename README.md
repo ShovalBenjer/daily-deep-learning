@@ -23,6 +23,12 @@ offline included.
   Worker that back sync and teacher chat over a quick tunnel.
 - `ROUTINE.md`: the contract the scheduled daily agent follows.
 - `DESIGN.md`: the visual and type system.
+- `game/`: the City of Lamps POC (ADR-0002 stack: Bun + Babylon 9 +
+  DuckDB-WASM). A night street of drill lamps; each opens a story-driven SQL
+  or fraud-decisioning drill graded against a reference query run on the same
+  in-browser database. `cd game && bun install && bun index.html` to play;
+  `python3 game/tools/build_bank.py` builds the local, gitignored book-excerpt
+  study bank. Not deployed: the Pages allowlist does not ship it.
 
 For a full file-by-file and directory-by-directory map, plus the library and
 CSP self-audit, see `docs/CODEBASE-MAP.md`. For gate status and the path to

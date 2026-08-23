@@ -19,6 +19,9 @@ export type LampState = 'dark' | 'flicker' | 'lit';
 export interface CityHandles {
   scene: Scene;
   setLampState: (id: string, s: LampState) => void;
+  /** The performed moment: camera drifts to the lamp and it flares bright
+   *  before settling to lit. Reduced-motion gets the settled state only. */
+  pulseLamp: (id: string) => void;
   onLampTap: (cb: (id: string) => void) => void;
 }
 
@@ -98,6 +101,8 @@ export function buildCity(canvas: HTMLCanvasElement, specs: LampSpec[]): CityHan
   }
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let pulse: { lamp: Lamp; until: number } | null = null;
+  let focusTarget: Vector3 | null = null;
   scene.onBeforeRenderObservable.add(() => {
     const t = performance.now() / 1000;
     for (const l of lamps.values()) {
@@ -106,6 +111,22 @@ export function buildCity(canvas: HTMLCanvasElement, specs: LampSpec[]): CityHan
         l.mat.emissiveColor = GOLD.scale(f);
         l.light.intensity = f * 0.5;
       }
+    }
+    if (pulse) {
+      const left = pulse.until - performance.now();
+      if (left <= 0) {
+        pulse.lamp.mat.emissiveColor = GOLD_HI.scale(1.0);
+        pulse.lamp.light.intensity = 0.85;
+        pulse = null;
+      } else {
+        const k = 1 + (left / 1200) * 2.2; // flare decays to the settled glow
+        pulse.lamp.mat.emissiveColor = GOLD_HI.scale(Math.min(2.6, k));
+        pulse.lamp.light.intensity = 0.85 * k;
+      }
+    }
+    if (focusTarget) {
+      camera.target = Vector3.Lerp(camera.target, focusTarget, 0.06);
+      if (Vector3.Distance(camera.target, focusTarget) < 0.05) focusTarget = null;
     }
   });
 
@@ -121,6 +142,13 @@ export function buildCity(canvas: HTMLCanvasElement, specs: LampSpec[]): CityHan
 
   return {
     scene,
+    pulseLamp(id) {
+      const l = lamps.get(id); if (!l) return;
+      l.state = 'lit';
+      focusTarget = l.head.position.clone();
+      if (reduced) { l.mat.emissiveColor = GOLD_HI.scale(1.0); l.light.intensity = 0.85; return; }
+      pulse = { lamp: l, until: performance.now() + 1200 };
+    },
     setLampState(id, s) {
       const l = lamps.get(id); if (!l) return;
       l.state = s;

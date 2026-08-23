@@ -26,7 +26,9 @@ const GOLD = new Color3(0.79, 0.66, 0.42);
 const GOLD_HI = new Color3(0.91, 0.79, 0.53);
 const DIM = new Color3(0.2, 0.19, 0.23);
 
-export function buildCity(canvas: HTMLCanvasElement, drillIds: string[]): CityHandles {
+export interface LampSpec { id: string; row: number; }
+
+export function buildCity(canvas: HTMLCanvasElement, specs: LampSpec[]): CityHandles {
   const engine = new Engine(canvas, true, { adaptToDeviceRatio: true });
   const scene = new Scene(engine);
   scene.clearColor = new Color4(0.059, 0.051, 0.078, 1);
@@ -49,31 +51,39 @@ export function buildCity(canvas: HTMLCanvasElement, drillIds: string[]): CityHa
   interface Lamp { head: Mesh; mat: StandardMaterial; light: PointLight; state: LampState; phase: number; }
   const lamps = new Map<string, Lamp>();
 
-  const street = drillIds.length;
-  drillIds.forEach((id, i) => {
-    const x = (i - (street - 1) / 2) * 3.2;
-    const post = MeshBuilder.CreateCylinder(`post-${id}`, { height: 2.6, diameter: 0.12 }, scene);
-    post.position.set(x, 1.3, 0);
+  const streetCount = specs.filter(s => s.row === 0).length;
+  let streetIdx = 0, shelfIdx = 0;
+  for (const { id, row } of specs) {
+    // row 0: the drill street up front. row 1+: the book shelves behind it,
+    // eight smaller lamps per shelf line.
+    let x: number, z: number, headY: number, dia: number;
+    if (row === 0) {
+      x = (streetIdx - (streetCount - 1) / 2) * 3.2; z = 0; headY = 2.85; dia = 0.62; streetIdx++;
+    } else {
+      x = ((shelfIdx % 8) - 3.5) * 2.0; z = -5 - Math.floor(shelfIdx / 8) * 2.2; headY = 1.9; dia = 0.4; shelfIdx++;
+    }
+    const post = MeshBuilder.CreateCylinder(`post-${id}`, { height: headY - 0.25, diameter: 0.1 }, scene);
+    post.position.set(x, (headY - 0.25) / 2, z);
     const pmat = new StandardMaterial(`pm-${id}`, scene);
     pmat.diffuseColor = new Color3(0.16, 0.14, 0.19); pmat.specularColor = Color3.Black();
     post.material = pmat;
 
-    const head = MeshBuilder.CreateSphere(`lamp-${id}`, { diameter: 0.62 }, scene);
-    head.position.set(x, 2.85, 0);
+    const head = MeshBuilder.CreateSphere(`lamp-${id}`, { diameter: dia }, scene);
+    head.position.set(x, headY, z);
     const mat = new StandardMaterial(`lm-${id}`, scene);
     mat.diffuseColor = DIM; mat.emissiveColor = DIM.scale(0.7); mat.specularColor = Color3.Black();
     head.material = mat;
 
     const light = new PointLight(`pl-${id}`, head.position.clone(), scene);
-    light.diffuse = GOLD; light.intensity = 0; light.range = 7;
+    light.diffuse = GOLD; light.intensity = 0; light.range = row === 0 ? 7 : 4;
 
     // widen the tap target: an invisible sphere around the head
-    const hit = MeshBuilder.CreateSphere(`hit-${id}`, { diameter: 1.6 }, scene);
+    const hit = MeshBuilder.CreateSphere(`hit-${id}`, { diameter: dia * 2.8 }, scene);
     hit.position.copyFrom(head.position); hit.isVisible = false; hit.isPickable = true;
     head.isPickable = true;
 
     lamps.set(id, { head, mat, light, state: 'dark', phase: Math.random() * 6.28 });
-  });
+  }
 
   // ambient horizon lamps: the rest of the city, dim until P1 wires real state
   for (let i = 0; i < 46; i++) {

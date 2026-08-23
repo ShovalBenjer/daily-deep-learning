@@ -1,18 +1,26 @@
 /**
- * POC boot: city + drill sheet. The loop is the Cowork coach's loop made
- * playable: story, prediction, write real SQL, run it on the seeded DuckDB,
- * grade by result-set match against the reference, then the verbal answer
- * and the analyst read. A passing drill lights its lamp; progress persists
- * in localStorage under 'lamps-poc'.
+ * POC boot: city + drill sheets. Two content streets:
  *
- * Rendering contract (review panel 2026-08-24): no innerHTML anywhere.
- * All markup is built with el(); every dynamic value (DB cells, SQL error
- * text, book excerpts) enters the DOM as a text node, so the XSS class the
- * panel flagged is closed by construction, not by sanitizer discipline.
+ * The drill street (fintech world, seeded DuckDB) now teaches instead of
+ * examining: each drill's holes carry a ladder (nudge, then a runnable
+ * diagnostic query, then reveal), "בדוק חורים" grades each hole separately
+ * with praise the moment it closes, and a failed run points at the first
+ * open hole instead of buzzing. Execution against the reference stays the
+ * final truth oracle.
+ *
+ * The book shelf (bank/book-drills.json, generated from the operator's own
+ * corpus by tools/gen_drills.py) renders as smaller lamps behind the
+ * street: each is a real query from the book with one load-bearing clause
+ * masked, answered by choice among clause-family distractors mined from
+ * the same corpus; a wrong pick quotes the book's own prose as the hint
+ * and the drill stays open.
+ *
+ * Rendering contract (review panel 2026-08-24): no innerHTML anywhere;
+ * every dynamic value enters the DOM as a text node via el().
  */
 import { initDb, runSql, canonical, SqlResult } from './db';
-import { drills, schemaNote, SqlDrill, CaseDrill } from './drills';
-import { buildCity, CityHandles, LampState } from './city';
+import { drills, schemaNote, SqlDrill, CaseDrill, Hole } from './drills';
+import { buildCity, CityHandles, LampState, LampSpec } from './city';
 
 const $ = (s: string) => document.querySelector(s) as HTMLElement;
 
@@ -26,6 +34,11 @@ function el(tag: string, attrs: Attrs = {}, ...children: (Node | string)[]): HTM
   }
   for (const c of children) n.append(typeof c === 'string' ? document.createTextNode(c) : c);
   return n;
+}
+
+interface BookDrill {
+  id: string; source: string; section: string; prose: string;
+  sqlMasked: string; maskLabel: string; options: string[]; correct: number;
 }
 
 type Progress = Record<string, 'attempted' | 'passed'>;
@@ -45,6 +58,7 @@ const saveP = (p: Progress) => { try { localStorage.setItem('lamps-poc', JSON.st
 
 let city: CityHandles;
 let progress = loadP();
+let bookDrills: BookDrill[] = [];
 
 const stateOf = (id: string): LampState =>
   progress[id] === 'passed' ? 'lit' : progress[id] === 'attempted' ? 'flicker' : 'dark';
@@ -71,28 +85,65 @@ function renderTable(res: SqlResult): HTMLElement {
   return box;
 }
 
-async function loadBank(id: string): Promise<HTMLElement> {
-  try {
-    const r = await fetch(`/bank/${id}.json`);
-    if (!r.ok) throw new Error('no bank');
-    const items: unknown = await r.json();
-    const box = el('div', {});
-    if (Array.isArray(items)) {
-      for (const i of items as { source?: unknown; excerpt?: unknown }[]) {
-        box.append(el('blockquote', {}, el('p', {}, String(i.excerpt ?? '')), el('cite', {}, String(i.source ?? ''))));
-      }
-    }
-    return box;
-  } catch {
-    return el('p', { class: 'muted' },
-      'בנק העיון ריק. הרץ ', el('code', {}, 'python3 tools/build_bank.py'),
-      ' (הקטעים נשארים מקומיים, מחוץ ל-git).');
-  }
+function markDone(id: string) {
+  progress[id] = 'passed'; saveP(progress); city.setLampState(id, 'lit');
+}
+function markTried(id: string) {
+  if (progress[id] !== 'passed') { progress[id] = 'attempted'; saveP(progress); city.setLampState(id, stateOf(id)); }
 }
 
 function block(title: string, ...children: (Node | string)[]): HTMLElement {
   return el('div', { class: 'block' }, el('h3', {}, title), ...children);
 }
+
+/* ---------- the guided hole ladder ---------- */
+
+function holePanel(d: SqlDrill, ta: HTMLTextAreaElement): HTMLElement {
+  const rung = new Map<Hole, number>(); // 0 untouched, 1 nudged, 2 diagnosed, 3 revealed
+  const rows = d.holes.map(h => {
+    const chip = el('span', { class: 'hole-chip' }, h.label);
+    const msg = el('div', { class: 'hole-msg' });
+    const more = el('button', { class: 'hole-more', onclick: async () => {
+      const r = (rung.get(h) || 1) + 1;
+      rung.set(h, r);
+      if (r === 2 && h.diagnostic) {
+        const res = el('div', {});
+        msg.replaceChildren(
+          el('p', {}, 'כלי אבחון, בדיוק מה שהיית עושה בעבודה:'),
+          el('pre', { dir: 'ltr' }, h.diagnostic),
+          el('button', { onclick: async () => { try { res.replaceChildren(renderTable(await runSql(h.diagnostic!))); } catch { res.replaceChildren(el('p', { class: 'muted' }, 'האבחון נכשל להריץ.')); } } }, 'הרץ אבחון'),
+          res, more);
+      } else {
+        msg.replaceChildren(el('p', {}, 'הפתרון לחור הזה:'), el('pre', { dir: 'ltr' }, h.reveal),
+          el('p', { class: 'muted' }, 'העתק פנימה, ותגיד בקול למה זו הצורה.'));
+      }
+    } }, 'עוד עזרה');
+    return { h, chip, msg, more, row: el('div', { class: 'hole-row' }, chip, msg) };
+  });
+
+  const grade = () => {
+    let allGood = true;
+    for (const r of rows) {
+      const ok = r.h.check(ta.value);
+      r.chip.classList.toggle('ok', ok);
+      if (ok) {
+        r.msg.replaceChildren(el('p', { class: 'praise' }, r.h.praise));
+      } else {
+        allGood = false;
+        if (!rung.get(r.h)) rung.set(r.h, 1);
+        if (rung.get(r.h) === 1) r.msg.replaceChildren(el('p', {}, r.h.nudge), r.more);
+      }
+    }
+    return allGood;
+  };
+
+  const panel = block('החורים', ...rows.map(r => r.row));
+  panel.classList.add('holes');
+  (panel as HTMLElement & { grade: () => boolean }).grade = grade;
+  return panel;
+}
+
+/* ---------- drill sheets ---------- */
 
 function openSql(d: SqlDrill) {
   const sheet = $('#sheet');
@@ -100,8 +151,7 @@ function openSql(d: SqlDrill) {
   const ta = el('textarea', { id: 'sql', dir: 'ltr', spellcheck: 'false' }) as HTMLTextAreaElement;
   ta.value = d.starter;
   const out = el('div', { id: 'out', 'aria-live': 'polite' });
-  const bank = el('div', { id: 'bank' });
-  const study = block('מהספרים', bank); study.hidden = true;
+  const holes = holePanel(d, ta) as HTMLElement & { grade: () => boolean };
   const verbalA = el('p', {}, d.verbalA); verbalA.hidden = true;
   const verbal = block('השאלה המילולית', el('p', {}, d.verbalQ),
     el('button', { onclick: () => { verbalA.hidden = false; } }, 'הצג תשובת מודל'), verbalA);
@@ -112,30 +162,33 @@ function openSql(d: SqlDrill) {
     if (running) return;  // a double-tap must not race two grades onto one verdict
     running = true;
     out.replaceChildren(el('p', { class: 'muted' }, 'מריץ…'));
-    if (progress[d.id] !== 'passed') { progress[d.id] = 'attempted'; saveP(progress); city.setLampState(d.id, stateOf(d.id)); }
+    markTried(d.id);
     try {
       const res = await runSql(ta.value);
       const ref = await runSql(d.reference);
       const pass = canonical(res) === canonical(ref);
-      out.replaceChildren(renderTable(res), pass
-        ? el('p', { class: 'verdict ok' }, 'הפנס נדלק. התוצאה זהה לרפרנס, אחד לאחד.')
-        : el('p', { class: 'verdict bad' },
-            `רץ, אבל לא זהה לרפרנס (${res.rows.length} שורות מול ${ref.rows.length}). ` +
-            'בדוק את החורים, את חלון הזמן, ואת סדר העמודות שהמשימה מגדירה. ומספר חשוד מדי? כמעט תמיד באג בשאילתה.'));
       if (pass) {
-        out.append(el('p', { class: 'analyst' }, d.analystRead));
-        progress[d.id] = 'passed'; saveP(progress);
-        city.setLampState(d.id, 'lit');
+        out.replaceChildren(renderTable(res),
+          el('p', { class: 'verdict ok' }, 'הפנס נדלק. התוצאה זהה לרפרנס, אחד לאחד.'),
+          el('p', { class: 'analyst' }, d.analystRead));
+        markDone(d.id);
         verbal.hidden = false;
+      } else {
+        holes.grade();
+        const firstOpen = d.holes.find(h => !h.check(ta.value));
+        out.replaceChildren(renderTable(res),
+          el('p', { class: 'verdict bad' }, firstOpen
+            ? `רץ, והכיוון נכון, אבל התוצאה עוד לא זהה לרפרנס (${res.rows.length} שורות מול ${ref.rows.length}). תתחיל מהחור "${firstOpen.label}" למעלה.`
+            : `רץ, כל החורים נראים במקום, אבל התוצאה שונה (${res.rows.length} שורות מול ${ref.rows.length}). בדוק את סדר העמודות ואת ה-ORDER BY שהמשימה מגדירה, ומספר חשוד מדי הוא כמעט תמיד באג.`));
       }
-      // the verdict must never render below the sheet's fold unseen
-      out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) {
       out.replaceChildren(el('p', { class: 'verdict bad' },
         'שגיאת SQL: ', el('span', { dir: 'ltr' }, (e as Error).message.slice(0, 300))));
     } finally {
       running = false;
     }
+    // the verdict must never render below the sheet's fold unseen
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
   sheet.append(
@@ -145,11 +198,12 @@ function openSql(d: SqlDrill) {
     block('הסכימה', el('pre', { dir: 'ltr' }, schemaNote)),
     block('המשימה', el('p', {}, d.task)),
     (() => { const b = block('ניבוי לפני הרצה', el('p', {}, d.prediction)); b.classList.add('pred'); return b; })(),
+    holes,
     ta,
     el('div', { class: 'row' },
-      el('button', { id: 'runBtn', class: 'gold', onclick: run }, 'הרץ'),
-      el('button', { onclick: async () => { study.hidden = !study.hidden; if (!study.hidden) bank.replaceChildren(await loadBank(d.id)); } }, 'עיון')),
-    out, study, verbal);
+      el('button', { id: 'checkBtn', onclick: () => { holes.grade(); } }, 'בדוק חורים'),
+      el('button', { id: 'runBtn', class: 'gold', onclick: run }, 'הרץ')),
+    out, verbal);
   sheet.hidden = false;
 }
 
@@ -160,16 +214,13 @@ function openCase(d: CaseDrill) {
   let verdict = '', blockNo = 0;
   const judge = () => {
     if (!verdict || !blockNo) return;
-    if (progress[d.id] !== 'passed') { progress[d.id] = 'attempted'; saveP(progress); }
+    markTried(d.id);
     const right = verdict === d.correctVerdict && blockNo === d.correctBlock;
     out.replaceChildren(right
       ? el('p', { class: 'verdict ok' }, `הפנס נדלק: ${d.correctVerdict} דרך Block ${d.correctBlock}.`)
       : el('p', { class: 'verdict bad' },
           `${verdict} דרך Block ${blockNo} זו לא הקריאה של התיק הזה. קרא שוב אילו עובדות בתיק שייכות לאיזה Block, ונסה שוב.`));
-    if (right) {
-      out.append(el('p', { class: 'analyst' }, d.modelRead));
-      progress[d.id] = 'passed'; saveP(progress); city.setLampState(d.id, 'lit');
-    } else city.setLampState(d.id, stateOf(d.id));
+    if (right) { out.append(el('p', { class: 'analyst' }, d.modelRead)); markDone(d.id); }
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
   const pick = (cls: string, set: () => void) => (e: Event) => {
@@ -192,26 +243,86 @@ function openCase(d: CaseDrill) {
   sheet.hidden = false;
 }
 
+function openBook(d: BookDrill) {
+  const sheet = $('#sheet');
+  sheet.replaceChildren();
+  const out = el('div', { id: 'out', 'aria-live': 'polite' });
+  const next = () => {
+    const remaining = bookDrills.find(b => progress[b.id] !== 'passed');
+    if (remaining) openBook(remaining); else sheet.hidden = true;
+  };
+  const buttons = d.options.map((opt, i) => el('button', {
+    class: 'opt-btn', dir: 'ltr',
+    onclick: (e: Event) => {
+      markTried(d.id);
+      const btn = e.currentTarget as HTMLButtonElement;
+      if (i === d.correct) {
+        sheet.querySelectorAll<HTMLButtonElement>('.opt-btn').forEach(b => { b.disabled = true; });
+        btn.classList.add('ok');
+        out.replaceChildren(
+          el('p', { class: 'verdict ok' }, 'בדיוק. הפנס נדלק.'),
+          el('p', { class: 'analyst' }, `מהספר: ${d.prose.slice(0, 320)}`),
+          el('button', { class: 'gold', onclick: next }, 'לפנס הבא במדף'));
+        markDone(d.id);
+      } else {
+        btn.classList.add('bad'); btn.disabled = true;
+        out.replaceChildren(
+          el('p', { class: 'verdict bad' }, 'לא זה, ותשמע למה זה מבלבל:'),
+          el('p', {}, `הרמז נמצא בטקסט של הספר עצמו: ${d.prose.slice(0, 260)}`),
+          el('p', { class: 'muted' }, 'נסה שוב, נשארו אפשרויות.'));
+      }
+      out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+  }, opt));
+  sheet.append(
+    el('button', { class: 'close', onclick: () => { sheet.hidden = true; } }, 'סגור'),
+    el('h2', {}, d.section || d.maskLabel),
+    el('p', { class: 'muted' }, `מדף הספרים · ${d.source}`),
+    block('מהספר', el('p', {}, d.prose)),
+    block('השאילתה, עם חור אחד', el('pre', { dir: 'ltr' }, d.sqlMasked)),
+    el('p', {}, `מה נכנס במקום הקו? (${d.maskLabel})`),
+    el('div', { class: 'row opts' }, ...buttons),
+    out);
+  sheet.hidden = false;
+}
+
 function openDrill(id: string) {
   const d = drills.find(x => x.id === id);
-  if (!d) return;
-  if (d.kind === 'sql') openSql(d); else openCase(d);
+  if (d) { if (d.kind === 'sql') openSql(d); else openCase(d); return; }
+  const b = bookDrills.find(x => x.id === id);
+  if (b) openBook(b);
 }
 
 async function boot() {
+  try {
+    const r = await fetch('/bank/book-drills.json');
+    // an SPA-fallback server answers HTML with 200; demand actual JSON so a
+    // broken bank is visible instead of silently empty
+    if (r.ok && (r.headers.get('content-type') || '').includes('json')) {
+      const parsed: unknown = await r.json();
+      if (Array.isArray(parsed)) bookDrills = parsed as BookDrill[];
+    }
+  } catch { /* shelf stays empty; the street still works */ }
+
   const canvas = document.getElementById('city') as HTMLCanvasElement;
-  city = buildCity(canvas, drills.map(d => d.id));
+  const specs: LampSpec[] = [
+    ...drills.map(d => ({ id: d.id, row: 0 })),
+    ...bookDrills.map(b => ({ id: b.id, row: 1 })),
+  ];
+  city = buildCity(canvas, specs);
   // dev hook for headless playtesting (agents drive drills without 3D picking)
   if (location.search.includes('dev')) {
     (window as unknown as Record<string, unknown>).__open = openDrill;
   }
-  drills.forEach(d => city.setLampState(d.id, stateOf(d.id)));
+  specs.forEach(s => city.setLampState(s.id, stateOf(s.id)));
   city.onLampTap(openDrill);
   const status = $('#status');
   try {
     await initDb(s => { status.textContent = s; });
     status.textContent = '';
-    $('#hint').textContent = 'הקש על פנס ברחוב כדי לפתוח תיק.';
+    $('#hint').textContent = bookDrills.length
+      ? `הקש על פנס ברחוב לתיק, או על מדף הספרים מאחור (${bookDrills.length} פנסים מהקורפוס).`
+      : 'הקש על פנס ברחוב כדי לפתוח תיק.';
   } catch (e) {
     status.textContent = 'המנוע לא עלה: ' + (e as Error).message.slice(0, 200);
   }

@@ -1,0 +1,58 @@
+/* POC styles: the ledger fiction's tokens (DESIGN.md), phone-first, RTL. */
+:root {
+  --bg: #0f0d14; --panel: #171420; --panel-2: #1d1929;
+  --ink: #e7dcc2; --faded: #8a8496; --line: #2b2536;
+  --gold: #c9a86a; --gold-hi: #e8c988;
+  --green: #79c07a; --red: #c9856a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: "Rubik", system-ui, sans-serif; font-size: 16px; line-height: 1.6;
+  display: flex; flex-direction: column;
+}
+header { padding: .7rem 1rem .3rem; text-align: center; }
+h1 { font-family: "Frank Ruhl Libre", serif; font-weight: 900; color: var(--gold-hi); margin: 0; font-size: 1.6rem; }
+.sub { margin: 0; color: var(--faded); font-size: .8rem; letter-spacing: .12em; }
+.muted { color: var(--faded); font-size: .85rem; margin: .2rem 0; }
+#city { flex: 1; width: 100%; min-height: 0; touch-action: none; outline: none; }
+
+#sheet {
+  position: fixed; inset-inline: 0; bottom: 0; max-height: 76vh; overflow-y: auto;
+  background: var(--panel); border-top: 1px solid var(--gold);
+  padding: 1rem 1.1rem 2rem; z-index: 5;
+}
+#sheet h2 { font-family: "Frank Ruhl Libre", serif; color: var(--gold-hi); margin: .2rem 0 .5rem; }
+#sheet h3 { font-size: .95rem; color: var(--gold); margin: 0 0 .3rem; }
+.block { background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: .7rem .9rem; margin: .7rem 0; }
+.pred { border-inline-start: 3px solid var(--gold); }
+pre { font-family: "IBM Plex Mono", monospace; font-size: .8rem; overflow-x: auto; margin: 0; color: var(--faded); }
+textarea {
+  width: 100%; min-height: 200px; background: #0b0a10; color: var(--ink);
+  font-family: "IBM Plex Mono", monospace; font-size: .85rem; line-height: 1.5;
+  border: 1px solid var(--line); border-radius: 3px; padding: .7rem; margin: .5rem 0;
+}
+textarea:focus, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.row { display: flex; gap: .6rem; flex-wrap: wrap; margin: .4rem 0; }
+button {
+  font-family: inherit; font-size: .95rem; font-weight: 700; cursor: pointer;
+  background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 3px; min-height: 44px; padding: 0 1.1rem;
+}
+button.gold { background: var(--gold); color: #17130b; border-color: var(--gold-hi); }
+button.on { border-color: var(--gold-hi); color: var(--gold-hi); }
+button.close { position: sticky; top: 0; float: left; min-height: 36px; font-size: .8rem; }
+.tblwrap { overflow-x: auto; margin: .6rem 0; }
+table { border-collapse: collapse; font-family: "IBM Plex Mono", monospace; font-size: .78rem; direction: ltr; }
+th, td { border: 1px solid var(--line); padding: .3rem .55rem; text-align: left; white-space: nowrap; }
+th { color: var(--gold); }
+.verdict { font-weight: 700; padding: .5rem .8rem; border-radius: 3px; }
+.verdict.ok { color: var(--green); border: 1px solid var(--green); }
+.verdict.bad { color: var(--red); border: 1px solid var(--red); }
+.analyst { border-inline-start: 3px solid var(--gold); background: var(--panel-2); padding: .6rem .9rem; }
+blockquote { border-inline-start: 2px solid var(--line); margin: .6rem 0; padding: .2rem .8rem; color: var(--faded); font-size: .9rem; }
+cite { display: block; font-family: "IBM Plex Mono", monospace; font-size: .72rem; margin-top: .3rem; }
+code { font-family: "IBM Plex Mono", monospace; font-size: .85em; }
+ol { padding-inline-start: 1.2rem; margin: 0; }
+ol li { margin: .3rem 0; font-size: .92rem; }

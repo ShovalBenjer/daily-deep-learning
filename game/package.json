@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@babylonjs/core": "^9.22.1",
+    "@duckdb/duckdb-wasm": "^1.33.1-dev57.0"
+  }
+}

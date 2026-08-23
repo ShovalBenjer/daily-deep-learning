@@ -4,6 +4,11 @@
  * grade by result-set match against the reference, then the verbal answer
  * and the analyst read. A passing drill lights its lamp; progress persists
  * in localStorage under 'lamps-poc'.
+ *
+ * Rendering contract (review panel 2026-08-24): no innerHTML anywhere.
+ * All markup is built with el(); every dynamic value (DB cells, SQL error
+ * text, book excerpts) enters the DOM as a text node, so the XSS class the
+ * panel flagged is closed by construction, not by sanitizer discipline.
  */
 import { initDb, runSql, canonical, SqlResult } from './db';
 import { drills, schemaNote, SqlDrill, CaseDrill } from './drills';
@@ -11,8 +16,31 @@ import { buildCity, CityHandles, LampState } from './city';
 
 const $ = (s: string) => document.querySelector(s) as HTMLElement;
 
+type Attrs = Record<string, string | boolean | ((e: Event) => void)>;
+function el(tag: string, attrs: Attrs = {}, ...children: (Node | string)[]): HTMLElement {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (typeof v === 'function') (n as unknown as Record<string, unknown>)[k] = v;
+    else if (typeof v === 'boolean') { if (v) n.setAttribute(k, ''); }
+    else n.setAttribute(k, v);
+  }
+  for (const c of children) n.append(typeof c === 'string' ? document.createTextNode(c) : c);
+  return n;
+}
+
 type Progress = Record<string, 'attempted' | 'passed'>;
-const loadP = (): Progress => { try { return JSON.parse(localStorage.getItem('lamps-poc') || '{}'); } catch { return {}; } };
+const loadP = (): Progress => {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem('lamps-poc') || '{}');
+    const out: Progress = {};
+    if (raw && typeof raw === 'object') {
+      for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+        if (v === 'attempted' || v === 'passed') out[k] = v;
+      }
+    }
+    return out;
+  } catch { return {}; }
+};
 const saveP = (p: Progress) => { try { localStorage.setItem('lamps-poc', JSON.stringify(p)); } catch { /* private mode */ } };
 
 let city: CityHandles;
@@ -33,99 +61,133 @@ function fmt(v: unknown): string {
   return String(v);
 }
 
-function renderTable(res: SqlResult): string {
-  const head = res.columns.map(c => `<th>${c}</th>`).join('');
-  const body = res.rows.slice(0, 40).map(r => `<tr>${r.map(v => `<td>${fmt(v)}</td>`).join('')}</tr>`).join('');
-  const more = res.rows.length > 40 ? `<p class="muted">…ועוד ${res.rows.length - 40} שורות</p>` : '';
-  return `<div class="tblwrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${more}`;
+function renderTable(res: SqlResult): HTMLElement {
+  const thead = el('thead', {}, el('tr', {}, ...res.columns.map(c => el('th', {}, c))));
+  const tbody = el('tbody', {}, ...res.rows.slice(0, 40).map(r =>
+    el('tr', {}, ...r.map(v => el('td', {}, fmt(v))))));
+  const wrap = el('div', { class: 'tblwrap' }, el('table', {}, thead, tbody));
+  const box = el('div', {}, wrap);
+  if (res.rows.length > 40) box.append(el('p', { class: 'muted' }, `ועוד ${res.rows.length - 40} שורות`));
+  return box;
 }
 
-async function loadBank(id: string): Promise<string> {
+async function loadBank(id: string): Promise<HTMLElement> {
   try {
     const r = await fetch(`/bank/${id}.json`);
-    if (!r.ok) throw 0;
-    const items: { source: string; excerpt: string }[] = await r.json();
-    return items.map(i => `<blockquote><p>${i.excerpt}</p><cite>${i.source}</cite></blockquote>`).join('');
+    if (!r.ok) throw new Error('no bank');
+    const items: unknown = await r.json();
+    const box = el('div', {});
+    if (Array.isArray(items)) {
+      for (const i of items as { source?: unknown; excerpt?: unknown }[]) {
+        box.append(el('blockquote', {}, el('p', {}, String(i.excerpt ?? '')), el('cite', {}, String(i.source ?? ''))));
+      }
+    }
+    return box;
   } catch {
-    return '<p class="muted">בנק העיון ריק. הרץ <code>python3 tools/build_bank.py</code> (הקטעים נשארים מקומיים, מחוץ ל-git).</p>';
+    return el('p', { class: 'muted' },
+      'בנק העיון ריק. הרץ ', el('code', {}, 'python3 tools/build_bank.py'),
+      ' (הקטעים נשארים מקומיים, מחוץ ל-git).');
   }
+}
+
+function block(title: string, ...children: (Node | string)[]): HTMLElement {
+  return el('div', { class: 'block' }, el('h3', {}, title), ...children);
 }
 
 function openSql(d: SqlDrill) {
   const sheet = $('#sheet');
-  sheet.innerHTML = `
-    <button class="close" id="closeBtn">סגור</button>
-    <h2>${d.title}</h2>
-    <p>${d.story}</p>
-    <div class="block"><h3>הסכימה</h3><pre dir="ltr">${schemaNote}</pre></div>
-    <div class="block"><h3>המשימה</h3><p>${d.task}</p></div>
-    <div class="block pred"><h3>ניבוי לפני הרצה</h3><p>${d.prediction}</p></div>
-    <textarea id="sql" dir="ltr" spellcheck="false">${d.starter}</textarea>
-    <div class="row"><button id="runBtn" class="gold">הרץ</button><button id="studyBtn">עיון</button></div>
-    <div id="out"></div>
-    <div id="study" class="block" hidden><h3>מהספרים</h3><div id="bank"></div></div>
-    <div id="verbal" hidden class="block">
-      <h3>השאלה המילולית</h3><p>${d.verbalQ}</p>
-      <button id="revealBtn">הצג תשובת מודל</button>
-      <p id="verbalA" hidden>${d.verbalA}</p>
-    </div>`;
-  sheet.hidden = false;
-  $('#closeBtn').onclick = () => { sheet.hidden = true; };
-  $('#studyBtn').onclick = async () => { const s = $('#study'); s.hidden = !s.hidden; if (!s.hidden) $('#bank').innerHTML = await loadBank(d.id); };
-  $('#runBtn').onclick = async () => {
-    const sql = ($('#sql') as HTMLTextAreaElement).value;
-    const out = $('#out');
-    out.innerHTML = '<p class="muted">מריץ…</p>';
+  sheet.replaceChildren();
+  const ta = el('textarea', { id: 'sql', dir: 'ltr', spellcheck: 'false' }) as HTMLTextAreaElement;
+  ta.value = d.starter;
+  const out = el('div', { id: 'out' });
+  const bank = el('div', { id: 'bank' });
+  const study = block('מהספרים', bank); study.hidden = true;
+  const verbalA = el('p', {}, d.verbalA); verbalA.hidden = true;
+  const verbal = block('השאלה המילולית', el('p', {}, d.verbalQ),
+    el('button', { onclick: () => { verbalA.hidden = false; } }, 'הצג תשובת מודל'), verbalA);
+  verbal.hidden = true;
+
+  const run = async () => {
+    out.replaceChildren(el('p', { class: 'muted' }, 'מריץ…'));
     if (progress[d.id] !== 'passed') { progress[d.id] = 'attempted'; saveP(progress); city.setLampState(d.id, stateOf(d.id)); }
     try {
-      const res = await runSql(sql);
+      const res = await runSql(ta.value);
       const ref = await runSql(d.reference);
       const pass = canonical(res) === canonical(ref);
-      out.innerHTML = renderTable(res) + (pass
-        ? `<p class="verdict ok">הפנס נדלק. התוצאה זהה לרפרנס, אחד לאחד.</p><p class="analyst">${d.analystRead}</p>`
-        : `<p class="verdict bad">רץ, אבל לא זהה לרפרנס (${res.rows.length} שורות מול ${ref.rows.length}). בדוק את החורים, את חלון הזמן, ואת סדר העמודות שהמשימה מגדירה. ומספר חשוד מדי? כמעט תמיד באג בשאילתה.</p>`);
+      out.replaceChildren(renderTable(res), pass
+        ? el('p', { class: 'verdict ok' }, 'הפנס נדלק. התוצאה זהה לרפרנס, אחד לאחד.')
+        : el('p', { class: 'verdict bad' },
+            `רץ, אבל לא זהה לרפרנס (${res.rows.length} שורות מול ${ref.rows.length}). ` +
+            'בדוק את החורים, את חלון הזמן, ואת סדר העמודות שהמשימה מגדירה. ומספר חשוד מדי? כמעט תמיד באג בשאילתה.'));
       if (pass) {
+        out.append(el('p', { class: 'analyst' }, d.analystRead));
         progress[d.id] = 'passed'; saveP(progress);
         city.setLampState(d.id, 'lit');
-        $('#verbal').hidden = false;
-        $('#revealBtn').onclick = () => { $('#verbalA').hidden = false; };
+        verbal.hidden = false;
       }
     } catch (e) {
-      out.innerHTML = `<p class="verdict bad">שגיאת SQL: <span dir="ltr">${(e as Error).message.slice(0, 300)}</span></p>`;
+      out.replaceChildren(el('p', { class: 'verdict bad' },
+        'שגיאת SQL: ', el('span', { dir: 'ltr' }, (e as Error).message.slice(0, 300))));
     }
   };
+
+  sheet.append(
+    el('button', { class: 'close', onclick: () => { sheet.hidden = true; } }, 'סגור'),
+    el('h2', {}, d.title),
+    el('p', {}, d.story),
+    block('הסכימה', el('pre', { dir: 'ltr' }, schemaNote)),
+    block('המשימה', el('p', {}, d.task)),
+    (() => { const b = block('ניבוי לפני הרצה', el('p', {}, d.prediction)); b.classList.add('pred'); return b; })(),
+    ta,
+    el('div', { class: 'row' },
+      el('button', { id: 'runBtn', class: 'gold', onclick: run }, 'הרץ'),
+      el('button', { onclick: async () => { study.hidden = !study.hidden; if (!study.hidden) bank.replaceChildren(await loadBank(d.id)); } }, 'עיון')),
+    out, study, verbal);
+  sheet.hidden = false;
 }
 
 function openCase(d: CaseDrill) {
   const sheet = $('#sheet');
-  sheet.innerHTML = `
-    <button class="close" id="closeBtn">סגור</button>
-    <h2>${d.title}</h2>
-    <div class="block"><h3>המדיניות</h3><ol>${d.policy.map(p => `<li>${p}</li>`).join('')}</ol></div>
-    <div class="block"><h3>התיק</h3><p>${d.caseFile}</p></div>
-    <div class="row">${d.verdicts.map(v => `<button class="verdict-btn" data-v="${v}">${v}</button>`).join('')}</div>
-    <div class="row" id="blocks">${d.policy.map((_, i) => `<button class="block-btn" data-b="${i + 1}">Block ${i + 1}</button>`).join('')}</div>
-    <p class="muted">בחר פסיקה + את ה-Block שמנמק אותה, ואז אמור בקול את ההסבר של 30 השניות.</p>
-    <div id="out"></div>`;
-  sheet.hidden = false;
-  $('#closeBtn').onclick = () => { sheet.hidden = true; };
-  let verdict = '', block = 0;
+  sheet.replaceChildren();
+  const out = el('div', { id: 'out' });
+  let verdict = '', blockNo = 0;
   const judge = () => {
-    if (!verdict || !block) return;
+    if (!verdict || !blockNo) return;
     if (progress[d.id] !== 'passed') { progress[d.id] = 'attempted'; saveP(progress); }
-    const right = verdict === d.correctVerdict && block === d.correctBlock;
-    $('#out').innerHTML = right
-      ? `<p class="verdict ok">הפנס נדלק: ${d.correctVerdict} דרך Block ${d.correctBlock}.</p><p class="analyst">${d.modelRead}</p>`
-      : `<p class="verdict bad">${verdict} דרך Block ${block} זו לא הקריאה של התיק הזה. קרא שוב אילו עובדות בתיק שייכות לאיזה Block, ונסה שוב.</p>`;
-    if (right) { progress[d.id] = 'passed'; saveP(progress); city.setLampState(d.id, 'lit'); }
-    else city.setLampState(d.id, stateOf(d.id));
+    const right = verdict === d.correctVerdict && blockNo === d.correctBlock;
+    out.replaceChildren(right
+      ? el('p', { class: 'verdict ok' }, `הפנס נדלק: ${d.correctVerdict} דרך Block ${d.correctBlock}.`)
+      : el('p', { class: 'verdict bad' },
+          `${verdict} דרך Block ${blockNo} זו לא הקריאה של התיק הזה. קרא שוב אילו עובדות בתיק שייכות לאיזה Block, ונסה שוב.`));
+    if (right) {
+      out.append(el('p', { class: 'analyst' }, d.modelRead));
+      progress[d.id] = 'passed'; saveP(progress); city.setLampState(d.id, 'lit');
+    } else city.setLampState(d.id, stateOf(d.id));
   };
-  sheet.querySelectorAll<HTMLButtonElement>('.verdict-btn').forEach(b => b.onclick = () => {
-    verdict = b.dataset.v!; sheet.querySelectorAll('.verdict-btn').forEach(x => x.classList.remove('on')); b.classList.add('on'); judge();
-  });
-  sheet.querySelectorAll<HTMLButtonElement>('.block-btn').forEach(b => b.onclick = () => {
-    block = Number(b.dataset.b); sheet.querySelectorAll('.block-btn').forEach(x => x.classList.remove('on')); b.classList.add('on'); judge();
-  });
+  const pick = (cls: string, set: () => void) => (e: Event) => {
+    set();
+    sheet.querySelectorAll('.' + cls).forEach(x => x.classList.remove('on'));
+    (e.currentTarget as HTMLElement).classList.add('on');
+    judge();
+  };
+  sheet.append(
+    el('button', { class: 'close', onclick: () => { sheet.hidden = true; } }, 'סגור'),
+    el('h2', {}, d.title),
+    block('המדיניות', el('ol', {}, ...d.policy.map(p => el('li', {}, p)))),
+    block('התיק', el('p', {}, d.caseFile)),
+    el('div', { class: 'row' }, ...d.verdicts.map(v =>
+      el('button', { class: 'verdict-btn', onclick: pick('verdict-btn', () => { verdict = v; }) }, v))),
+    el('div', { class: 'row' }, ...d.policy.map((_, i) =>
+      el('button', { class: 'block-btn', onclick: pick('block-btn', () => { blockNo = i + 1; }) }, `Block ${i + 1}`))),
+    el('p', { class: 'muted' }, 'בחר פסיקה + את ה-Block שמנמק אותה, ואז אמור בקול את ההסבר של 30 השניות.'),
+    out);
+  sheet.hidden = false;
+}
+
+function openDrill(id: string) {
+  const d = drills.find(x => x.id === id);
+  if (!d) return;
+  if (d.kind === 'sql') openSql(d); else openCase(d);
 }
 
 async function boot() {
@@ -133,16 +195,10 @@ async function boot() {
   city = buildCity(canvas, drills.map(d => d.id));
   // dev hook for headless playtesting (agents drive drills without 3D picking)
   if (location.search.includes('dev')) {
-    (window as unknown as Record<string, unknown>).__open = (id: string) => {
-      const d = drills.find(x => x.id === id)!;
-      if (d.kind === 'sql') openSql(d); else openCase(d);
-    };
+    (window as unknown as Record<string, unknown>).__open = openDrill;
   }
   drills.forEach(d => city.setLampState(d.id, stateOf(d.id)));
-  city.onLampTap(id => {
-    const d = drills.find(x => x.id === id)!;
-    if (d.kind === 'sql') openSql(d); else openCase(d);
-  });
+  city.onLampTap(openDrill);
   const status = $('#status');
   try {
     await initDb(s => { status.textContent = s; });

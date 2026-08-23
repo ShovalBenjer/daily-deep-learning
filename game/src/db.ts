@@ -10,6 +10,10 @@
  * Contracts: initDb() resolves once with a connected AsyncDuckDB; runSql()
  * returns { columns, rows } or throws with the engine's message; the
  * schema matches the drill text exactly (merchants, transactions).
+ * Seeding never assembles row values into SQL text: rows are registered
+ * as JSON files and loaded with read_json, so the only SQL strings are
+ * literal DDL (review panel 2026-08-24, sql-concat). Money is generated
+ * as integer cents and stored as DECIMAL(12,2), never floated in JS.
  *
  * Agent-context: worker+wasm load from jsdelivr at runtime. POC-only
  * shortcut, acceptable because the POC runs on localhost (no CSP); the
@@ -39,17 +43,19 @@ const MERCHANTS = [
   [7, 'PixelPay Top-ups', 'digital', 'IL', '2025-12-05', true, 30, 0.72],
 ] as const;
 
-function seedSql(): string {
+interface TxnRow { txn_id: number; merchant_id: number; txn_ts: string; amount_cents: number; status: string; card_id: number; }
+
+function seedRows(): TxnRow[] {
   const rnd = mulberry32(20260824);
-  const rows: string[] = [];
+  const rows: TxnRow[] = [];
   let txn = 1000;
-  const push = (mid: number, ts: string, amount: number, status: string, card: number) =>
-    rows.push(`(${txn++}, ${mid}, TIMESTAMP '${ts}', ${amount.toFixed(2)}, '${status}', ${card})`);
+  const push = (mid: number, ts: string, amountCents: number, status: string, card: number) =>
+    rows.push({ txn_id: txn++, merchant_id: mid, txn_ts: ts, amount_cents: amountCents, status, card_id: card });
 
   const day = (m: number, d: number) =>
     `2026-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')} ${String(Math.floor(rnd() * 14) + 8).padStart(2, '0')}:${String(Math.floor(rnd() * 60)).padStart(2, '0')}:00`;
 
-  for (const [mid, , , , signup, , perMonth, approvalP] of MERCHANTS) {
+  for (const [mid, , , , , , perMonth, approvalP] of MERCHANTS) {
     for (const month of [6, 7, 8]) {
       // Aurora opens 2026-06-20: June is a stub month; August is the spike.
       let n = perMonth as number;
@@ -57,22 +63,19 @@ function seedSql(): string {
       if (mid === 6 && month === 8) n = 340;
       for (let i = 0; i < n; i++) {
         const d = mid === 6 && month === 6 ? 20 + Math.floor(rnd() * 10) : 1 + Math.floor(rnd() * 28);
-        const amount = mid === 6 && month === 8 ? 900 + rnd() * 2600 : 15 + rnd() * 480;
+        const cents = mid === 6 && month === 8
+          ? 90000 + Math.floor(rnd() * 260000)
+          : 1500 + Math.floor(rnd() * 48000);
         const status = rnd() < (approvalP as number) ? 'approved' : (rnd() < 0.8 ? 'declined' : 'refunded');
-        push(mid as number, day(month, d), amount, status, 5000 + Math.floor(rnd() * 900));
+        push(mid as number, day(month, d), cents, status, 5000 + Math.floor(rnd() * 900));
       }
     }
   }
   // PixelPay July card-testing burst: small amounts, many cards, ~4% approved.
   for (let i = 0; i < 200; i++) {
-    push(7, day(7, 9 + Math.floor(rnd() * 3)), 1 + rnd() * 4, rnd() < 0.04 ? 'approved' : 'declined', 7000 + i);
+    push(7, day(7, 9 + Math.floor(rnd() * 3)), 100 + Math.floor(rnd() * 400), rnd() < 0.04 ? 'approved' : 'declined', 7000 + i);
   }
-  return `
-    CREATE TABLE merchants (merchant_id INT, name TEXT, category TEXT, country TEXT, signup_date DATE, kyc_verified BOOLEAN);
-    INSERT INTO merchants VALUES ${MERCHANTS.map(m => `(${m[0]}, '${m[1]}', '${m[2]}', '${m[3]}', DATE '${m[4]}', ${m[5]})`).join(',')};
-    CREATE TABLE transactions (txn_id INT, merchant_id INT, txn_ts TIMESTAMP, amount DOUBLE, status TEXT, card_id INT);
-    INSERT INTO transactions VALUES ${rows.join(',')};
-  `;
+  return rows;
 }
 
 export async function initDb(onStatus: (s: string) => void): Promise<void> {
@@ -87,7 +90,24 @@ export async function initDb(onStatus: (s: string) => void): Promise<void> {
   URL.revokeObjectURL(workerUrl);
   conn = await db.connect();
   onStatus('זורע נתונים');
-  await conn.query(seedSql());
+  const merchants = MERCHANTS.map(m => ({
+    merchant_id: m[0], name: m[1], category: m[2], country: m[3], signup_date: m[4], kyc_verified: m[5],
+  }));
+  await db.registerFileText('seed_merchants.json', JSON.stringify(merchants));
+  await db.registerFileText('seed_transactions.json', JSON.stringify(seedRows()));
+  await conn.query(`
+    CREATE TABLE merchants AS
+      SELECT merchant_id, name, category, country,
+             CAST(signup_date AS DATE) AS signup_date, kyc_verified
+      FROM read_json('seed_merchants.json',
+        columns={merchant_id: 'INT', name: 'TEXT', category: 'TEXT', country: 'TEXT', signup_date: 'TEXT', kyc_verified: 'BOOLEAN'});
+    CREATE TABLE transactions AS
+      SELECT txn_id, merchant_id, CAST(txn_ts AS TIMESTAMP) AS txn_ts,
+             CAST(amount_cents AS DECIMAL(14,2)) / 100 AS amount,
+             status, card_id
+      FROM read_json('seed_transactions.json',
+        columns={txn_id: 'INT', merchant_id: 'INT', txn_ts: 'TEXT', amount_cents: 'BIGINT', status: 'TEXT', card_id: 'INT'});
+  `);
   onStatus('');
 }
 

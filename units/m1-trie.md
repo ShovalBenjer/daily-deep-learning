@@ -167,3 +167,5 @@ Trie הוא ה-binary search של עולם המחרוזות: במקום לחצו
 ```concepts
 {"items":[{"id":"c-trie","t":"Trie","he":"עץ תחיליות","d":"עץ שבו כל קשת היא תו ואורח שורש-לעלה מאיית מילה מאוחסנת","rel":["c-trie-node","c-trie-prefix"],"node":"dsa"},{"id":"c-trie-node","t":"TrieNode","he":"צומת תחיליות","d":"הבלוק הבסיסי של Trie: children dict ו-is_end flag","rel":["c-trie"],"node":"dsa"},{"id":"c-trie-prefix","t":"prefix query","he":"שאילתת תחילית","d":"הליכה במורד ה-Trie לאורך תווי תחילית; הצומת הסופי עוגן לכל המילים שחולקות אותה","rel":["c-trie","c-binary-search"],"node":"dsa"}]}
 ```
+
+<!-- audited -->

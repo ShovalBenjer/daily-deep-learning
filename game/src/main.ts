@@ -99,7 +99,7 @@ function openSql(d: SqlDrill) {
   sheet.replaceChildren();
   const ta = el('textarea', { id: 'sql', dir: 'ltr', spellcheck: 'false' }) as HTMLTextAreaElement;
   ta.value = d.starter;
-  const out = el('div', { id: 'out' });
+  const out = el('div', { id: 'out', 'aria-live': 'polite' });
   const bank = el('div', { id: 'bank' });
   const study = block('מהספרים', bank); study.hidden = true;
   const verbalA = el('p', {}, d.verbalA); verbalA.hidden = true;
@@ -128,6 +128,8 @@ function openSql(d: SqlDrill) {
         city.setLampState(d.id, 'lit');
         verbal.hidden = false;
       }
+      // the verdict must never render below the sheet's fold unseen
+      out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) {
       out.replaceChildren(el('p', { class: 'verdict bad' },
         'שגיאת SQL: ', el('span', { dir: 'ltr' }, (e as Error).message.slice(0, 300))));
@@ -154,7 +156,7 @@ function openSql(d: SqlDrill) {
 function openCase(d: CaseDrill) {
   const sheet = $('#sheet');
   sheet.replaceChildren();
-  const out = el('div', { id: 'out' });
+  const out = el('div', { id: 'out', 'aria-live': 'polite' });
   let verdict = '', blockNo = 0;
   const judge = () => {
     if (!verdict || !blockNo) return;
@@ -168,6 +170,7 @@ function openCase(d: CaseDrill) {
       out.append(el('p', { class: 'analyst' }, d.modelRead));
       progress[d.id] = 'passed'; saveP(progress); city.setLampState(d.id, 'lit');
     } else city.setLampState(d.id, stateOf(d.id));
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
   const pick = (cls: string, set: () => void) => (e: Event) => {
     set();

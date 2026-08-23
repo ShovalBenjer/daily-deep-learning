@@ -1615,8 +1615,8 @@ function renderLadder() {
   html += `<div class="ledger-art" aria-hidden="true"></div>`;
   // arm focus: choosing a resume variation is choosing your build
   html += `<div class="arm-strip">` + Object.entries(ARMS).map(([k, v]) =>
-    `<button class="arm-chip ${S.armFocus === +k ? 'on' : ''}" aria-pressed="${S.armFocus === +k}" data-arm="${k}" dir="ltr">${v}</button>`).join('') +
-    `<button class="arm-chip ${!S.armFocus ? 'on' : ''}" aria-pressed="${!S.armFocus}" data-arm="0">בלי מוקד</button></div>`;
+    `<button class="arm-chip ${S.armFocus === +k ? 'on' : ''}" aria-pressed="${S.armFocus === +k ? 'true' : 'false'}" data-arm="${k}" dir="ltr">${v}</button>`).join('') +
+    `<button class="arm-chip ${!S.armFocus ? 'on' : ''}" aria-pressed="${!S.armFocus ? 'true' : 'false'}" data-arm="0">בלי מוקד</button></div>`;
   if (skills && skills.skills) {
     const cur = s => S.skillLevels[s.id] ?? s.current;
     const F = S.armFocus;

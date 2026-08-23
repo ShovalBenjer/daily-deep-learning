@@ -1081,7 +1081,7 @@ section.part { margin: 1.6rem 0; padding: 1rem 1.15rem 1.15rem; }
   background: var(--panel); background-image: var(--noise); opacity: .55; }
 .ach-seal svg { width: 26px; height: 26px; fill: none; stroke: var(--faded); stroke-width: 1.6;
   stroke-linecap: round; stroke-linejoin: round; }
-.ach-seal .as-name { font-size: .75rem; font-weight: 700; color: var(--faded); }
+.ach-seal .as-name { font-size: .85rem; font-weight: 700; color: var(--faded); }
 .ach-seal .as-desc { font-size: .75rem; color: var(--faded); line-height: 1.3; }
 .ach-seal.got { opacity: 1; border-color: var(--gold); }
 .ach-seal.got svg { stroke: var(--gold-hi); filter: drop-shadow(0 0 5px color-mix(in oklab, var(--gold) 60%, transparent)); }

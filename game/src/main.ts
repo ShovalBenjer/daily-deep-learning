@@ -107,7 +107,10 @@ function openSql(d: SqlDrill) {
     el('button', { onclick: () => { verbalA.hidden = false; } }, 'הצג תשובת מודל'), verbalA);
   verbal.hidden = true;
 
+  let running = false;
   const run = async () => {
+    if (running) return;  // a double-tap must not race two grades onto one verdict
+    running = true;
     out.replaceChildren(el('p', { class: 'muted' }, 'מריץ…'));
     if (progress[d.id] !== 'passed') { progress[d.id] = 'attempted'; saveP(progress); city.setLampState(d.id, stateOf(d.id)); }
     try {
@@ -128,6 +131,8 @@ function openSql(d: SqlDrill) {
     } catch (e) {
       out.replaceChildren(el('p', { class: 'verdict bad' },
         'שגיאת SQL: ', el('span', { dir: 'ltr' }, (e as Error).message.slice(0, 300))));
+    } finally {
+      running = false;
     }
   };
 

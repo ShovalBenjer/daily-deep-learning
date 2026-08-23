@@ -1,9 +1,10 @@
 # ADR-0002: Bun toolchain + Babylon.js 9 for the game the site becomes
 
-Date: 2026-08-24. Status: accepted (operator decision, recorded the same
-night). Supersedes the "no bundler, no framework, no npm at the root"
-non-goal in AGENTS.md, which this ADR revokes deliberately rather than
-eroding silently.
+- **Status:** accepted (operator decision, recorded the same night)
+- **Date:** 2026-08-24
+- **Supersedes:** the "no bundler, no framework, no npm at the root"
+  non-goal in AGENTS.md, which this ADR revokes deliberately rather than
+  eroding silently.
 
 ## Context
 
@@ -70,3 +71,17 @@ world layer cannot be hand-vendored into an inline script.
   binds.
 - CSP tightens: bundled assets remove the need for 'unsafe-inline'
   script-src once the inline script is fully strangled.
+
+## Falsifiers
+
+- If `bun build`'s HTML-entrypoint pipeline cannot reproduce today's deploy
+  (stage_site.py's default-deny posture, the _headers file, the vendored
+  KaTeX/marked/DOMPurify assets) by the P0 exit, the Vite comparison reopens
+  with that measured gap as the input.
+- If Babylon 9's clustered/volumetric lighting cannot hold 60fps on a
+  mid-range phone for the City of Lamps scene at P1, the fidelity bar drops
+  first (fewer dynamic lights, baked fallbacks); the engine choice reopens
+  only if the reduced bar still misses.
+- If the world layer ever needs ECS-scale entity counts (thousands of
+  simulated actors), Bevy is re-evaluated with numbers, per the taste
+  ledger's own falsifier on the 1-or-4 fork.

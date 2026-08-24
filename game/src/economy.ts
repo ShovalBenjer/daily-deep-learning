@@ -164,6 +164,11 @@ export function lamplighterRound(now = new Date()): string | null {
   if (store.lastLight === today) return null;
   let weakest: { id: string; r: number } | null = null;
   for (const id of Object.keys(store.cards)) {
+    // the lamplighter refreshes what the learner once EARNED, never a lamp
+    // whose last grade was a fail: recovery belongs to the learner, and a
+    // failed-only card must not get auto-certified (PR #10 round-5 Medium)
+    const lg = store.lastGrade[id];
+    if (lg === undefined || lg === 'fail') continue;
     const r = retrievability(id, now);
     if (r !== null && (!weakest || r < weakest.r)) weakest = { id, r };
   }

@@ -560,7 +560,6 @@ def main() -> int:
             print(f"skip {rel}: not readable at {args.base}")
             continue
 
-        after_html: str
         if args.head is None:
             path = root / rel
             if not path.exists():

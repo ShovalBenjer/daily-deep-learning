@@ -31,7 +31,11 @@ offline included.
 - `game/`: the City of Lamps POC (ADR-0002 stack: Bun + Babylon 9 +
   DuckDB-WASM). A night street of drill lamps; each opens a story-driven SQL
   or fraud-decisioning drill graded against a reference query run on the same
-  in-browser database. `cd game && bun install && bun serve.ts` to play
+  in-browser database. Lamp brightness is live FSRS retrievability (ts-fsrs):
+  a dimming lamp IS a due review; passes earn stability-days that bank into
+  embers at end-of-shift, and an already-bright lamp earns nothing, so the
+  economy cannot be farmed. The hired lamplighter (earned automation)
+  refreshes the weakest lamp once per real day. `cd game && bun install && bun serve.ts` to play
   (serve.ts also serves the local study bank, which the bare HTML dev server
   cannot);
   `python3 game/tools/build_bank.py` builds the local, gitignored book-excerpt

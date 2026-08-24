@@ -23,6 +23,11 @@ offline included.
   Worker that back sync and teacher chat over a quick tunnel.
 - `ROUTINE.md`: the contract the scheduled daily agent follows.
 - `DESIGN.md`: the visual and type system.
+- `e2e/`: the self-contained Playwright lane (boot/render/interaction plus
+  axe accessibility over the six routes, phone-sized viewport). Same command
+  locally and in CI: `cd e2e && bun install && bun x playwright test`. This
+  lane replaced the private-harness dependency that kept the e2e, a11y and
+  pipeline gate waivers alive; the quality contract now carries none.
 - `game/`: the City of Lamps POC (ADR-0002 stack: Bun + Babylon 9 +
   DuckDB-WASM). A night street of drill lamps; each opens a story-driven SQL
   or fraud-decisioning drill graded against a reference query run on the same

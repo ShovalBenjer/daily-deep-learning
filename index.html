@@ -2074,7 +2074,7 @@ function renderKodex() {
       <div class="plate">${deckRows}
       <p class="finish-hint">חפיסה נפתחת אל תוך השליפה בקצב ${DECK_PER_DAY} מושגים ביום, לא בבת אחת.</p>
       </div>` : ''}
-    <div class="set-strip" id="setStrip"></div>
+    <div class="set-strip" id="setStrip" tabindex="0" role="region" aria-label="ערכות"></div>
     <div class="qhead"><h2>חדר החותמות</h2><span class="d">${Object.keys(S.ach || {}).length}/${ACHS.length}</span></div>
     <div class="ach-grid">` + ACHS.map(a => {
       const got = (S.ach || {})[a.id];

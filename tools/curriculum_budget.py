@@ -64,7 +64,7 @@ def main() -> None:
         print(f"  {cls.upper():<7} {n:>4}  {share}")
     print(f"  {'TOTAL':<7} {len(units):>4}")
 
-    days = (DEADLINE - datetime.datetime.now(tz=datetime.timezone.utc).date()).days
+    days = (DEADLINE - datetime.datetime.now(tz=datetime.UTC).date()).days
     available = days * HOURS_PER_DAY
     low = sum(u["estMin"] for u in must) / 60
     high = sum(u["estMin"] + u["depthEstMin"] for u in must) / 60

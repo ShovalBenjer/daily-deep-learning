@@ -37,8 +37,7 @@ test('tapping a tab actually changes the view', async ({ page }) => {
   await boot(page, '/');
   const before = await page.locator('#view').innerText();
   await page.locator('#tab-kodex').tap();
-  await page.waitForTimeout(400);
-  const after = await page.locator('#view').innerText();
-  expect(after).not.toEqual(before);
+  // web-first assertion instead of a fixed sleep (PR #9 review, Low #1)
+  await expect(page.locator('#view')).not.toHaveText(before, { timeout: 5000 });
   await expect(page.locator('#tab-kodex[aria-current="page"]')).toHaveCount(1);
 });

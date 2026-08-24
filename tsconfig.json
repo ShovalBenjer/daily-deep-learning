@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node"
+  },
+  "include": [
+    "tools/**/*.ts",
+    "daemon/**/*.ts",
+    "game/**/*.ts",
+    "e2e/**/*.ts"
+  ]
+}

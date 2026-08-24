@@ -1,0 +1,101 @@
+{
+  "recording_note": "Recorded from live sadna-sync and daemon. Use REPLAY=true to replay offline.",
+  "entries": [
+    {
+      "url": "https://sadna-sync.shovalb9.workers.dev",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "answers": {},
+        "reviews": {},
+        "beliefs": {}
+      }
+    },
+    {
+      "url": "https://sadna-sync.shovalb9.workers.dev",
+      "method": "POST",
+      "status": 400,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "bad request"
+    },
+    {
+      "url": "https://sadna-sync.shovalb9.workers.dev",
+      "method": "POST",
+      "status": 413,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "payload too large"
+    },
+    {
+      "url": "https://sadna-sync.shovalb9.workers.dev",
+      "method": "POST",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "answers": {},
+        "reviews": {},
+        "beliefs": {},
+        "__test": 1234567890
+      }
+    },
+    {
+      "url": "http://localhost:8788/health",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "url": "http://localhost:8788/chat",
+      "method": "POST",
+      "status": 401,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "unauthorized"
+    },
+    {
+      "url": "http://localhost:8788/chat",
+      "method": "POST",
+      "status": 400,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "error": "message is required"
+      }
+    },
+    {
+      "url": "http://localhost:8788/nope",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "not found"
+    },
+    {
+      "url": "http://localhost:8788/chat",
+      "method": "POST",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "reply": "התשובה היא אלפא"
+      }
+    }
+  ]
+}

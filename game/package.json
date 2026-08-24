@@ -5,6 +5,10 @@
     "ts-fsrs": "^5.4.1"
   },
   "devDependencies": {
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest run"
   }
 }

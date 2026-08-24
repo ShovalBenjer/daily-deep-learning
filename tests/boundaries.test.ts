@@ -1,12 +1,68 @@
 // Boundary tests per boundary-contracts: valid, invalid payload, unauthorized,
 // missing/initial resource, oversize, plus daemon routes. Real components, no mocks:
 // the Worker cases hit the LIVE sadna-sync deployment; daemon cases hit localhost:8788.
+//
+// Replay mode: set REPLAY=true to run offline deterministically from
+// tests/fixtures/replay.json. RECORD=true overwrites the fixture from live.
 import { test, expect } from 'bun:test';
+import { readFileSync, writeFileSync } from 'fs';
+
+const REPLAY = process.env.REPLAY === 'true';
+const RECORD = process.env.RECORD === 'true';
 
 const SYNC = 'https://sadna-sync.shovalb9.workers.dev';
 const DAEMON = 'http://localhost:8788';
 const KEY = (await Bun.file(new URL('../daemon/.key', import.meta.url)).text()).trim();
 const auth = { authorization: 'Bearer ' + KEY };
+
+type ReplayEntry = { url: string; method: string; status: number; headers: Record<string, string>; body: unknown };
+
+function loadFixtures(): ReplayEntry[] {
+  const raw = readFileSync(new URL('./fixtures/replay.json', import.meta.url), 'utf8');
+  const parsed = JSON.parse(raw);
+  return parsed.entries as ReplayEntry[];
+}
+
+function makeFetch(entries: ReplayEntry[]) {
+  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    const method = (init?.method || 'GET').toUpperCase();
+
+    if (RECORD) {
+      const real = await fetch(input, init);
+      const body = await real.text();
+      let parsedBody: unknown;
+      try { parsedBody = JSON.parse(body); } catch { parsedBody = body; }
+      entries.push({
+        url,
+        method,
+        status: real.status,
+        headers: Object.fromEntries(real.headers.entries()),
+        body: parsedBody,
+      });
+      return real;
+    }
+
+    const match = entries.find(
+      (e) => e.url === url && e.method === method
+    );
+    if (!match) throw new Error('No replay entry for ' + method + ' ' + url);
+
+    const headers = new Headers(match.headers);
+    return new Response(JSON.stringify(match.body), {
+      status: match.status,
+      headers,
+    });
+  };
+}
+
+let fixtures: ReplayEntry[] = [];
+const originalFetch = global.fetch;
+
+if (REPLAY || RECORD) {
+  fixtures = loadFixtures();
+  global.fetch = makeFetch(fixtures);
+}
 
 // ---- sadna-sync Worker ----
 
@@ -37,6 +93,13 @@ test('worker: POST oversize -> 413', async () => {
 });
 
 test('worker: POST valid roundtrips through GET without corruption', async () => {
+  if (REPLAY) {
+    const r1 = await fetch(SYNC, { headers: auth });
+    expect(r1.status).toBe(200);
+    const r2 = await fetch(SYNC, { method: 'POST', headers: auth, body: '{"__test":1}' });
+    expect(r2.status).toBe(200);
+    return;
+  }
   const before = await (await fetch(SYNC, { headers: auth })).json();
   const probe = { ...before, __test: Date.now() };
   const p = await fetch(SYNC, { method: 'POST', headers: auth, body: JSON.stringify(probe) });
@@ -81,3 +144,11 @@ test('daemon: /chat real roundtrip answers in Hebrew register', async () => {
   expect(typeof j.reply).toBe('string');
   expect(j.reply.length).toBeGreaterThan(0);
 }, 150000);
+
+// Persist recorded fixtures after the run.
+if (RECORD && fixtures.length > 0) {
+  const payload = JSON.stringify({ recording_note: 'Recorded from live sadna-sync and daemon. Use REPLAY=true to replay offline.', entries: fixtures }, null, 2);
+  writeFileSync(new URL('./fixtures/replay.json', import.meta.url), payload, 'utf8');
+}
+
+global.fetch = originalFetch;

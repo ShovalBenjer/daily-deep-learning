@@ -11,15 +11,29 @@ export default defineConfig({
   timeout: 30_000,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list']],
-  use: {
-    baseURL: 'http://127.0.0.1:8080',
-    // iPhone-sized chromium, not real WebKit: webkit's system deps need
-    // sudo on this box (backlog row). Blink at 390x844 with touch is the
-    // honest available approximation of the phone-first target.
-    ...devices['iPhone 13'],
-    defaultBrowserType: 'chromium',
-    browserName: 'chromium',
-  },
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['iPhone 13'],
+        browserName: 'chromium',
+      },
+    },
+    {
+      name: 'webkit',
+      use: {
+        ...devices['iPhone 13'],
+        browserName: 'webkit',
+      },
+    },
+    {
+      name: 'firefox',
+      use: {
+        ...devices['iPhone 13'],
+        browserName: 'firefox',
+      },
+    },
+  ],
   webServer: {
     command: 'python3 -m http.server 8080 --bind 127.0.0.1',
     cwd: '..',

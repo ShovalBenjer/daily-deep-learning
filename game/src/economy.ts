@@ -34,7 +34,7 @@ const RATING: Record<Help, Grade> = {
   fail: Rating.Again,
 };
 
-interface Store { cards: Record<string, Card>; embers: number; lamplighter: boolean; lastLight: string; }
+interface Store { cards: Record<string, Card>; embers: number; lamplighter: boolean; lastLight: string; pendingGain: number; }
 
 const KEY = 'lamps-economy';
 
@@ -47,14 +47,15 @@ function load(): Store {
       embers: typeof s.embers === 'number' ? s.embers : 0,
       lamplighter: s.lamplighter === true,
       lastLight: typeof s.lastLight === 'string' ? s.lastLight : '',
+      // a reload before end-shift must not discard earned light (PR #10)
+      pendingGain: typeof s.pendingGain === 'number' ? s.pendingGain : 0,
     };
   } catch {
-    return { cards: {}, embers: 0, lamplighter: false, lastLight: '' };
+    return { cards: {}, embers: 0, lamplighter: false, lastLight: '', pendingGain: 0 };
   }
 }
 
 const store = load();
-let shiftStabilityGain = 0;
 
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch { /* private mode */ }
@@ -64,14 +65,26 @@ function reviveCard(c: Card): Card {
   return { ...c, due: new Date(c.due), last_review: c.last_review ? new Date(c.last_review) : undefined };
 }
 
-/** Record a graded review for a lamp; returns stability-days gained this review. */
+/**
+ * Record a graded review for a lamp; returns stability-days gained.
+ *
+ * Anti-farming rule (PR #10 High, and the ENGINE research's own
+ * mastery-evidence law): a lamp still burning bright is not due, so
+ * re-passing it is practice, not evidence, and earns nothing. The FSRS
+ * card is untouched too: same-session repeats must not inflate stability.
+ */
 export function review(id: string, help: Help, now = new Date()): number {
-  const prev = store.cards[id] ? reviveCard(store.cards[id]) : createEmptyCard(now);
+  const existing = store.cards[id] ? reviveCard(store.cards[id]) : null;
+  if (existing) {
+    const r = f.get_retrievability(existing, now, false) as number;
+    if (r >= 0.95) return 0; // not due: practice is free, embers are not
+  }
+  const prev: Card = existing ?? createEmptyCard(now);
   const before = prev.stability || 0;
   const next = f.next(prev, now, RATING[help]).card;
   store.cards[id] = next;
   const gained = Math.max(0, next.stability - before);
-  shiftStabilityGain += gained;
+  store.pendingGain += gained;
   save();
   return gained;
 }
@@ -83,7 +96,7 @@ export function retrievability(id: string, now = new Date()): number | null {
   return f.get_retrievability(reviveCard(c), now, false) as number;
 }
 
-export function shiftGain(): number { return shiftStabilityGain; }
+export function shiftGain(): number { return store.pendingGain; }
 export function embers(): number { return store.embers; }
 export function hasLamplighter(): boolean { return store.lamplighter; }
 
@@ -91,9 +104,9 @@ export const LAMPLIGHTER_PRICE = 30; // tunable, see header
 
 /** Bank the shift: stability-days become embers. Returns embers banked. */
 export function endShift(): number {
-  const banked = Math.round(shiftStabilityGain);
+  const banked = Math.round(store.pendingGain);
   store.embers += banked;
-  shiftStabilityGain = 0;
+  store.pendingGain = 0;
   save();
   return banked;
 }

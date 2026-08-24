@@ -23,7 +23,7 @@ import { drills, schemaNote, SqlDrill, CaseDrill, Hole } from './drills';
 import { buildCity, CityHandles, LampState, LampSpec } from './city';
 import {
   review, retrievability, shiftGain, embers, endShift,
-  hasLamplighter, buyLamplighter, lamplighterRound, LAMPLIGHTER_PRICE, Help,
+  hasLamplighter, buyLamplighter, lamplighterRound, LAMPLIGHTER_PRICE, DUE_RETENTION, Help,
 } from './economy';
 
 const $ = (s: string) => document.querySelector(s) as HTMLElement;
@@ -115,9 +115,13 @@ function makeHelpTracker() {
 }
 
 function lampStateFromMemory(id: string): LampState {
+  // lit is a PASSED-only state: a failed-and-abandoned drill has a card
+  // whose post-review retrievability is ~1, and without this guard it
+  // painted the lamp lit (PR #10 second-round High)
+  if (progress[id] !== 'passed') return stateOf(id);
   const r = retrievability(id);
   if (r === null) return stateOf(id);
-  if (r >= 0.9) return 'lit';       // FSRS request-retention line: due = flicker
+  if (r >= DUE_RETENTION) return 'lit';
   if (r >= 0.6) return 'flicker';
   return 'dark';
 }

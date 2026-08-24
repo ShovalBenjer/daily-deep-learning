@@ -21,7 +21,7 @@
  * focused week of stability gains) and its one-lamp-per-day throughput.
  * NOT tunable here: the forgetting curve, which is ts-fsrs's own.
  */
-import { createEmptyCard, fsrs, Rating, type Card, type Grade } from 'ts-fsrs';
+import { createEmptyCard, fsrs, Rating, State, type Card, type Grade } from 'ts-fsrs';
 
 const f = fsrs();
 
@@ -73,17 +73,28 @@ function reviveCard(c: Card): Card {
  * re-passing it is practice, not evidence, and earns nothing. The FSRS
  * card is untouched too: same-session repeats must not inflate stability.
  */
+/** FSRS request-retention: at or above this a lamp is not due. One constant
+ *  shared with the lamp visuals so "not due" and "still bright" never drift. */
+export const DUE_RETENTION = 0.9;
+
 export function review(id: string, help: Help, now = new Date()): number {
   const existing = store.cards[id] ? reviveCard(store.cards[id]) : null;
   if (existing) {
     const r = f.get_retrievability(existing, now, false) as number;
-    if (r >= 0.95) return 0; // not due: practice is free, embers are not
+    // A lapsed card (Learning/Relearning) is ALWAYS earnable: the Again
+    // review leaves R at ~1, and without this exception the honest
+    // fail-learn-retry recovery earned nothing, punishing exactly the loop
+    // the game exists to teach. A bright card in Review state stays blocked.
+    const relearning = existing.state === State.Learning || existing.state === State.Relearning;
+    if (r >= DUE_RETENTION && !relearning) return 0; // not due: practice is free, embers are not
   }
   const prev: Card = existing ?? createEmptyCard(now);
   const before = prev.stability || 0;
   const next = f.next(prev, now, RATING[help]).card;
   store.cards[id] = next;
-  const gained = Math.max(0, next.stability - before);
+  // Again is a lapse, never income: without this, failing a fresh lamp once
+  // minted its initial stability as embers (PR #10 second-round High).
+  const gained = help === 'fail' ? 0 : Math.max(0, next.stability - before);
   store.pendingGain += gained;
   save();
   return gained;

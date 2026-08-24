@@ -42,6 +42,7 @@ import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+from typing import cast
 
 # Files carrying an inline <script> that this repo hand-edits.
 TARGETS = ("index.html", "writing/the-bench.html")
@@ -567,7 +568,7 @@ def main() -> int:
                 continue
             after_html = path.read_text(encoding="utf-8", errors="replace")
         else:
-            after_html = git_show(args.head, rel)
+            after_html = cast(str, git_show(args.head, rel))
             if after_html is None:
                 print(f"skip {rel}: not readable at {args.head}")
                 continue

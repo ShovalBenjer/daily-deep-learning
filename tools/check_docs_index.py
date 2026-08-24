@@ -43,6 +43,15 @@ def docs_files() -> list[str]:
     return sorted(out)
 
 
+def tracked_docs() -> set[str]:
+    import subprocess
+    try:
+        out = subprocess.run(["git", "ls-files", "docs"], cwd=ROOT, capture_output=True, text=True, timeout=20)
+        return {p[len("docs/"):] for p in out.stdout.split() if p.startswith("docs/")}
+    except Exception:
+        return set()
+
+
 def main() -> int:
     if not (ROOT / "AGENTS.md").exists():
         print("cannot measure: run from the repository root")
@@ -50,6 +59,17 @@ def main() -> int:
     if not DOCS.is_dir():
         print("cannot measure: docs/ missing")
         return 2
+
+    # Fresh-checkout rule (PR #8 review, High): INDEX.md and BACKLOG.md are
+    # local-only, so a clone or new worktree has neither, and only tracked
+    # docs (the ADRs). Failing there would reopen the gate-depends-on-
+    # untracked-files trap. The control plane is INACTIVE until a local
+    # (untracked) doc exists; the moment one does, triage is required.
+    local_docs = [f for f in docs_files() if f not in tracked_docs()]
+    if not INDEX.exists() and not local_docs:
+        print("docs control plane inactive: fresh checkout, only tracked docs present")
+        return 0
+
     problems: list[str] = []
 
     if not INDEX.exists():
@@ -75,8 +95,9 @@ def main() -> int:
     if not BACKLOG.exists():
         problems.append("docs/BACKLOG.md does not exist")
     else:
+        open_row = re.compile(r"^\s*[-*]\s+\[ \]")
         for i, line in enumerate(BACKLOG.read_text().splitlines(), 1):
-            if line.startswith("- [ ]") and "`" not in line:
+            if open_row.match(line) and "`" not in line:
                 problems.append(f"BACKLOG.md:{i} open row names no source doc in backticks")
 
     if problems:

@@ -46,9 +46,9 @@ def docs_files() -> list[str]:
 def tracked_docs() -> set[str]:
     import subprocess
     try:
-        out = subprocess.run(["git", "ls-files", "docs"], cwd=ROOT, capture_output=True, text=True, timeout=20)
+        out = subprocess.run(["git", "ls-files", "docs"], cwd=ROOT, capture_output=True, text=True, timeout=20, check=False)
         return {p[len("docs/"):] for p in out.stdout.split() if p.startswith("docs/")}
-    except Exception:
+    except (OSError, subprocess.SubprocessError):
         return set()
 
 

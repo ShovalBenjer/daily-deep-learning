@@ -145,7 +145,7 @@ def main() -> int:
         print("  inbox empty, nothing to route")
         return 0
 
-    today = datetime.date.today().isoformat()
+    today = datetime.datetime.now(tz=datetime.timezone.utc).date().isoformat()
     routed = []
     counts: dict[str, int] = {}
 

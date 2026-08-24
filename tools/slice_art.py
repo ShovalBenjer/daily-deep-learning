@@ -7,6 +7,7 @@
 Run after tools/gen_art.sh. Requires: uv pip install pillow (or py -m pip).
 """
 from pathlib import Path
+
 from PIL import Image
 
 RAW = Path(__file__).resolve().parent.parent / "assets/art/raw"

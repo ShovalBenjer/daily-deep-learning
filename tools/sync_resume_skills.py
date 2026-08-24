@@ -9,7 +9,10 @@ owns levels; this script only closes the claim->ledger gap.
 Run: py tools/sync_resume_skills.py            (from the repo root)
 Wired into the weekly council (ROUTINE.md section 0).
 """
-import json, re, sys, io
+import io
+import json
+import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent

@@ -25,7 +25,6 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
-import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA = ROOT / "domains.json"

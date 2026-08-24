@@ -1,8 +1,10 @@
 # Seeds rank-quest chains (5 per node) for the most active nodes.
 # Quest r is what buying rank r unlocks; matches the evidence ladder.
-import json, os
+import json
+import os
 p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "talents.json")
-t = json.load(open(p, encoding="utf-8"))
+with open(p, encoding="utf-8") as _fh:
+    t = json.load(_fh)
 Q = {
  "sql-core": [
   "פתח את כרטיסי המושגים של SQL באוצר וענה על הבוחן שלהם.",
@@ -71,5 +73,6 @@ for tr in t["trees"]:
         for node in tier["nodes"]:
             if node["id"] in Q:
                 node["quests"] = Q[node["id"]]; n += 1
-json.dump(t, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+with open(p, "w", encoding="utf-8") as _fh:
+    json.dump(t, _fh, ensure_ascii=False, indent=1)
 print("quest chains:", n)

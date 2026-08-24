@@ -55,7 +55,7 @@ def parse_fences(md: str) -> tuple[dict[str, int], list[dict]]:
     counts = {k: 0 for k in FENCES}
     concepts: list[dict] = []
     for kind in FENCES:
-        for m in re.finditer("```" + kind + r"\n(.*?)\n```", md, re.S):
+        for m in re.finditer("```" + kind + r"\n(.*?)\n```", md, re.DOTALL):
             body = m.group(1)
             if "\n" in body:
                 raise ValueError(f"{kind} fence spans more than one line")

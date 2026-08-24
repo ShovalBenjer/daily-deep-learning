@@ -1,9 +1,11 @@
 # Builds talents.json v2 per MASTER-PLAN: 42 nodes, 5 named tiers/tree,
 # synergies, kinds, capstones, domain/skill connections. Old ids preserved.
-import json, os
+import json
+import os
 
 p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "talents.json")
-old = json.load(open(p, encoding="utf-8"))
+with open(p, encoding="utf-8") as _fh:
+    old = json.load(_fh)
 oldreq = {}
 for t in old["trees"]:
     for tier in t["tiers"]:
@@ -105,6 +107,7 @@ v2 = {
  ]
 }
 
-json.dump(v2, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+with open(p, "w", encoding="utf-8") as _fh:
+    json.dump(v2, _fh, ensure_ascii=False, indent=1)
 total = sum(len(tier["nodes"]) for t in v2["trees"] for tier in t["tiers"])
 print("nodes:", total, "| synergies:", len(v2["synergies"]))

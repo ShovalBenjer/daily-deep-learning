@@ -1,7 +1,7 @@
 # Seeds rank-quest chains (5 per node) for the most active nodes.
 # Quest r is what buying rank r unlocks; matches the evidence ladder.
-import os
 import json
+import os
 p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "talents.json")
 with open(p, encoding="utf-8") as _fh:
     t = json.load(_fh)

@@ -33,6 +33,11 @@ designed yet.
   oracle/architect/warden.
 - Rarity ramp `--r0..--r4` = LEVELS ONLY (gray→green→blue→violet→gold).
   Color is grammar, never decoration.
+- Button faces: `--btn-face(-hi/-lo)` + `--btn-ink` are ONE fixed warm-gold
+  pair for both themes (locked 2026-08-24, same pattern as `--chip-face`).
+  The theme-inverting `--gold` is for text and line-work and must never be
+  a face under dark ink; the gradient's darkest stop is 78% toward black,
+  measured 5.17:1 under the ink (72% sat at 4.45, below AA).
 - Type voices (three roles, each with exactly one job):
   1. Frank Ruhl Libre serif = DISPLAY and brand only. Wordmark, all headings,
      the illuminated day-stamp, wax-seal letters, ritual titles and numerals,
@@ -57,8 +62,13 @@ designed yet.
 
 ## Motion contract (the Performed Interface)
 
-1. ONE spring family: `--ease-spring` / JS `SPRING`. No other easings for
-   entrances/settles (ease-out allowed for exits/fades only).
+0. Measured figures (folded 2026-08-24 from the operator's subtle-UI
+   psychology corpus, via inbox): microinteractions RESOLVE in under
+   300ms; disclosure works in three visibility tiers, not two; status is
+   an ambient pulse, never a popup; counted-up numbers read as live data
+   and are worth their cost; motion that communicates no state change is
+   cognitive load, so no gratuitous loops and no parallax. These figures
+   bound rules 1-5 below; a motion outside them needs a named reason.
 2. Events are PERFORMED: motion + counted numbers + particles (+ sound later)
    fired together, scaled by magnitude (`award()` → burst size + ptsFloat).
 3. ONE fixed celebration ritual (`ritual()`); magnitude lives in the frame

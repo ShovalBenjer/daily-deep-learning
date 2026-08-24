@@ -109,7 +109,15 @@ export function review(id: string, help: Help, now = new Date()): number {
   }
   const prev: Card = existing ?? createEmptyCard(now);
   const before = prev.stability || 0;
-  const next = f.next(prev, now, RATING[help]).card;
+  let next: Card;
+  try {
+    next = f.next(prev, now, RATING[help]).card;
+  } catch {
+    // a card that passed the shape check but is otherwise malformed must
+    // cost one lamp's history, not the session (PR #10 round-6 Low)
+    delete store.cards[id]; delete store.lastGrade[id]; save();
+    return 0;
+  }
   store.cards[id] = next;
   // Again is a lapse, never income: without this, failing a fresh lamp once
   // minted its initial stability as embers (PR #10 second-round High).

@@ -43,6 +43,15 @@
      badge, reusing dark theme's already-good pairing as fixed literals. */
   --chip-face-hi: #e8c988;
   --chip-face: #c9a86a;
+  /* the primary-button face, decoupled from --gold exactly like --chip-face:
+     one fixed warm-gold pair for BOTH themes, so the light theme's darkened
+     text-gold (#775e2d) never becomes a button face under dark ink. The
+     bottom gradient stop is 78%, not 72%: at 72% the darkest point measured
+     4.45:1 under #14101a ink (just below AA); 78% measures 5.17:1. */
+  --btn-face-hi: #e8c988;
+  --btn-face: #c9a86a;
+  --btn-face-lo: color-mix(in oklab, #c9a86a 78%, black);
+  --btn-ink: #14101a;
   --green: #79b791;
   --red: #c96a5e;
   --line: #332e44;
@@ -199,10 +208,10 @@ main { position: relative; z-index: 1; max-width: 44rem; margin: 0 auto;
      checker, forced-colors mode, a gradient that fails to paint) sees dark ink
      on the dark panel behind. Declaring the flat gold under the gradient keeps
      the rendering identical and makes the declaration true. */
-  background-color: var(--gold);
-  background-image: linear-gradient(180deg, var(--gold-hi), var(--gold) 52%, color-mix(in oklab, var(--gold) 72%, black));
-  border: 1px solid color-mix(in oklab, var(--gold) 55%, black);
-  color: #14101a; border-radius: 3px; cursor: pointer;
+  background-color: var(--btn-face);
+  background-image: linear-gradient(180deg, var(--btn-face-hi), var(--btn-face) 52%, var(--btn-face-lo));
+  border: 1px solid color-mix(in oklab, var(--btn-face) 55%, black);
+  color: var(--btn-ink); border-radius: 3px; cursor: pointer;
   min-height: 44px; padding-inline: 1rem;
   font-family: inherit; font-weight: 700;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.38), inset 0 -1px 0 rgba(0,0,0,.35), 0 3px 8px -3px var(--shadow);

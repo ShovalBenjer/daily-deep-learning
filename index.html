@@ -1441,6 +1441,11 @@ function renderPanel() {
     renderPanel();
     renderNodeSheet(tree, found, { open: st.open, reqOk: st.reqOk });
   });
+  // Draw NOW, synchronously: layout is already computed at this point, and a
+  // throttled tab (occluded window, background load, some WebViews) never
+  // delivers an animation frame, which left the board lineless since 07-29.
+  // The rAF pass stays as a next-frame refinement for late layout shifts.
+  drawPanelEdges();
   requestAnimationFrame(drawPanelEdges);
 }
 function drawPanelEdges() {

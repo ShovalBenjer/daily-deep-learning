@@ -18,19 +18,18 @@ a subject. Neither is required.
 ## Open
 
 <!-- append below this line. the council empties it. -->
-!#design How do you build an interface a language model would never generate by default? Every model converges on the same few looks (cream-serif, dark-neon, riso data-journalism, dashboard-infographic); "distinctive" AI design is still inside that distribution. LOOP-ESCAPE FINDING (multi-persona analysis, 2026-07-29): the slop does NOT live in the palette. It lives in the connective prose (the "not X, it's Y" antithesis engine, which is the model's own voice) and the information architecture (re-representing the same content as stylized figures; even-length sections). Swapping to a fifth palette is the "new look, new name" trap. The genuine escape is content substitution: make the one un-fakeable material the spine (for that post, the human operator's verbatim one-line corrections; for the platform, the learner's own errors/answers), and demote the model's confident prose to the thing being corrected. Real artifacts (raw gifs, raw terminal output) cannot look generated and are denser than the figures that re-tell them. This directly sharpens DESIGN.md's "named direction, say it before you code": the direction must be owned and material-derived, not a generatable identity.
-#a11y Designing by eye fails hard measurable checks: a hero number that "looked fine" measured 2.28:1 contrast (WCAG needs 3:1 large, 4.5:1 text). Add a WCAG contrast pass over every fg/bg pair to the gate-to-green; the math is ~15 lines and would convert some of the 46 fail / 382 warn from guesses to numbers.
-#a11y shots.py (in ~/.claude/skills/case-ledger-post/) renders a page and audits horizontal overflow, content clipped inside an overflow:auto container, and elements stuck at opacity 0 while in the viewport, plus --measure for ancestor-width debugging. Most of these are invisible in the CSS and only appear in a render; wire it into the a11y gate.
-#design The SOTA Subtle UI/UX psychology doc (work-docs/) empirically backs the Performed Interface: count-up numbers = "live data" dopamine, microinteractions resolve under 300ms, progressive disclosure in three visibility tiers, ambient pulse for status not popups, and the hard rule that motion must communicate a state change and never decorate (it explicitly warns against gratuitous loops and parallax as cognitive load). Fold the specific figures into DESIGN.md's motion contract.
-#design A scroll-reveal that unobserves after firing leaves any section the observer misses (deep-link mid-page, fast flick scroll) invisible forever. Bulletproof pattern: threshold 0 + rootMargin, plus a load/scroll sweep that reveals anything at or above the viewport bottom. Directly relevant to the platform's scroll-driven animations.
-
-https://github.com/scottstts/Threejs-Awesome-Graphics-Agent-Skills
-https://arxiv.org/abs/2605.22791
-! the talent tree still has no lines between nodes #design
-is item response theory the right model for placement?
-
 
 ## Routed
 
 <!-- the council moves digested items here with a date and a destination. -->
+- 2026-08-24 `!#design loop-escape / un-generatable interface` -> absorbed as the game spine's foundation: the un-fakeable material (the learner's own memory state) IS the light field; recorded in the game spine spec and docs/taste.md.
+- 2026-08-24 `#a11y WCAG contrast pass into the gate` -> superseded by the axe-core lane (e2e/tests/a11y.spec.ts) now wired into the gate's a11y_ux domain; its first run found and fixed two real violations.
+- 2026-08-24 `#a11y shots.py render-level auditor` -> docs/BACKLOG.md row (local), still open as a gate addition.
+- 2026-08-24 `#design SOTA subtle-UI psychology figures` -> folded into DESIGN.md's motion contract as rule 0 (measured figures bounding rules 1-5).
+- 2026-08-24 `#design scroll-reveal bulletproof pattern` -> docs/BACKLOG.md row (local); no reveals exist in the app yet (checked: zero IntersectionObserver), so it waits for the first one.
+- 2026-08-24 `https://github.com/scottstts/Threejs-Awesome-Graphics-Agent-Skills` -> reference for the P1 blueprint-city build (agent skills for 3D graphics), attached to the P1 row in docs/BACKLOG.md.
+- 2026-08-24 `https://arxiv.org/abs/2605.22791` -> Gated DeltaNet-2 (linear-attention architecture): unit candidate for the m7 attention track (m7-mha-mqa-gqa lineage), for the daily generator's pool.
+- 2026-08-24 `! the talent tree still has no lines between nodes #design` -> FIXED at the root: the complete edge-drawing code was gated behind requestAnimationFrame, which throttled/occluded tabs never deliver; it now draws synchronously after layout (index.html renderPanel). Verified: 23 edges render in a tab with rAF provably dead.
+- 2026-08-24 `is item response theory the right model for placement?` -> docs/BACKLOG.md row (local), tied to running the ENGINE research prompt (its section C compares IRT/BKT/DKT with population-free defaults).
+
 - 2026-07-29 `what does SSH actually stand for and what did it replace?` -> answered by `units/m0-ssh.md`. Secure Shell; replaced telnet, rlogin, rsh and FTP, all of which sent credentials in cleartext.

@@ -297,6 +297,8 @@ function openCase(d: CaseDrill) {
     const right = verdict === d.correctVerdict && blockNo === d.correctBlock;
     if (right) {
       const gained = markDone(d.id, help.level());
+      // a solved case is closed: re-clicks must not re-invoke review()
+      sheet.querySelectorAll<HTMLButtonElement>('.verdict-btn, .block-btn').forEach(b => { b.disabled = true; });
       out.replaceChildren(
         el('p', { class: 'verdict ok' }, `הפנס נדלק: ${d.correctVerdict} דרך Block ${d.correctBlock}. +${gained.toFixed(1)} ימי יציבות.`),
         el('p', { class: 'analyst' }, d.modelRead),

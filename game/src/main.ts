@@ -404,8 +404,12 @@ async function boot() {
   if (location.search.includes('dev')) {
     (window as unknown as Record<string, unknown>).__open = openDrill;
   }
-  // lamp brightness IS live retrievability: FSRS decides what flickers
-  specs.forEach(s => city.setLampState(s.id, lampStateFromMemory(s.id)));
+  // lamp brightness IS live retrievability: FSRS decides what flickers.
+  // Per-lamp try/catch: one corrupted stored card must not darken the city.
+  specs.forEach(s => {
+    try { city.setLampState(s.id, lampStateFromMemory(s.id)); }
+    catch { city.setLampState(s.id, stateOf(s.id)); }
+  });
   city.onLampTap(openDrill);
   const tended = lamplighterRound();
   if (tended) city.setLampState(tended, lampStateFromMemory(tended));

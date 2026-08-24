@@ -69,7 +69,7 @@ def shots(base: str, outdir: str, width: int = 390, height: int = 844) -> list[s
     """
     import pathlib
 
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import sync_playwright  # type: ignore
 
     out = pathlib.Path(outdir)
     out.mkdir(parents=True, exist_ok=True)

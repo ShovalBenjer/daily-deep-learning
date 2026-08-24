@@ -91,8 +91,8 @@ for name, aspect, prompt in JOBS:
         print(f"gen {name} via {model}...")
         img = gen(model, prompt, aspect)
         if img:
-            with open(dest, "wb") as _fh:
-                _fh.write(img)
+            with open(dest, "wb") as _out:
+                _out.write(img)
             print(f"  saved {name}.png {len(img)//1024}KB")
             ok = True
             break

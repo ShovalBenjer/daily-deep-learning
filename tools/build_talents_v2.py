@@ -2,6 +2,7 @@
 # synergies, kinds, capstones, domain/skill connections. Old ids preserved.
 import json
 import os
+from typing import Any
 
 p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "talents.json")
 with open(p, encoding="utf-8") as _fh:
@@ -20,7 +21,7 @@ def N(id, name, en, line, kind, domains, skills=None, req=None):
     if r: d["req"] = r
     return d
 
-v2 = {
+v2: dict[str, Any] = {
  "note": "v2 (2026-07-25): 42 nodes over 5 named tiers per tree, per MASTER-PLAN. Points EARNED from answers, SPENT by choice. Tier t opens at 3*t spent in tree AND learner level >= tier_levels[t]. Ranks 4-5 on skill-linked nodes are EVIDENCE-GATED by the ledger. Old node ids preserved (S.ranks survive).",
  "max_rank": 5, "tier_gate": 3, "tier_levels": [1, 2, 3, 5, 7],
  "synergies": [

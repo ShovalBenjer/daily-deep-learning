@@ -129,8 +129,24 @@ function markDone(id: string, help: Help) {
   paintEcon();
   return gained;
 }
+const attemptedNow = new Set<string>();
 function markTried(id: string) {
+  attemptedNow.add(id);
   if (progress[id] !== 'passed') { progress[id] = 'attempted'; saveP(progress); city.setLampState(id, stateOf(id)); }
+}
+
+/**
+ * Closing a sheet after attempting without passing records Again: walking
+ * away from a failed drill is retrieval evidence too (this is the caller
+ * the 'fail' grade was documented for; PR #10 warning).
+ */
+function closeBtn(id: string): HTMLElement {
+  return el('button', { class: 'close', onclick: () => {
+    if (attemptedNow.has(id) && progress[id] !== 'passed') { review(id, 'fail'); paintEcon(); }
+    attemptedNow.delete(id);
+    $('#sheet').hidden = true;
+    city.setLampState(id, lampStateFromMemory(id));
+  } }, 'סגור');
 }
 function returnToCity(id: string) {
   $('#sheet').hidden = true;
@@ -245,7 +261,7 @@ function openSql(d: SqlDrill) {
   };
 
   sheet.append(
-    el('button', { class: 'close', onclick: () => { sheet.hidden = true; } }, 'סגור'),
+    closeBtn(d.id),
     el('h2', {}, d.title),
     el('p', {}, d.story),
     block('הסכימה', el('pre', { dir: 'ltr' }, schemaNote)),
@@ -290,7 +306,7 @@ function openCase(d: CaseDrill) {
     judge();
   };
   sheet.append(
-    el('button', { class: 'close', onclick: () => { sheet.hidden = true; } }, 'סגור'),
+    closeBtn(d.id),
     el('h2', {}, d.title),
     block('המדיניות', el('ol', {}, ...d.policy.map(p => el('li', {}, p)))),
     block('התיק', el('p', {}, d.caseFile)),
@@ -339,7 +355,7 @@ function openBook(d: BookDrill) {
     },
   }, opt));
   sheet.append(
-    el('button', { class: 'close', onclick: () => { sheet.hidden = true; } }, 'סגור'),
+    closeBtn(d.id),
     el('h2', {}, d.section || d.maskLabel),
     el('p', { class: 'muted' }, `מדף הספרים · ${d.source}`),
     block('מהספר', el('p', {}, d.prose)),
@@ -395,14 +411,15 @@ async function boot() {
       paintEcon();
     }
   };
-  if (tended) $('#hint').textContent = 'הפנסאי עבר בלילה וטיפל בפנס שדעך.';
   const status = $('#status');
   try {
     await initDb(s => { status.textContent = s; });
     status.textContent = '';
-    $('#hint').textContent = bookDrills.length
+    // set after initDb so the boot hint cannot overwrite it (PR #10 warning)
+    const tendedNote = tended ? ' הפנסאי עבר בלילה וטיפל בפנס שדעך.' : '';
+    $('#hint').textContent = (bookDrills.length
       ? `הקש על פנס ברחוב לתיק, או על מדף הספרים מאחור (${bookDrills.length} פנסים מהקורפוס).`
-      : 'הקש על פנס ברחוב כדי לפתוח תיק.';
+      : 'הקש על פנס ברחוב כדי לפתוח תיק.') + tendedNote;
   } catch (e) {
     status.textContent = 'המנוע לא עלה: ' + (e as Error).message.slice(0, 200);
   }

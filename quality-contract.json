@@ -78,7 +78,18 @@
     },
     "perf": {
       "required": false,
-      "na_reason": "No performance budget exists anywhere in this repo as of 2026-07-25 -- no lighthouserc, no size-limit config, no CI perf gate; repo-wide search for budget/lighthouse/perf-budget across .md/.yml/.toml/.json hit only unrelated learning-content prose about SRE error budgets. Static site with no bundler, so there is nothing to measure a fabricated threshold against. Not a waiver (no expiry would be honest for a genuinely undefined budget) -- na_reason instead, and it should convert to a real cmd the day someone sets an actual budget (e.g. a max total byte count for index.html + inline script, or a Lighthouse CI run against the Cloudflare Pages deploy)."
+      "na_reason": "No performance budget exists anywhere in this repo as of 2026-07-25 -- no lighthouserc, no size-limit config, no CI perf gate; repo-wide search for budget/lighthouse/perf-budget across .md/.yml/.toml/.json hit only unrelated learning-content prose about SRE error budgets. Static site with no bundler, so there is nothing to measure a fabricated threshold against. Not a waiver (no expiry would be honest for a genuinely undefined budget) -- na_reason instead, and it should convert to a real cmd the day someone sets an actual budget (e.g. a max total byte count for index.html + inline script, or a Lighthouse CI run against the Cloudflare Pages deploy).",
+      "_level": "L10"
+    },
+    "component_tests": {
+      "required": false,
+      "na_reason": "No component-level tests exist in this repo. The app is a single ~139 KB inline script with no module boundaries; component tests require either modular extraction (rejected: no bundler per project constraints) or a harness that loads the script in isolation. Filed as a gap against work-docs/testing.",
+      "_level": "L5"
+    },
+    "golden_regression": {
+      "required": false,
+      "na_reason": "No golden or regression test suite exists. The closest coverage is the e2e Playwright lane, which exercises routes and axe checks but does not snapshot DOM output or compare against a known-good baseline. Filed as a gap against work-docs/testing.",
+      "_level": "L9"
     }
   }
 }

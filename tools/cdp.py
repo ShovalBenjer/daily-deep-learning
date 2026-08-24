@@ -48,11 +48,10 @@ def endpoint(timeout: float = 2.0) -> str:
                 with urllib.request.urlopen(f"{url}/json/version", timeout=timeout) as r:
                     if r.status == 200:
                         return url
-            except Exception:
+            except (OSError, urllib.error.URLError):
                 continue
     raise RuntimeError(
-        "no CDP endpoint on ports %s. Start Chrome with --remote-debugging-port."
-        % (PORTS,)
+        f"no CDP endpoint on ports {PORTS}. Start Chrome with --remote-debugging-port."
     )
 
 
@@ -70,7 +69,7 @@ def shots(base: str, outdir: str, width: int = 390, height: int = 844) -> list[s
     """
     import pathlib
 
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import sync_playwright  # type: ignore
 
     out = pathlib.Path(outdir)
     out.mkdir(parents=True, exist_ok=True)

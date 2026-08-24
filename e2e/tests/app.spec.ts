@@ -5,7 +5,7 @@
  * human's thumb. Console errors fail the test: the app's own boot survives
  * partial data by design, so a thrown error is never expected noise.
  */
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const ROUTES = ['/', '/#/map', '/#/ladder', '/#/kodex', '/#/discover', '/#/history'];
 

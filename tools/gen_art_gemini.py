@@ -6,7 +6,12 @@ Prompts locked to DESIGN.md: antique gold + parchment on near-black ink,
 engraved, candlelit, painterly. NO text in images.
 Output: assets/art/raw/*.png  → post-process with tools/slice_art.py.
 """
-import base64, json, os, sys, time, urllib.request
+import base64
+import json
+import os
+import sys
+import time
+import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets", "art", "raw")
@@ -15,10 +20,11 @@ os.makedirs(OUT, exist_ok=True)
 KEY = os.environ.get("GEMINI_API_KEY", "")
 if not KEY:
     env = os.path.join(os.path.dirname(ROOT), "new-recruit", ".env")
-    for line in open(env, encoding="utf-8", errors="replace"):
-        if line.startswith("GEMINI_API_KEY"):
-            KEY = line.split("=", 1)[1].strip().strip('"').strip("'")
-            break
+    with open(env, encoding="utf-8", errors="replace") as _fh:
+        for line in _fh:
+            if line.startswith("GEMINI_API_KEY"):
+                KEY = line.split("=", 1)[1].strip().strip('"').strip("'")
+                break
 assert KEY, "GEMINI_API_KEY not found"
 
 MODELS = ["gemini-3.1-flash-image", "gemini-2.5-flash-image"]
@@ -28,26 +34,26 @@ STYLE = ("dark fantasy game UI asset, antique gold leaf and warm parchment tones
 
 JOBS = [
     ("frame-hero-painted", "1:1",
-     f"ornate square baroque picture frame, {STYLE} symmetric engraved corner rosettes, "
-     "thin elegant gold border with empty pure-black center, designed as a 9-slice UI frame asset"),
+     (f"ornate square baroque picture frame, {STYLE} symmetric engraved corner rosettes, "
+      "thin elegant gold border with empty pure-black center, designed as a 9-slice UI frame asset")),
     ("board-bg", "1:1",
-     f"ancient carved dark walnut guild notice board surface, {STYLE} worn oiled wood grain, "
-     "faint engraved filigree near the corners, empty seamless background texture"),
+     (f"ancient carved dark walnut guild notice board surface, {STYLE} worn oiled wood grain, "
+      "faint engraved filigree near the corners, empty seamless background texture")),
     ("crest-systems", "1:1",
-     f"circular engraved guild crest of a fortress tower with interlocking gears, {STYLE} "
-     "wax-seal medallion, centered emblem on black"),
+     (f"circular engraved guild crest of a fortress tower with interlocking gears, {STYLE} "
+      "wax-seal medallion, centered emblem on black")),
     ("crest-craft", "1:1",
-     f"circular engraved guild crest of a smith hammer crossed with a quill pen, {STYLE} "
-     "wax-seal medallion, centered emblem on black"),
+     (f"circular engraved guild crest of a smith hammer crossed with a quill pen, {STYLE} "
+      "wax-seal medallion, centered emblem on black")),
     ("crest-ops", "1:1",
-     f"circular engraved guild crest of a watchman lantern above a shield, {STYLE} "
-     "wax-seal medallion, centered emblem on black"),
+     (f"circular engraved guild crest of a watchman lantern above a shield, {STYLE} "
+      "wax-seal medallion, centered emblem on black")),
     ("spark-portrait", "1:1",
-     f"adorable small lantern spirit mascot: a warm living flame with two bright eyes inside "
-     f"a brass lantern, {STYLE} painted game character portrait, glowing softly, centered on black"),
+     (f"adorable small lantern spirit mascot: a warm living flame with two bright eyes inside "
+      f"a brass lantern, {STYLE} painted game character portrait, glowing softly, centered on black")),
     ("ledger-banner", "16:9",
-     f"ancient open ledger book on a scribe workbench with ink pot and gold leaf tools, {STYLE} "
-     "wide painted game header scene with atmospheric depth"),
+     (f"ancient open ledger book on a scribe workbench with ink pot and gold leaf tools, {STYLE} "
+      "wide painted game header scene with atmospheric depth")),
 ]
 
 def gen(model, prompt, aspect):
@@ -85,7 +91,8 @@ for name, aspect, prompt in JOBS:
         print(f"gen {name} via {model}...")
         img = gen(model, prompt, aspect)
         if img:
-            open(dest, "wb").write(img)
+            with open(dest, "wb") as _out:
+                _out.write(img)
             print(f"  saved {name}.png {len(img)//1024}KB")
             ok = True
             break

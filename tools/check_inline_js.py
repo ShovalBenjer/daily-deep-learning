@@ -5,14 +5,15 @@
 #
 # This is a syntax check only (parses the JS, catches nothing semantic).
 # Used by the quality-contract "types" domain.
+import os
 import re
 import subprocess
 import sys
 import tempfile
-import os
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-html = open(os.path.join(R, "index.html"), encoding="utf-8").read()
+with open(os.path.join(R, "index.html"), encoding="utf-8") as _fh:
+    html = _fh.read()
 
 # src-less <script> tags only; scripts with a src attribute are separate files.
 blocks = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>", html)
@@ -28,9 +29,9 @@ for i, body in enumerate(blocks):
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(body)
-        p = subprocess.run(["node", "--check", path], capture_output=True, text=True)
+        p = subprocess.run(["node", "--check", path], capture_output=True, text=True, check=False)
         status = "ok" if p.returncode == 0 else "FAIL"
-        print("inline script #{} ({} bytes): {}".format(i, len(body), status))
+        print(f"inline script #{i} ({len(body)} bytes): {status}")
         if p.returncode != 0:
             failed = True
             print(p.stderr)

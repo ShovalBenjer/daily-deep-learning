@@ -87,6 +87,38 @@ jobs:
       - name: Stage the site and audit the boundary
         run: python3 tools/stage_site.py dist
 
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install lint tools
+        run: python3 -m pip install ruff mypy
+      - name: Lint Python tools
+        run: ruff check tools/
+      - name: Type-check Python tools
+        run: mypy tools/
+
+  typecheck:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.14'
+      - name: Type-check daemon
+        run: cd daemon && bun install && bun x tsc --noEmit
+      - name: Type-check game
+        run: cd game && bun install --frozen-lockfile && bun x tsc --noEmit
+      - name: Type-check e2e
+        run: cd e2e && bun install --frozen-lockfile && bun x tsc --noEmit
+
   e2e:
     runs-on: ubuntu-latest
     permissions:

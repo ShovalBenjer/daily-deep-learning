@@ -1,11 +1,16 @@
 # Link integrity for the connections graph (MASTER-PLAN W3).
 # Every id referenced anywhere must resolve. Run by the council weekly and
 # before manual data commits. Exit 1 on orphans.
-import json, sys, io, os
+import io
+import json
+import os
+import sys
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-J = lambda f: json.load(open(os.path.join(R, f), encoding="utf-8"))
+def J(f):
+    with open(os.path.join(R, f), encoding="utf-8") as _fh:
+        return json.load(_fh)
 
 talents, skills, concepts = J("talents.json"), J("skills.json"), J("concepts.json")
 syllabus = J("syllabus.json")

@@ -16,7 +16,7 @@ Typical usage::
 import pathlib
 import sys
 
-from PIL import Image
+from PIL import Image  # type: ignore
 
 VIEWPORT = 844
 

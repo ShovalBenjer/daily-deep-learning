@@ -28,7 +28,6 @@ Typical usage::
 """
 
 import re
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -110,7 +109,7 @@ def themes(css: str) -> dict[str, dict[str, str]]:
         the later one silently overwriting the earlier.
     """
     out: dict[str, dict[str, str]] = {}
-    for m in re.finditer(r"(?P<sel>[^{}]+)\{(?P<body>[^{}]*?)\}", css, re.S):
+    for m in re.finditer(r"(?P<sel>[^{}]+)\{(?P<body>[^{}]*?)\}", css, re.DOTALL):
         body = m.group("body")
         tokens = dict(re.findall(r"--([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})", body))
         if not tokens or "bg" not in tokens:

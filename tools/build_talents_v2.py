@@ -1,9 +1,12 @@
 # Builds talents.json v2 per MASTER-PLAN: 42 nodes, 5 named tiers/tree,
 # synergies, kinds, capstones, domain/skill connections. Old ids preserved.
-import json, os
+import json
+import os
+from typing import Any
 
 p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "talents.json")
-old = json.load(open(p, encoding="utf-8"))
+with open(p, encoding="utf-8") as _fh:
+    old = json.load(_fh)
 oldreq = {}
 for t in old["trees"]:
     for tier in t["tiers"]:
@@ -18,7 +21,7 @@ def N(id, name, en, line, kind, domains, skills=None, req=None):
     if r: d["req"] = r
     return d
 
-v2 = {
+v2: dict[str, Any] = {
  "note": "v2 (2026-07-25): 42 nodes over 5 named tiers per tree, per MASTER-PLAN. Points EARNED from answers, SPENT by choice. Tier t opens at 3*t spent in tree AND learner level >= tier_levels[t]. Ranks 4-5 on skill-linked nodes are EVIDENCE-GATED by the ledger. Old node ids preserved (S.ranks survive).",
  "max_rank": 5, "tier_gate": 3, "tier_levels": [1, 2, 3, 5, 7],
  "synergies": [
@@ -105,6 +108,7 @@ v2 = {
  ]
 }
 
-json.dump(v2, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+with open(p, "w", encoding="utf-8") as _fh:
+    json.dump(v2, _fh, ensure_ascii=False, indent=1)
 total = sum(len(tier["nodes"]) for t in v2["trees"] for tier in t["tiers"])
 print("nodes:", total, "| synergies:", len(v2["synergies"]))

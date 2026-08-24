@@ -42,11 +42,12 @@ import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+from typing import cast
 
 # Files carrying an inline <script> that this repo hand-edits.
 TARGETS = ("index.html", "writing/the-bench.html")
 
-_DEF = re.compile(r"^[ \t]*(?:async[ \t]+)?function[ \t]+([A-Za-z_$][\w$]*)", re.M)
+_DEF = re.compile(r"^[ \t]*(?:async[ \t]+)?function[ \t]+([A-Za-z_$][\w$]*)", re.MULTILINE)
 
 
 class _ScriptCollector(HTMLParser):
@@ -237,7 +238,7 @@ def _body_spans(script: str, name: str) -> list[tuple[int, int]]:
     """
     spans = []
     for m in re.finditer(rf"^[ \t]*(?:async[ \t]+)?function[ \t]+{re.escape(name)}\b",
-                         script, re.M):
+                          script, re.MULTILINE):
         paren_at = script.find("(", m.end())
         if paren_at < 0:
             continue
@@ -344,7 +345,7 @@ def git_show(ref: str, path: str) -> str | None:
     """Read a path at a ref, or None when the ref or path is not there."""
     try:
         out = subprocess.run(["git", "show", f"{ref}:{path}"],
-                             capture_output=True, timeout=30)
+                             capture_output=True, timeout=30, check=False)
     except (OSError, subprocess.SubprocessError):
         return None
     if out.returncode != 0:
@@ -546,7 +547,7 @@ def main() -> int:
         args.base = "HEAD"
         if args.head is None:
             dirty = subprocess.run(["git", "status", "--porcelain"] + list(TARGETS),
-                                   capture_output=True, timeout=30)
+                                   capture_output=True, timeout=30, check=False)
             if dirty.returncode == 0 and not dirty.stdout.strip():
                 args.base = "HEAD~1"
                 print("working tree is clean for the target files, "
@@ -567,7 +568,7 @@ def main() -> int:
                 continue
             after_html = path.read_text(encoding="utf-8", errors="replace")
         else:
-            after_html = git_show(args.head, rel)
+            after_html = cast(str, git_show(args.head, rel))
             if after_html is None:
                 print(f"skip {rel}: not readable at {args.head}")
                 continue

@@ -28,6 +28,7 @@ Typical usage::
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -545,7 +546,7 @@ def judgment_units() -> list[dict]:
         derives 18 real units rather than inventing the difference.
     """
     jmap = json.loads((ROOT / "judgment_map.json").read_text(encoding="utf-8"))
-    block = {
+    block: dict[str, Any] = {
         "id": "C1", "moscow": "could", "node": None, "skills": [], "difficulty": 7,
         "estMin": 6, "depthEstMin": 20, "goals": [],
         "source": {"kind": "index", "name": "judgment_map.json, Principal Engineer Curriculum"},

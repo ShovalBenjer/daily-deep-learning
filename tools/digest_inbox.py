@@ -24,6 +24,7 @@ import argparse
 import datetime
 import pathlib
 import re
+from typing import Any
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 INBOX = ROOT / "inbox.md"
@@ -38,7 +39,7 @@ OPEN_MARK = "## Open"
 ROUTED_MARK = "## Routed"
 
 
-def classify(line: str) -> dict[str, str]:
+def classify(line: str) -> dict[str, Any]:
     """Route one captured line by its shape alone.
 
     Args:
@@ -145,7 +146,7 @@ def main() -> int:
         print("  inbox empty, nothing to route")
         return 0
 
-    today = datetime.date.today().isoformat()
+    today = datetime.datetime.now(tz=datetime.UTC).date().isoformat()
     routed = []
     counts: dict[str, int] = {}
 

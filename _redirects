@@ -3,3 +3,6 @@
 # NOT the-bench.pages.dev: that slug belongs to a third party's account, found
 # the hard way when the first deploy returned "Project not found" [8000007].
 /writing/* https://case-ledgers.pages.dev/:splat 301
+
+# SPA fallback: every hash route returns index.html so direct navigation works.
+/* /index.html 200

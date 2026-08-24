@@ -21,6 +21,10 @@
 import { initDb, runSql, canonical, SqlResult } from './db';
 import { drills, schemaNote, SqlDrill, CaseDrill, Hole } from './drills';
 import { buildCity, CityHandles, LampState, LampSpec } from './city';
+import {
+  review, retrievability, shiftGain, embers, endShift,
+  hasLamplighter, buyLamplighter, lamplighterRound, LAMPLIGHTER_PRICE, Help,
+} from './economy';
 
 const $ = (s: string) => document.querySelector(s) as HTMLElement;
 
@@ -85,22 +89,45 @@ function renderTable(res: SqlResult): HTMLElement {
   return box;
 }
 
-/* ---------- the collected light (the minimal game economy) ----------
- * Numbers are DELIBERATELY simple and unspeced: street drill 3, case 2,
- * book lamp 1, first pass only. The real economy (decay, rested bonus,
- * talent integration) is a design block in the GAME-SPINE doc, not here. */
-const XP_KEY = 'lamps-poc-xp';
-let xp = (() => { try { return Number(localStorage.getItem(XP_KEY)) || 0; } catch { return 0; } })();
-function paintXp() {
-  const n = $('#xp'); if (n) n.textContent = xp > 0 ? `אור שנאסף: ${xp}` : '';
+/* ---------- the ember economy (see src/economy.ts for the grounding) ---------- */
+function paintEcon() {
+  const n = $('#econ');
+  const gain = shiftGain();
+  const bank = embers();
+  n.textContent = (gain > 0 || bank > 0)
+    ? `משמרת: +${gain.toFixed(1)} ימי יציבות · גחלים: ${bank}`
+    : '';
+  ($('#endShift') as HTMLButtonElement).hidden = gain < 0.5;
+  const shop = $('#shopBtn') as HTMLButtonElement;
+  if (hasLamplighter()) { shop.hidden = false; shop.disabled = true; shop.textContent = 'הפנסאי פועל'; }
+  else if (bank >= LAMPLIGHTER_PRICE) { shop.hidden = false; shop.disabled = false; shop.textContent = `שכור פנסאי (${LAMPLIGHTER_PRICE} גחלים)`; }
+  else shop.hidden = true;
 }
-function markDone(id: string, points: number) {
-  if (progress[id] !== 'passed') {
-    xp += points;
-    try { localStorage.setItem(XP_KEY, String(xp)); } catch { /* private mode */ }
-    paintXp();
-  }
-  progress[id] = 'passed'; saveP(progress); city.setLampState(id, 'lit');
+
+/** Grade-by-help for the pass being recorded; escalates monotonically. */
+function makeHelpTracker() {
+  const order: Help[] = ['none', 'hint', 'reveal'];
+  let level: Help = 'none';
+  return {
+    escalate(to: Help) { if (order.indexOf(to) > order.indexOf(level)) level = to; },
+    level() { return level; },
+  };
+}
+
+function lampStateFromMemory(id: string): LampState {
+  const r = retrievability(id);
+  if (r === null) return stateOf(id);
+  if (r >= 0.9) return 'lit';       // FSRS request-retention line: due = flicker
+  if (r >= 0.6) return 'flicker';
+  return 'dark';
+}
+
+function markDone(id: string, help: Help) {
+  const gained = review(id, help);
+  progress[id] = 'passed'; saveP(progress);
+  city.setLampState(id, 'lit');
+  paintEcon();
+  return gained;
 }
 function markTried(id: string) {
   if (progress[id] !== 'passed') { progress[id] = 'attempted'; saveP(progress); city.setLampState(id, stateOf(id)); }
@@ -119,7 +146,7 @@ function block(title: string, ...children: (Node | string)[]): HTMLElement {
 
 /* ---------- the guided hole ladder ---------- */
 
-function holePanel(d: SqlDrill, ta: HTMLTextAreaElement): HTMLElement {
+function holePanel(d: SqlDrill, ta: HTMLTextAreaElement, onHelp: (h: Help) => void): HTMLElement {
   const rung = new Map<Hole, number>(); // 0 untouched, 1 nudged, 2 diagnosed, 3 revealed
   const rows = d.holes.map(h => {
     const chip = el('span', { class: 'hole-chip' }, h.label);
@@ -127,6 +154,7 @@ function holePanel(d: SqlDrill, ta: HTMLTextAreaElement): HTMLElement {
     const more = el('button', { class: 'hole-more', onclick: async () => {
       const r = (rung.get(h) || 1) + 1;
       rung.set(h, r);
+      onHelp(r >= 3 || !h.diagnostic ? 'reveal' : 'hint');
       if (r === 2 && h.diagnostic) {
         const res = el('div', {});
         msg.replaceChildren(
@@ -151,6 +179,7 @@ function holePanel(d: SqlDrill, ta: HTMLTextAreaElement): HTMLElement {
         r.msg.replaceChildren(el('p', { class: 'praise' }, r.h.praise));
       } else {
         allGood = false;
+        onHelp('hint');
         if (!rung.get(r.h)) rung.set(r.h, 1);
         if (rung.get(r.h) === 1) r.msg.replaceChildren(el('p', {}, r.h.nudge), r.more);
       }
@@ -172,7 +201,8 @@ function openSql(d: SqlDrill) {
   const ta = el('textarea', { id: 'sql', dir: 'ltr', spellcheck: 'false' }) as HTMLTextAreaElement;
   ta.value = d.starter;
   const out = el('div', { id: 'out', 'aria-live': 'polite' });
-  const holes = holePanel(d, ta) as HTMLElement & { grade: () => boolean };
+  const help = makeHelpTracker();
+  const holes = holePanel(d, ta, help.escalate) as HTMLElement & { grade: () => boolean };
   const verbalA = el('p', {}, d.verbalA); verbalA.hidden = true;
   const verbal = block('השאלה המילולית', el('p', {}, d.verbalQ),
     el('button', { onclick: () => { verbalA.hidden = false; } }, 'הצג תשובת מודל'), verbalA);
@@ -189,13 +219,14 @@ function openSql(d: SqlDrill) {
       const ref = await runSql(d.reference);
       const pass = canonical(res) === canonical(ref);
       if (pass) {
+        const gained = markDone(d.id, help.level());
         out.replaceChildren(renderTable(res),
-          el('p', { class: 'verdict ok' }, 'הפנס נדלק. התוצאה זהה לרפרנס, אחד לאחד. +3 אור.'),
+          el('p', { class: 'verdict ok' }, `הפנס נדלק. התוצאה זהה לרפרנס, אחד לאחד. +${gained.toFixed(1)} ימי יציבות.`),
           el('p', { class: 'analyst' }, d.analystRead),
           returnBtn(d.id, 'חזרה לעיר, לראות אותו נדלק'));
-        markDone(d.id, 3);
         verbal.hidden = false;
       } else {
+        help.escalate('hint');
         holes.grade();
         const firstOpen = d.holes.find(h => !h.check(ta.value));
         out.replaceChildren(renderTable(res),
@@ -233,18 +264,22 @@ function openCase(d: CaseDrill) {
   const sheet = $('#sheet');
   sheet.replaceChildren();
   const out = el('div', { id: 'out', 'aria-live': 'polite' });
+  const help = makeHelpTracker();
   let verdict = '', blockNo = 0;
   const judge = () => {
     if (!verdict || !blockNo) return;
     markTried(d.id);
     const right = verdict === d.correctVerdict && blockNo === d.correctBlock;
-    out.replaceChildren(right
-      ? el('p', { class: 'verdict ok' }, `הפנס נדלק: ${d.correctVerdict} דרך Block ${d.correctBlock}.`)
-      : el('p', { class: 'verdict bad' },
-          `${verdict} דרך Block ${blockNo} זו לא הקריאה של התיק הזה. קרא שוב אילו עובדות בתיק שייכות לאיזה Block, ונסה שוב.`));
     if (right) {
-      out.append(el('p', { class: 'analyst' }, d.modelRead), returnBtn(d.id, 'חזרה לעיר, לראות אותו נדלק'));
-      markDone(d.id, 2);
+      const gained = markDone(d.id, help.level());
+      out.replaceChildren(
+        el('p', { class: 'verdict ok' }, `הפנס נדלק: ${d.correctVerdict} דרך Block ${d.correctBlock}. +${gained.toFixed(1)} ימי יציבות.`),
+        el('p', { class: 'analyst' }, d.modelRead),
+        returnBtn(d.id, 'חזרה לעיר, לראות אותו נדלק'));
+    } else {
+      help.escalate('hint');
+      out.replaceChildren(el('p', { class: 'verdict bad' },
+        `${verdict} דרך Block ${blockNo} זו לא הקריאה של התיק הזה. קרא שוב אילו עובדות בתיק שייכות לאיזה Block, ונסה שוב.`));
     }
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
@@ -276,6 +311,7 @@ function openBook(d: BookDrill) {
     const remaining = bookDrills.find(b => progress[b.id] !== 'passed');
     if (remaining) openBook(remaining); else sheet.hidden = true;
   };
+  const help = makeHelpTracker();
   const buttons = d.options.map((opt, i) => el('button', {
     class: 'opt-btn', dir: 'ltr',
     onclick: (e: Event) => {
@@ -284,14 +320,15 @@ function openBook(d: BookDrill) {
       if (i === d.correct) {
         sheet.querySelectorAll<HTMLButtonElement>('.opt-btn').forEach(b => { b.disabled = true; });
         btn.classList.add('ok');
+        const gained = markDone(d.id, help.level());
         out.replaceChildren(
-          el('p', { class: 'verdict ok' }, 'בדיוק. הפנס נדלק. +1 אור.'),
+          el('p', { class: 'verdict ok' }, `בדיוק. הפנס נדלק. +${gained.toFixed(1)} ימי יציבות.`),
           el('p', { class: 'analyst' }, `מהספר: ${d.prose.slice(0, 320)}`),
           el('div', { class: 'row' },
             el('button', { class: 'gold', onclick: next }, 'לפנס הבא במדף'),
             returnBtn(d.id)));
-        markDone(d.id, 1);
       } else {
+        help.escalate('hint');
         btn.classList.add('bad'); btn.disabled = true;
         out.replaceChildren(
           el('p', { class: 'verdict bad' }, 'לא זה, ותשמע למה זה מבלבל:'),
@@ -341,9 +378,24 @@ async function boot() {
   if (location.search.includes('dev')) {
     (window as unknown as Record<string, unknown>).__open = openDrill;
   }
-  specs.forEach(s => city.setLampState(s.id, stateOf(s.id)));
+  // lamp brightness IS live retrievability: FSRS decides what flickers
+  specs.forEach(s => city.setLampState(s.id, lampStateFromMemory(s.id)));
   city.onLampTap(openDrill);
-  paintXp();
+  const tended = lamplighterRound();
+  if (tended) city.setLampState(tended, lampStateFromMemory(tended));
+  paintEcon();
+  ($('#endShift') as HTMLButtonElement).onclick = () => {
+    const banked = endShift();
+    $('#hint').textContent = `המשמרת נסגרה: ${banked} גחלים נכנסו לכיס.`;
+    paintEcon();
+  };
+  ($('#shopBtn') as HTMLButtonElement).onclick = () => {
+    if (buyLamplighter()) {
+      $('#hint').textContent = 'הפנסאי נשכר: מעכשיו הוא מרענן את הפנס החלש ביותר פעם ביום.';
+      paintEcon();
+    }
+  };
+  if (tended) $('#hint').textContent = 'הפנסאי עבר בלילה וטיפל בפנס שדעך.';
   const status = $('#status');
   try {
     await initDb(s => { status.textContent = s; });

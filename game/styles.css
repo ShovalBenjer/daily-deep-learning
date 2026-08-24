@@ -45,6 +45,8 @@ button.gold { background: var(--gold); color: #17130b; border-color: var(--gold-
 button.on { border-color: var(--gold-hi); color: var(--gold-hi); }
 button.close { position: sticky; top: .3rem; z-index: 6; min-height: 36px; font-size: .8rem; background: var(--panel); display: inline-block; }
 .xp { margin: .1rem 0 0; color: var(--gold-hi); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.econ-row { display: flex; gap: .5rem; justify-content: center; margin-top: .25rem; }
+.econ-row button { min-height: 34px; font-size: .78rem; padding: 0 .8rem; }
 .tblwrap { overflow-x: auto; margin: .6rem 0; }
 table { border-collapse: collapse; font-family: "IBM Plex Mono", monospace; font-size: .78rem; direction: ltr; }
 th, td { border: 1px solid var(--line); padding: .3rem .55rem; text-align: left; white-space: nowrap; }

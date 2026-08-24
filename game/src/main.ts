@@ -133,9 +133,12 @@ function markDone(id: string, help: Help) {
   paintEcon();
   return gained;
 }
-const attemptedNow = new Set<string>();
+// Only the currently-open sheet's attempt matters; a Set leaked stale ids
+// when a second lamp was tapped through the canvas strip above the drawer
+// and later closes recorded a wrong Again (PR #10 third-round Medium).
+let openAttempt: string | null = null;
 function markTried(id: string) {
-  attemptedNow.add(id);
+  openAttempt = id;
   if (progress[id] !== 'passed') { progress[id] = 'attempted'; saveP(progress); city.setLampState(id, stateOf(id)); }
 }
 
@@ -146,8 +149,8 @@ function markTried(id: string) {
  */
 function closeBtn(id: string): HTMLElement {
   return el('button', { class: 'close', onclick: () => {
-    if (attemptedNow.has(id) && progress[id] !== 'passed') { review(id, 'fail'); paintEcon(); }
-    attemptedNow.delete(id);
+    if (openAttempt === id && progress[id] !== 'passed') { review(id, 'fail'); paintEcon(); }
+    openAttempt = null;
     $('#sheet').hidden = true;
     city.setLampState(id, lampStateFromMemory(id));
   } }, 'סגור');
@@ -216,6 +219,7 @@ function holePanel(d: SqlDrill, ta: HTMLTextAreaElement, onHelp: (h: Help) => vo
 /* ---------- drill sheets ---------- */
 
 function openSql(d: SqlDrill) {
+  openAttempt = null; // a fresh sheet must not inherit a stale attempt
   const sheet = $('#sheet');
   sheet.replaceChildren();
   const ta = el('textarea', { id: 'sql', dir: 'ltr', spellcheck: 'false' }) as HTMLTextAreaElement;
@@ -281,6 +285,7 @@ function openSql(d: SqlDrill) {
 }
 
 function openCase(d: CaseDrill) {
+  openAttempt = null; // a fresh sheet must not inherit a stale attempt
   const sheet = $('#sheet');
   sheet.replaceChildren();
   const out = el('div', { id: 'out', 'aria-live': 'polite' });
@@ -324,6 +329,7 @@ function openCase(d: CaseDrill) {
 }
 
 function openBook(d: BookDrill) {
+  openAttempt = null; // a fresh sheet must not inherit a stale attempt
   const sheet = $('#sheet');
   sheet.replaceChildren();
   const out = el('div', { id: 'out', 'aria-live': 'polite' });

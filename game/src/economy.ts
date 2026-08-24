@@ -80,13 +80,13 @@ export const DUE_RETENTION = 0.9;
 export function review(id: string, help: Help, now = new Date()): number {
   const existing = store.cards[id] ? reviveCard(store.cards[id]) : null;
   if (existing) {
-    const r = f.get_retrievability(existing, now, false) as number;
+    const r = f.get_retrievability(existing, now, false);
     // A lapsed card (Learning/Relearning) is ALWAYS earnable: the Again
     // review leaves R at ~1, and without this exception the honest
     // fail-learn-retry recovery earned nothing, punishing exactly the loop
     // the game exists to teach. A bright card in Review state stays blocked.
     const relearning = existing.state === State.Learning || existing.state === State.Relearning;
-    if (r >= DUE_RETENTION && !relearning) return 0; // not due: practice is free, embers are not
+    if (typeof r === 'number' && r >= DUE_RETENTION && !relearning) return 0; // not due: practice is free
   }
   const prev: Card = existing ?? createEmptyCard(now);
   const before = prev.stability || 0;
@@ -104,7 +104,8 @@ export function review(id: string, help: Help, now = new Date()): number {
 export function retrievability(id: string, now = new Date()): number | null {
   const c = store.cards[id];
   if (!c) return null;
-  return f.get_retrievability(reviveCard(c), now, false) as number;
+  const r = f.get_retrievability(reviveCard(c), now, false);
+  return typeof r === 'number' ? r : null;
 }
 
 export function shiftGain(): number { return store.pendingGain; }
@@ -115,9 +116,11 @@ export const LAMPLIGHTER_PRICE = 30; // tunable, see header
 
 /** Bank the shift: stability-days become embers. Returns embers banked. */
 export function endShift(): number {
-  const banked = Math.round(store.pendingGain);
+  // floor + carry: fractional stability is never discarded, it waits for
+  // the next shift (PR #10 nit: Math.round leaked sub-0.5 gains)
+  const banked = Math.floor(store.pendingGain);
   store.embers += banked;
-  store.pendingGain = 0;
+  store.pendingGain -= banked;
   save();
   return banked;
 }

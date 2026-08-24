@@ -69,6 +69,8 @@ designed yet.
    and are worth their cost; motion that communicates no state change is
    cognitive load, so no gratuitous loops and no parallax. These figures
    bound rules 1-5 below; a motion outside them needs a named reason.
+1. ONE spring family: `--ease-spring` / JS `SPRING`. No other easings for
+   entrances/settles (ease-out allowed for exits/fades only).
 2. Events are PERFORMED: motion + counted numbers + particles (+ sound later)
    fired together, scaled by magnitude (`award()` → burst size + ptsFloat).
 3. ONE fixed celebration ritual (`ritual()`); magnitude lives in the frame

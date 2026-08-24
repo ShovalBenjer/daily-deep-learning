@@ -70,10 +70,46 @@ jobs:
       - name: Unit tests, hermetic slice
         run: bun test tests/mentor.test.ts tests/decks.test.ts tests/contract.test.ts tests/fuzz.test.ts tests/mutation.test.ts
 
+      # types domain, third half: the game is TypeScript strict by ADR-0002,
+      # and the commitment is enforced here as well as in the local gate.
+      - name: Game strict typecheck
+        run: cd game && bun install --frozen-lockfile && bun x tsc --noEmit
+
+      # docs control plane (tools/check_docs_index.py). On this runner the
+      # local-only docs population does not exist, so the check prints its
+      # "inactive" notice and passes; it runs here so the tool itself cannot
+      # rot unexecuted, and so the pipeline builtin sees the step.
+      - name: Docs control plane
+        run: python3 tools/check_docs_index.py
+
       # Fails if any forbidden path reaches the upload, so the publication
       # boundary is enforced by CI rather than by remembering.
       - name: Stage the site and audit the boundary
         run: python3 tools/stage_site.py dist
+
+  e2e:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.14'
+      # The self-contained e2e lane (e2e/playwright.config.ts): boots the
+      # static site the same way the local dev loop does and runs the boot,
+      # interaction, and axe accessibility suites on a phone-sized viewport.
+      # This is the step that retired the pipeline waiver's private-repo
+      # blocker: nothing here reaches outside this repository.
+      - name: Install e2e dependencies
+        run: cd e2e && bun install --frozen-lockfile
+      - name: Install chromium
+        run: cd e2e && bun x playwright install --with-deps chromium
+      - name: Playwright suite (app + a11y)
+        run: cd e2e && bun x playwright test --config playwright.config.ts
 
   preview:
     needs: checks

@@ -111,3 +111,5 @@ client = AzureOpenAI(azure_endpoint="...", azure_deployment="chat-prod", api_key
 ```concepts
 {"items":[{"id":"foundry-sdk","t":"azure-ai-projects SDK","he":"SDK של Foundry","d":"חבילת פייתון שמעטפת את Azure AI Foundry REST API; AIProjectClient הוא נקודת הכניסה לפריסות, evals ו-agents.","rel":["foundry-project","azure-ai-inference-sdk"],"node":"azure-core"},{"id":"azure-ai-inference-sdk","t":"azure-ai-inference SDK","he":"SDK הסקה","d":"חבילת פייתון שמספקת ChatCompletionsClient; מתקבלת מ-AIProjectClient.inference.get_chat_completions_client() לחיבור אוטומטי לפרויקט.","rel":["foundry-sdk","foundry-project"],"node":"azure-core"},{"id":"ai-project-client","t":"AIProjectClient","he":"לקוח פרויקט","d":"מחלקת ה-Python שמחברת קוד לפרויקט Foundry; מקבלת endpoint ו-DefaultAzureCredential ומספקת גישה לכל משאבי הפרויקט.","rel":["foundry-sdk","foundry-project"],"node":"azure-core"}]}
 ```
+
+<!-- audited -->

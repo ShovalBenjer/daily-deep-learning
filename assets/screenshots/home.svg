@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844" role="img" aria-label="לוח הלימוד היומי של הסדנה">
+  <rect width="390" height="844" fill="#0f0d14"/>
+  <rect x="0" y="0" width="390" height="844" fill="none" stroke="#c9a86a" stroke-opacity="0.25" stroke-width="2"/>
+
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8c988"/>
+      <stop offset="1" stop-color="#c9a86a"/>
+    </linearGradient>
+    <pattern id="grain" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="#0f0d14"/>
+      <circle cx="1" cy="1" r="0.5" fill="#ffffff" fill-opacity="0.04"/>
+    </pattern>
+  </defs>
+  <rect width="390" height="844" fill="url(#grain)"/>
+
+  <text x="28" y="70" fill="url(#gold)" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700">הסדנה</text>
+  <text x="28" y="96" fill="#e7dcc2" fill-opacity="0.55" font-family="Arial, sans-serif" font-size="13">לוח הלימוד היומי</text>
+
+  <text x="28" y="150" fill="#e7dcc2" font-family="Georgia, serif" font-size="20" font-weight="700">היחידה הבאה</text>
+  <rect x="24" y="166" width="342" height="120" rx="10" fill="#17141f" stroke="#c9a86a" stroke-opacity="0.5"/>
+  <rect x="36" y="186" width="6" height="80" fill="url(#gold)"/>
+  <text x="58" y="214" fill="#e7dcc2" font-family="Georgia, serif" font-size="19" font-weight="700">MDP: העולם כמשחק מוגדר היטב</text>
+  <text x="58" y="244" fill="#e7dcc2" fill-opacity="0.6" font-family="Arial, sans-serif" font-size="13">מצבים, פעולות, תגמול והחזרה. עץ: systems</text>
+  <text x="58" y="270" fill="url(#gold)" font-family="Arial, sans-serif" font-size="13">החלפה זמינה ↺</text>
+
+  <text x="28" y="330" fill="#e7dcc2" font-family="Georgia, serif" font-size="20" font-weight="700">מפת הכישורים</text>
+  <g font-family="Arial, sans-serif" font-size="13" fill="#e7dcc2">
+    <rect x="24" y="346" width="108" height="92" rx="8" fill="#17141f" stroke="#7c5cff" stroke-opacity="0.6"/>
+    <text x="40" y="372" fill="#b9a6ff">oracle</text>
+    <text x="40" y="400" fill="#e7dcc2" fill-opacity="0.7">רמה 4</text>
+    <text x="40" y="420" fill="#b6e3a7">1 240 נק'</text>
+
+    <rect x="141" y="346" width="108" height="92" rx="8" fill="#17141f" stroke="#c9a86a" stroke-opacity="0.6"/>
+    <text x="157" y="372" fill="url(#gold)">architect</text>
+    <text x="157" y="400" fill="#e7dcc2" fill-opacity="0.7">רמה 3</text>
+    <text x="157" y="420" fill="#b6e3a7">880 נק'</text>
+
+    <rect x="258" y="346" width="108" height="92" rx="8" fill="#17141f" stroke="#5fb0a8" stroke-opacity="0.6"/>
+    <text x="274" y="372" fill="#7fd0c6">warden</text>
+    <text x="274" y="400" fill="#e7dcc2" fill-opacity="0.7">רמה 2</text>
+    <text x="274" y="420" fill="#b6e3a7">410 נק'</text>
+  </g>
+
+  <rect x="24" y="500" width="342" height="14" rx="7" fill="#17141f"/>
+  <rect x="24" y="500" width="220" height="14" rx="7" fill="url(#gold)"/>
+  <text x="28" y="540" fill="#e7dcc2" fill-opacity="0.6" font-family="Arial, sans-serif" font-size="13">התקדמות יומית: 7 ימים רצופים</text>
+
+  <g fill="none" stroke="#c9a86a" stroke-opacity="0.4">
+    <circle cx="195" cy="660" r="44"/>
+    <circle cx="195" cy="660" r="30"/>
+  </g>
+  <text x="195" y="668" text-anchor="middle" fill="url(#gold)" font-family="Georgia, serif" font-size="22" font-weight="700">הניצוץ</text>
+
+  <rect x="24" y="780" width="342" height="44" rx="10" fill="#17141f" stroke="#c9a86a" stroke-opacity="0.5"/>
+  <text x="195" y="807" text-anchor="middle" fill="#e7dcc2" font-family="Arial, sans-serif" font-size="14">התחל יחידה →</text>
+</svg>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844" role="img" aria-label="שיעור עם תרגיל מרובה ברירות בסדנה">
+  <rect width="390" height="844" fill="#0f0d14"/>
+  <rect x="0" y="0" width="390" height="844" fill="none" stroke="#c9a86a" stroke-opacity="0.25" stroke-width="2"/>
+  <defs>
+    <linearGradient id="gold2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8c988"/>
+      <stop offset="1" stop-color="#c9a86a"/>
+    </linearGradient>
+    <pattern id="grain2" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="#0f0d14"/>
+      <circle cx="1" cy="1" r="0.5" fill="#ffffff" fill-opacity="0.04"/>
+    </pattern>
+  </defs>
+  <rect width="390" height="844" fill="url(#grain2)"/>
+
+  <text x="28" y="64" fill="url(#gold2)" font-family="Georgia, serif" font-size="24" font-weight="700">MDP: העולם כמשחק</text>
+  <text x="28" y="90" fill="#e7dcc2" fill-opacity="0.55" font-family="Arial, sans-serif" font-size="13">מה תדע בסוף · האינטואיציה · הגדרות מדויקות</text>
+
+  <rect x="24" y="118" width="342" height="2" fill="#c9a86a" fill-opacity="0.3"/>
+
+  <text x="28" y="166" fill="#e7dcc2" font-family="Georgia, serif" font-size="19" font-weight="700">תרגיל</text>
+  <text x="28" y="196" fill="#e7dcc2" fill-opacity="0.8" font-family="Arial, sans-serif" font-size="14">איזה מושג מתאר את התגמול המצטבר לאורך</text>
+  <text x="28" y="218" fill="#e7dcc2" fill-opacity="0.8" font-family="Arial, sans-serif" font-size="14">זמן עם הנחתה γ?</text>
+
+  <g font-family="Arial, sans-serif" font-size="15">
+    <rect x="24" y="244" width="342" height="48" rx="10" fill="#17141f" stroke="#c9a86a" stroke-opacity="0.5"/>
+    <text x="44" y="274" fill="#e7dcc2">א. return (G_t)</text>
+
+    <rect x="24" y="304" width="342" height="48" rx="10" fill="#17141f" stroke="#7c5cff" stroke-opacity="0.7"/>
+    <text x="44" y="334" fill="#b9a6ff">ב. value function (V)</text>
+
+    <rect x="24" y="364" width="342" height="48" rx="10" fill="#17141f" stroke="#c9a86a" stroke-opacity="0.5"/>
+    <text x="44" y="394" fill="#e7dcc2">ג. policy (π)</text>
+
+    <rect x="24" y="424" width="342" height="48" rx="10" fill="#17141f" stroke="#c9a86a" stroke-opacity="0.5"/>
+    <text x="44" y="454" fill="#e7dcc2">ד. transition (P)</text>
+  </g>
+
+  <rect x="24" y="500" width="342" height="40" rx="10" fill="#17141f" stroke="#5fb0a8" stroke-opacity="0.6"/>
+  <text x="44" y="525" fill="#7fd0c6" font-family="Arial, sans-serif" font-size="13">הסבר: G_t = Σ γ^k r_{t+k}, סכום מונחת</text>
+
+  <rect x="24" y="612" width="342" height="14" rx="7" fill="#17141f"/>
+  <rect x="24" y="612" width="120" height="14" rx="7" fill="url(#gold2)"/>
+  <text x="28" y="652" fill="#e7dcc2" fill-opacity="0.6" font-family="Arial, sans-serif" font-size="13">עץ: systems · skill: rl</text>
+
+  <rect x="24" y="700" width="342" height="48" rx="10" fill="url(#gold2)"/>
+  <text x="195" y="730" text-anchor="middle" fill="#0f0d14" font-family="Georgia, serif" font-size="18" font-weight="700">אשר תשובה</text>
+
+  <text x="195" y="788" text-anchor="middle" fill="#b6e3a7" font-family="Arial, sans-serif" font-size="14">+25 נקודות · רצף 7 ימים</text>
+</svg>

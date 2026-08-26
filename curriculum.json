@@ -5024,9 +5024,9 @@
       "estMin": 10,
       "depthEstMin": 30,
       "body": {
-        "status": "pending",
-        "generated": null,
-        "hash": null
+        "status": "fresh",
+        "generated": "2026-08-26T00:00:00Z",
+        "hash": "3bc8f61a16c3f67f"
       }
     },
     {

@@ -77,3 +77,5 @@
 
 ## חיבור
 יחידה זו שייכת לבלוק M5. היא מחברת את m5-responsible-ai (safety filters בזמן אמת) אל m5-monitoring-drift (מעקב רציף על ציוני evaluators לאורך זמן). ב-AI-103, שאלות על evaluation מופיעות תחת "Implement generative AI solutions" וגם תחת "Monitor and evaluate a generative AI solution". הבחנת groundedness מול relevance, ומנגנון safety pass_rate לעומת AI-assisted scores, הם בדיוק ה-discriminators שהבוחן בוחן.
+
+<!-- audited -->

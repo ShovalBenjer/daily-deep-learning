@@ -56,19 +56,22 @@ jobs:
           python3 tools/check_callsites.py --selftest
           python3 tools/check_callsites.py
 
-      # unit domain of quality-contract.json, hermetic slice only. These five
-      # files read index.html and daemon/server_parse.ts directly (server_parse
-      # has zero imports of its own) and open no network connection, so they
-      # are safe to run on any runner with no secret. tests/boundaries.test.ts
-      # is deliberately excluded here, not deleted from the suite: it opens a
-      # live round trip to the sadna-sync Worker, which needs a SYNC_KEY this
-      # repo has no secret for (`gh secret list` shows only
-      # CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLAUDE_CODE_OAUTH_TOKEN),
+      # unit domain of quality-contract.json, hermetic slice only. These files
+      # read index.html, daemon/server.ts and daemon/server_parse.ts directly
+      # (server_parse and sadna-sync/worker.js have zero imports of their own)
+      # and open no network connection, so they are safe to run on any runner
+      # with no secret. tests/worker.test.ts runs the real Worker handler
+      # in-process over a stub KV, which is the replayable half of the sync
+      # boundary. tests/boundaries.test.ts is deliberately excluded here, not
+      # deleted from the suite: it opens a live round trip to the sadna-sync
+      # Worker, which needs a SYNC_KEY this repo has no secret for
+      # (`gh secret list` shows only CLOUDFLARE_API_TOKEN,
+      # CLOUDFLARE_ACCOUNT_ID, CLAUDE_CODE_OAUTH_TOKEN),
       # and 5 of its 10 tests also need a local daemon on :8788 that this
       # runner cannot start. Full tests/boundaries.test.ts stays a local-only
       # check; see quality-contract.json domains.pipeline for the remainder.
       - name: Unit tests, hermetic slice
-        run: bun test tests/mentor.test.ts tests/decks.test.ts tests/contract.test.ts tests/fuzz.test.ts tests/mutation.test.ts
+        run: bun test tests/mentor.test.ts tests/decks.test.ts tests/contract.test.ts tests/fuzz.test.ts tests/mutation.test.ts tests/worker.test.ts tests/prompts.test.ts tests/budget.test.ts
 
       # types domain, third half: the game is TypeScript strict by ADR-0002,
       # and the commitment is enforced here as well as in the local gate.

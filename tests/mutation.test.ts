@@ -196,3 +196,148 @@ test('L4 mutation: the harness can actually fail (control)', () => {
   for (let seed = 1; seed <= 60; seed++) if (violated(harmless, seed)) anyViolation = true;
   expect(anyViolation).toBe(false);
 });
+
+// ------------------------------------------------------- L4 mutation: mentor
+//
+// TESTING-SOTA-2026-GAPS.md section 6 item 3: mentorQueue decides what the
+// learner is told about their own mistakes and had no mutation coverage, so
+// nothing measured whether tests/mentor.test.ts could fail. Same shape as the
+// deck layer: an oracle of behavioural invariants, planted defects that must
+// all die against it, and a harmless control that must survive.
+
+function mentorSource(): string {
+  const start = HTML.indexOf('const MENTOR = {');
+  const end = HTML.indexOf('function renderMentor');
+  if (start < 0 || end < 0) throw new Error('mentor block not found in index.html');
+  return HTML.slice(start, end);
+}
+
+const mDay = (offset: number) =>
+  new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
+
+/**
+ * The mentor invariants, each one a case tests/mentor.test.ts proved against
+ * the real source. Returns the first violated invariant's name, or null.
+ */
+function mentorViolated(src: string): string | null {
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const load = (partial: any, kodex: any = null) => {
+    // Real state always carries the three maps; only the deliberate
+    // empty-object case below passes bare {} the way the app's first boot does.
+    const S = Object.keys(partial).length
+      ? { answers: {}, reviews: {}, beliefs: {}, ...partial } : partial;
+    try {
+      return new Function('S', 'kodex', 'iso',
+        src + '\nreturn { mentorQueue };')(S, kodex, iso).mentorQueue();
+    } catch (e) { throw new Error('threw: ' + String(e).slice(0, 60)); }
+  };
+  try {
+    // The four-signal split, at and around both boundaries.
+    let q = load({ answers: {
+      'at-70': { ok: false, attempts: 2, conf: 70, q: 'a', date: '2026-07-20' },
+      'at-69': { ok: false, attempts: 2, conf: 69, q: 'b', date: '2026-07-20' },
+      'at-40': { ok: true, attempts: 1, conf: 40, q: 'c', date: '2026-07-20' },
+      'at-41': { ok: true, attempts: 1, conf: 41, q: 'd', date: '2026-07-20' },
+      'scraped': { ok: true, attempts: 2, conf: 20, q: 'e', date: '2026-07-20' },
+      'legacy': { ok: false, attempts: 2, q: 'f', date: '2026-07-20' },
+    } });
+    const by = Object.fromEntries(q.map((x: any) => [x.id, x.kind]));
+    if (by['at-70'] !== 'misconception') return 'certain at 70 is not a misconception';
+    if (by['at-69'] !== 'gap') return 'unsure at 69 is not a gap';
+    if (by['at-40'] !== 'imposter') return 'first-try right at 40 is not imposter';
+    if (by['at-41'] !== undefined) return 'right and confident produced a row';
+    if (by['scraped'] !== undefined) return 'a second-attempt pass produced a row';
+    if (by['legacy'] !== 'gap') return 'a missing confidence counted as certain';
+
+    // Decay fires at the lapse floor, not below it.
+    q = load({ reviews: { leaky: { iv: 1, due: '2026-07-20', lapses: 2 },
+                          fine: { iv: 3, due: '2026-07-20', lapses: 1 } } });
+    const decays = q.filter((x: any) => x.kind === 'decay').map((x: any) => x.id);
+    if (decays.join(',') !== 'leaky') return 'lapse floor is wrong: ' + decays.join(',');
+
+    // A due retest exists, outranks a fresh misconception, and survives its
+    // own belief being settled (settling suppresses the answer, never the
+    // retest the settlement scheduled).
+    q = load({ answers: { miss: { ok: false, attempts: 2, conf: 90, q: 'n', date: mDay(0) } },
+               beliefs: { 'isolation-serial': { believed: 'x', actual: 'y', opened: mDay(-7),
+                                                status: 'corrected', retest: mDay(-1) } } });
+    if (!q.length || q[0].kind !== 'retest') return 'a due retest is not first';
+    if (!q.find((x: any) => x.kind === 'misconception')) return 'the misconception vanished';
+
+    // A retest that is not due yet stays out.
+    q = load({ beliefs: { later: { believed: 'x', actual: 'y', opened: mDay(0),
+                                   status: 'corrected', retest: mDay(3) } } });
+    if (q.length) return 'a not-yet-due retest entered the queue';
+
+    // Suppression matches the answers named in `from`, and nothing else.
+    q = load({ answers: { 'u-m3-tx-q2': { ok: false, attempts: 2, conf: 88, q: 'i', date: mDay(-2) },
+                          'unrelated': { ok: false, attempts: 2, conf: 88, q: 'j', date: mDay(-2) } },
+               beliefs: { 'isolation-serial': { believed: 'x', actual: 'y', opened: mDay(-1),
+                                                status: 'corrected', retest: mDay(5),
+                                                from: ['u-m3-tx-q2'] } } });
+    const ids = q.map((x: any) => x.id);
+    if (ids.includes('u-m3-tx-q2')) return 'a worked-through answer resurfaced';
+    if (!ids.includes('unrelated')) return 'suppression swallowed an unrelated answer';
+
+    // An open belief suppresses nothing: only corrected or retested settle.
+    q = load({ answers: { 'u-m3-tx-q2': { ok: false, attempts: 2, conf: 88, q: 'i', date: mDay(-2) } },
+               beliefs: { 'isolation-serial': { believed: 'x', actual: 'y', opened: mDay(-1),
+                                                status: 'open', retest: mDay(5),
+                                                from: ['u-m3-tx-q2'] } } });
+    if (!q.find((x: any) => x.id === 'u-m3-tx-q2')) return 'an open belief already suppressed';
+
+    // Empty state is an empty queue, not a throw.
+    if (load({}).length) return 'empty state produced rows';
+  } catch (e) { return String((e as Error).message); }
+  return null;
+}
+
+/** Each mentor mutant is a defect someone could plausibly introduce. */
+const MENTOR_MUTANTS: Array<{ name: string; from: string; to: string }> = [
+  { name: 'certainty boundary made exclusive',
+    from: 'a.conf >= MENTOR.sure', to: 'a.conf > MENTOR.sure' },
+  { name: 'certainty threshold drifted to 95',
+    from: 'const MENTOR = { sure: 70,', to: 'const MENTOR = { sure: 95,' },
+  { name: 'imposter requires no first-try',
+    from: 'a.ok && a.attempts === 1 &&', to: 'a.ok &&' },
+  { name: 'suppression keyed on the belief id alone (the shipped regression)',
+    from: 'for (const src of [].concat(b.from || [], k)) settled.add(src);',
+    to: 'settled.add(k);' },
+  { name: 'open beliefs settle too',
+    from: "if (!b || (b.status !== 'corrected' && b.status !== 'retested')) continue;",
+    to: 'if (!b) continue;' },
+  { name: 'retest due gate dropped',
+    from: "if (b.status === 'corrected' && b.retest && b.retest <= today)",
+    to: "if (b.status === 'corrected' && b.retest)" },
+  { name: 'a settled belief suppresses its own retest',
+    from: "x.kind === 'retest' || !settled.has(x.id)", to: '!settled.has(x.id)' },
+  { name: 'priority order inverted',
+    from: 'MENTOR_KINDS[a.kind].w - MENTOR_KINDS[b.kind].w',
+    to: 'MENTOR_KINDS[b.kind].w - MENTOR_KINDS[a.kind].w' },
+  { name: 'lapse floor dropped to any lapse',
+    from: '>= MENTOR.lapseFloor', to: '>= 1' },
+];
+
+test('L4 mutation: the real mentor source passes its own oracle', () => {
+  expect(mentorViolated(mentorSource())).toBeNull();
+});
+
+test('L4 mutation: every planted mentor defect is caught', () => {
+  const src = mentorSource();
+  const survivors: string[] = [];
+  for (const m of MENTOR_MUTANTS) {
+    expect(src.includes(m.from)).toBe(true);          // the mutation still applies
+    const mutated = src.replace(m.from, m.to);
+    expect(mutated).not.toBe(src);
+    if (!mentorViolated(mutated)) survivors.push(m.name);
+  }
+  expect(survivors).toEqual([]);
+});
+
+test('L4 mutation: the mentor harness can actually fail (control)', () => {
+  const src = mentorSource();
+  const harmless = src.replace('function mentorQueue()',
+    'const MENTOR_UNUSED_ALIAS = 0;\nfunction mentorQueue()');
+  expect(harmless).not.toBe(src);
+  expect(mentorViolated(harmless)).toBeNull();
+});

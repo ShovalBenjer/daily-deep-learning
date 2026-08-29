@@ -10,6 +10,15 @@ import { test, expect, Page } from '@playwright/test';
 const ROUTES = ['/', '/#/map', '/#/ladder', '/#/kodex', '/#/discover', '/#/history'];
 
 async function boot(page: Page, route: string): Promise<string[]> {
+  // The lane's self-containment claim has to include the font CDN: the two
+  // Google Fonts origins are the only third-party requests on boot, and a CDN
+  // outage (or an egress-filtered runner) would fail the console oracle with
+  // an artifact that is not this app's. Stubbed here, so the oracle stays
+  // strict for every same-origin resource; the CSS font fallback stack covers
+  // rendering.
+  await page.route('https://fonts.googleapis.com/**', r =>
+    r.fulfill({ contentType: 'text/css', body: '' }));
+  await page.route('https://fonts.gstatic.com/**', r => r.fulfill({ body: '' }));
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });

@@ -851,6 +851,7 @@ function buildWidget(d) {
   if (d.type === 'gridworld') return widgetGridworld(d);
   if (d.type === 'algviz') return widgetAlgviz(d);
   if (d.type === 'severity-filter') return widgetSeverityFilter(d);
+  if (d.type === 'kv-calc') return widgetKvCalc(d);
   return null;
 }
 
@@ -1069,6 +1070,95 @@ const ALGS = {
         x.fillText(r.label, colW * 2.5 + colW * 0.35, y + 6);
       });
     }
+  },
+  'sliding-window': {
+    name: 'Sliding Window (Fixed k)',
+    code: ['sum = Σ arr[0..k-1]', 'best = sum', 'for i = k to n-1:', '  sum += arr[i]', '  sum -= arr[i-k]', '  best = max(best, sum)'],
+    init(p) {
+      const arr = p.arr || [2, 1, 5, 1, 3, 2];
+      const k = p.k || 3;
+      const initSum = arr.slice(0, k).reduce((a, b) => a + b, 0);
+      return { arr, k, sum: initSum, best: initSum, i: k - 1, left: 0, right: k - 1, phase: 'init', ops: 0 };
+    },
+    step(s) {
+      if (s.phase === 'init') { s.phase = 'run'; return { line: 1, note: `חלון ראשון: [${s.arr.slice(0, s.k).join(',')}] = ${s.sum}` }; }
+      s.i++;
+      if (s.i >= s.arr.length) return { done: true, line: 5, note: `סיום. best = ${s.best}` };
+      s.left = s.i - s.k + 1; s.right = s.i;
+      const added = s.arr[s.i], removed = s.arr[s.i - s.k];
+      s.sum += added - removed; s.ops++;
+      const improved = s.sum > s.best;
+      if (improved) s.best = s.sum;
+      return { line: improved ? 5 : 3, note: `+${added} -${removed} → sum=${s.sum}` + (improved ? ' ★ best חדש!' : '') };
+    },
+    draw(s, cv) {
+      const W = cv.clientWidth || 320, H = 130, dpr = Math.min(devicePixelRatio, 2);
+      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const n = s.arr.length, bw = Math.min(48, (W - 16) / n), x0 = (W - bw * n) / 2;
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      const left = s.phase === 'init' ? 0 : s.left, right = s.phase === 'init' ? s.k - 1 : s.right;
+      if (right < n) {
+        x.fillStyle = themeC('--gold'); x.globalAlpha = 0.15;
+        x.fillRect(x0 + left * bw - 2, 18, (right - left + 1) * bw + 4, 50);
+        x.globalAlpha = 1;
+      }
+      s.arr.forEach((v, i) => {
+        const px = x0 + i * bw;
+        const inW = i >= left && i <= right;
+        x.fillStyle = inW ? themeC('--gold') : themeC('--panel'); x.globalAlpha = inW ? 1 : 0.4;
+        x.fillRect(px + 1, 26, bw - 2, 36);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 26, bw - 2, 36);
+        x.fillStyle = inW ? '#14101a' : themeC('--ink'); x.font = '13px "IBM Plex Mono"';
+        x.fillText(v, px + bw / 2, 44);
+        x.globalAlpha = 1;
+        x.fillStyle = themeC('--faded'); x.font = '10px "IBM Plex Mono"';
+        x.fillText(i, px + bw / 2, 74);
+      });
+      x.fillStyle = themeC('--green'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('sum=' + s.sum + '  best=' + s.best, W / 2, 96);
+      x.fillStyle = themeC('--faded'); x.font = '10px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('k=' + s.k + '  צעדים: ' + s.ops, W / 2, 116);
+    }
+  },
+  'two-pointers': {
+    name: 'Two Pointers (Converging)',
+    code: ['i = 0, j = n-1', 'while i < j:', '  s = arr[i] + arr[j]', '  if s == target: return', '  if s > target: j--', '  else: i++'],
+    init(p) {
+      const arr = p.arr || [1, 3, 5, 7, 8, 11, 15];
+      const target = p.target ?? 12;
+      return { arr, target, i: 0, j: arr.length - 1, sum: 0, found: false, ops: 0 };
+    },
+    step(s) {
+      if (s.found || s.i >= s.j) return { done: true, line: 1, note: s.found ? `נמצא: arr[${s.i}]+arr[${s.j}]=${s.target}` : 'לא נמצא זוג' };
+      s.sum = s.arr[s.i] + s.arr[s.j]; s.ops++;
+      if (s.sum === s.target) { s.found = true; return { line: 3, note: `${s.arr[s.i]}+${s.arr[s.j]}=${s.sum} = יעד!` }; }
+      if (s.sum > s.target) { const old = s.j; s.j--; return { line: 4, note: `${s.arr[s.i]}+${s.arr[old]}=${s.sum} > ${s.target}, j--` }; }
+      const old = s.i; s.i++; return { line: 5, note: `${s.arr[old]}+${s.arr[s.j]}=${s.sum} < ${s.target}, i++` };
+    },
+    draw(s, cv) {
+      const W = cv.clientWidth || 320, H = 120, dpr = Math.min(devicePixelRatio, 2);
+      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const n = s.arr.length, bw = Math.min(42, (W - 16) / n), x0 = (W - bw * n) / 2;
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      s.arr.forEach((v, i) => {
+        const px = x0 + i * bw;
+        const isI = i === s.i, isJ = i === s.j, inR = i >= s.i && i <= s.j;
+        x.fillStyle = s.found && (isI || isJ) ? themeC('--green') : isI ? themeC('--gold') : isJ ? themeC('--oracle') : themeC('--panel');
+        x.globalAlpha = inR ? 1 : 0.25;
+        x.fillRect(px + 1, 30, bw - 2, 36);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 30, bw - 2, 36);
+        x.fillStyle = (isI || isJ) ? '#14101a' : themeC('--ink'); x.font = '13px "IBM Plex Mono"';
+        x.fillText(v, px + bw / 2, 48);
+        x.globalAlpha = 1;
+      });
+      x.font = '11px "IBM Plex Mono"'; x.fillStyle = themeC('--gold');
+      x.fillText('i=' + s.i, x0 + s.i * bw + bw / 2, 80);
+      if (s.j !== s.i) { x.fillStyle = themeC('--oracle'); x.fillText('j=' + s.j, x0 + s.j * bw + bw / 2, 80); }
+      x.fillStyle = themeC('--green'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('יעד: ' + s.target + '  sum=' + s.sum + '  השוואות: ' + s.ops, W / 2, 14);
+    }
   }
 };
 
@@ -1259,6 +1349,64 @@ function widgetSeverityFilter(d) {
   ctr.querySelectorAll('input').forEach(inp => {
     inp.oninput = () => {
       thresholds[inp.dataset.cat] = +inp.value;
+      inp.nextElementSibling.textContent = inp.value;
+      draw();
+    };
+  });
+  requestAnimationFrame(draw);
+  addEventListener('resize', draw, { passive: true });
+  return w;
+}
+
+function widgetKvCalc(d) {
+  const w = widgetShell(d.title || 'KV Cache Calculator');
+  const cv = document.createElement('canvas'); w.appendChild(cv);
+  const ro = document.createElement('div'); ro.className = 'w-readout'; w.appendChild(ro);
+  const ctr = document.createElement('div'); ctr.className = 'w-controls'; ctr.style.flexWrap='wrap';
+  const params = {L:d.L||32, H:d.H||8, dh:d.dh||128, S:d.S||4096, b:d.b||2};
+  const labels = { L: 'שכבות L', H: 'ראשי KV H', dh: 'מימד ראש d_h', S: 'טוקנים S', b: 'בתים b' };
+  const ranges = { L: [1, 128, 1], H: [1, 128, 1], dh: [32, 256, 32], S: [128, 131072, 128], b: [1, 4, 1] };
+  Object.keys(params).forEach(k => {
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin:4px 6px';
+    const sp = document.createElement('span'); sp.textContent = labels[k]; lbl.appendChild(sp);
+    const inp = document.createElement('input'); inp.type = 'range';
+    inp.min = ranges[k][0]; inp.max = ranges[k][1]; inp.step = ranges[k][2];
+    inp.value = params[k]; inp.dataset.param = k; lbl.appendChild(inp);
+    const v = document.createElement('b'); v.textContent = params[k]; lbl.appendChild(v);
+    ctr.appendChild(lbl);
+  });
+  w.appendChild(ctr);
+  function fmt(bytes) {
+    if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + ' GB';
+    if (bytes >= 1e6) return (bytes / 1e6).toFixed(1) + ' MB';
+    return (bytes / 1e3).toFixed(0) + ' KB';
+  }
+  function draw() {
+    const { L, H, dh, S, b } = params;
+    const total = 2 * L * H * dh * S * b;
+    const perLayer = 2 * H * dh * S * b;
+    const W = cv.clientWidth || 320, HH = 90, dpr = Math.min(devicePixelRatio, 2);
+    cv.width = W * dpr; cv.height = HH * dpr; cv.style.height = HH + 'px';
+    const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, HH);
+    const barW = W - 40, barH = 28, barY = 44;
+    const frac = Math.min(total / 2199023255552, 1);
+    x.fillStyle = themeC('--panel'); x.globalAlpha = 0.3;
+    x.fillRect(20, barY, barW, barH); x.globalAlpha = 1;
+    const col = total > 16e9 ? themeC('--red') : total > 2e9 ? themeC('--oracle') : themeC('--green');
+    x.fillStyle = col; x.globalAlpha = 0.7;
+    x.fillRect(20, barY, barW * frac, barH); x.globalAlpha = 1;
+    x.strokeStyle = themeC('--line'); x.strokeRect(20, barY, barW, barH);
+    x.fillStyle = themeC('--ink'); x.font = '700 14px "IBM Plex Mono"';
+    x.textAlign = 'center'; x.fillText(fmt(total), W / 2, barY + barH / 2 + 5);
+    x.fillStyle = themeC('--gold'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+    x.fillText('2 × L × H × d_h × S × b', W / 2, 28);
+    const pct = total > 0 ? ((total / 16e9) * 100).toFixed(1) : '0';
+    ro.textContent = fmt(total) + ' סה"כ · ' + pct + '% ממשקלי 8B model · ' + fmt(perLayer) + ' לשכבה';
+  }
+  ctr.querySelectorAll('input').forEach(inp => {
+    inp.oninput = () => {
+      params[inp.dataset.param] = +inp.value;
       inp.nextElementSibling.textContent = inp.value;
       draw();
     };

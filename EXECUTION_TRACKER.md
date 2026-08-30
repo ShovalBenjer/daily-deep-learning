@@ -59,6 +59,29 @@ Update this file immediately before and after every action.
   - Verification: `cd e2e && bun x playwright test` with no third-party
     egress available (reproduced in this session's sandbox).
 
+- [x] L4-RANKING: [TESTING-SOTA-2026-GAPS.md:77,33] Mutation coverage for
+  the unit-ranking pipeline. `rankedUnits()` decides what the learner sees
+  next and had no mutation coverage.
+  - Status: VERIFIED
+  - Acceptance Criteria: planted defects in the ranking pipeline (MOSCOW
+    weight collapse, skip decay inversion, goalPull min-vs-max, skill gap
+    inversion, availability gate ignored, deadline urgency zeroed, gap
+    factor default zeroed, closed-unit inclusion) are all killed by an
+    oracle; a harmless control edit survives.
+  - Verification: `bun test tests/mutation.test.ts` (ranking section,
+    8 mutants killed, control survives).
+
+- [x] L4-SRS: [TESTING-SOTA-2026-GAPS.md:77,33] Mutation coverage for
+  SRS gradeReview. `gradeReview()` governs the spaced-repetition schedule
+  and had no mutation coverage.
+  - Status: VERIFIED
+  - Acceptance Criteria: planted defects in gradeReview (wrong doesn't
+    demote, wrong doesn't lapse, correct doesn't promote, confidence
+    threshold raised, multi-attempt promotes, IV cap removed) are all
+    killed by an oracle; a harmless control edit survives.
+  - Verification: `bun test tests/mutation.test.ts` (gradeReview section,
+    6 mutants killed, control survives).
+
 ## Verified out of scope for a remote session
 
 - ROUTINE.md daily unit generation: belongs to the scheduled morning agent;
@@ -76,6 +99,7 @@ Update this file immediately before and after every action.
 
 - build: `python3 tools/validate_links.py` exit 0 (errors=0).
 - types: full sweep exit 0, including `cd game && bun x tsc --noEmit`.
-- unit (hermetic slice): 38 pass, 0 fail before this session's additions.
+- unit (hermetic slice): 38 pass, 0 fail before this session's additions;
+  72 pass, 0 fail, 3535 expect() calls after all additions.
 - e2e: 7 pass locally; 6 boot specs failed only on third-party font egress,
   fixed by E2E-HERMETIC above.

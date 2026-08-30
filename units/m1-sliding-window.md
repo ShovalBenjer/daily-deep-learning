@@ -239,6 +239,10 @@ best = max(best, right - left + 1)
 
 יחידת התרגול הבאה: **m1-sliding-window-drill**.
 
+```widget
+{"type":"algviz","algo":"sliding-window","title":"Sliding Window: צפה כיצד החלון מחליק, מוסיף ומסיר איבר בכל צעד"}
+```
+
 ```quiz
 {"id":"u-m1-sliding-window-q1","tree":"systems","skill":"python","q":"arr=[2,1,5,1,3,2], k=3. מה הסכום המקסימלי של תת-מערך בגודל k?","options":["8","7","9","6"],"answer":2,"explain":"החלונות: [2,1,5]=8, [1,5,1]=7, [5,1,3]=9, [1,3,2]=6. המקסימום הוא 9 (החלון [5,1,3] באינדקסים 2-4)."}
 ```

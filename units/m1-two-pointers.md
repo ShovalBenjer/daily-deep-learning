@@ -162,6 +162,10 @@ Two Pointers הוא חלק מ-M1 (DS&A, node `dsa`). הוא בנוי על אות
 
 הקשר ל-arrays-hashing: כשהמערך לא ממוין, hash table. כשהמערך ממוין, Two Pointers. לרוב בבעיות "Find a pair", אחת משתיהן מספיקה.
 
+```widget
+{"type":"algviz","algo":"two-pointers","title":"Two Pointers: צפה כיצד i ו-j מתנגשים ומוצאים את הזוג"}
+```
+
 ```quiz
 {"id":"u-m1-two-pointers-q1","tree":"systems","skill":"python","q":"Two Pointers converging (i=0, j=n-1) מבטיח O(n) רק כשמתקיים תנאי מהותי על הקלט. מה הוא?","options":["הקלט ממוין (או קיימת מונוטוניות)","הקלט מכיל מספרים חיוביים בלבד","אין ערכים כפולים בקלט","ה-target חיובי"],"answer":0,"explain":"מונוטוניות (בד\"כ מיון) מאפשרת לבטל שורה שלמה בכל צעד: אם arr[i]+arr[j]>target, אז arr[i']+arr[j]>target לכל i'>=i. ללא מיון, ההוכחה נשברת."}
 ```

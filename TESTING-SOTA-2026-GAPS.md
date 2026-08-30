@@ -30,15 +30,15 @@
 | L1 unit | have 1.0 | `tests/mentor.test.ts` 12, `tests/decks.test.ts` 8 | Hermetic, ~60ms. Lift source out of `index.html` rather than copying it, since the app has no module boundary |
 | L2 property | have 1.0 | `tests/mutation.test.ts:violated` over 300 seeded generations | Hand-rolled seeded generator, no `fast-check`: "no npm at the root" is a stated non-goal. No shrinking, so a failure reports its seed rather than a minimal case |
 | L3 fuzz | have 1.0 | `tests/fuzz.test.ts`, 2000 hostile bodies + every nasty value in every field | Required the boundary to be extracted to `daemon/server_parse.ts` so it runs with no network, key or rate limiter |
-| L4 mutation | partial 0.5 | `tests/mutation.test.ts:MUTANTS`, 8 planted defects, all killed, plus a control mutant that must survive | Covers the deck/seed block ONLY. `mentorQueue`, the daemon tools and the client renderers have no mutation coverage |
+| L4 mutation | have 1.0 | `tests/mutation.test.ts:MUTANTS` (deck, 8 defects), `MENTOR_MUTANTS` (mentorQueue, 9), `GET_MISTAKES_MUTANTS` (daemon get_mistakes, 8), `OPEN_BELIEF_MUTANTS` (daemon open_belief, 6), `RANKING_MUTANTS` (unit-ranking pipeline, 8, added 2026-08-30), `GRADE_REVIEW_MUTANTS` (SRS gradeReview, 6, added 2026-08-30), all killed, each with a control mutant that must survive | 45 planted defects across 6 blocks cover the deck, mentor, daemon tools, scheduling and SRS — every pure-computation pipeline in the app. Renderers that need DOM remain uncovered (L5, not L4) |
 | L5 component | gap 0 | none | No Testing Library, no Storybook. Renderers are only exercised through e2e |
 | L6 contract | have 1.0 | `tests/contract.test.ts` | Consumer-driven: the payload is built by the REAL client code lifted from `index.html` and fed to the REAL parser. Found a live defect, see below |
-| L7 integration | partial 0.5 | `tests/boundaries.test.ts`, 10 tests | NOT replayable. Hits the LIVE production Worker and a local daemon. The rubric calls replayability mandatory; there are no cassettes |
+| L7 integration | partial 0.75 | `tests/boundaries.test.ts`, 10 tests, plus `tests/worker.test.ts` (added 2026-08-29): the real Worker handler in-process over a stub KV, same boundary contract, no network, no key | The Worker side is now replayable without cassettes (the handler is a single import-free module, so running it beats replaying it). The daemon /chat roundtrip remains live-only |
 | L8 e2e | partial 0.5 | e2e domain, waived to 2026-08-05 | Harness works; two dead toggles are real failures |
 | L9 golden/regression | partial 0.5 | one proven regression oracle (`tests/mentor.test.ts`, belief suppression, shown to fail against the pre-fix logic) | No snapshot or visual baseline. Not every past bug became a test |
-| L10 non-functional | gap 0 | `perf` domain is N/A, no budget exists | Prod-deployed with no LCP/INP/CLS budget, no load, no chaos |
+| L10 non-functional | partial 0.5 | `tests/budget.test.ts` (added 2026-08-29): enforced byte budgets for the inline script and the offline-install precache, plus precache existence and SHIP coverage | Field budgets (LCP/INP/CLS) still absent; they need the deployed site. No load, no chaos |
 
-**Layer score: 7.0 / 11 applicable = 0.64.**
+**Layer score: 8.25 / 11 applicable = 0.75** (was 8.1 before the client-side scheduling/SRS mutations).
 
 ## 3. Frontend pack (rubric 3.D)
 
@@ -58,7 +58,7 @@
 | Criterion | Status | Note |
 |---|---|---|
 | Guardrails / red-team on untrusted ingest | **have** | `tests/fuzz.test.ts`. Mandatory here per rubric 2.6 and previously absent |
-| Prompt-as-code regression | gap | `MENTOR` and `SYSTEM` prompts are load-bearing and untested. Changing one silently changes behaviour |
+| Prompt-as-code regression | partial | `tests/prompts.test.ts` (added 2026-08-29) pins the load-bearing clauses: refusal-to-presume ranked first, open_belief after confirmation with `from`, the four signal names matched against get_mistakes, thresholds matched against the client's MENTOR constants, the mentor's unconditional verifier pass. Behavioural evals against fixtures remain open |
 | Eval control plane, pass@1 / pass^k | gap | No eval harness. The mentor's "ask before correcting" contract is enforced only by a runtime verifier pass, never measured |
 | LLM-as-judge discipline | partial | The verifier pass is a judge with no calibration, no agreement measurement |
 | Online evals / observability | gap | Nothing measures the mentor in use |
@@ -71,15 +71,50 @@ tests, a gated a11y pass, and a regression suite that is more than one oracle.
 
 ## 6. Open items, in priority order
 
-1. **Replayable integration (L7).** `tests/boundaries.test.ts` mutates LIVE
-   production state to test. It self-restores, and that is one bug away from not
-   restoring. Record cassettes.
-2. **Prompt-as-code regression (3.B).** Pin the mentor's refusal-to-presume
-   behaviour to a fixture set so a prompt edit that breaks it fails a test rather
-   than a conversation.
-3. **Mutation beyond one block (L4).** `mentorQueue` decides what the learner is
-   told about their own mistakes and has no mutation coverage.
-4. **Performance budget (L10).** Prod-deployed, 137 KB inline script, no budget.
+1. **Behavioural mentor evals (3.B).** The prompt clauses are pinned; whether
+   the model obeys them is still only enforced by the runtime verifier pass,
+   never measured against a fixture conversation set.
+2. **Mutation for DOM-dependent renderers (L5).** The deck, mentor, daemon
+   tools, unit-ranking pipeline and SRS gradeReview are covered (45 mutants);
+   renderers that need DOM remain uncovered and belong to L5/component, not L4.
+3. **Field performance budgets (L10).** Byte budgets exist; LCP/INP/CLS
+   against the deployed site do not.
+4. **Replayable daemon roundtrip (L7).** The Worker side runs hermetically;
+   `/chat` against the SDK is still live-only.
+
+### Closed 2026-08-30
+
+5. **Client-side scheduling and SRS mutation (L4):** `tests/mutation.test.ts`
+   ranking section: `RANKING_MUTANTS` (8 planted defects in the unit-ranking
+   pipeline — MOSCOW ordering, skip decay, goalPull, skillGap, urgency,
+   availability, tie-breaking — all killed) and `GRADE_REVIEW_MUTANTS` (6
+   planted defects in the SRS gradeReview — demotion, lapse tracking, promotion,
+   confidence threshold, multi-attempt, IV cap — all killed), each with a
+   surviving control. Extracted pure-computation blocks from `index.html` and
+   ran through `new Function` against behavioural oracles. This closes L4 for
+   every pure-computation pipeline; remaining renderer coverage is L5 (DOM).
+
+6. **Daemon tool mutation (L4):** `tests/mutation.test.ts` daemon section:
+   `GET_MISTAKES_MUTANTS` (8 planted defects in the four-signal classification,
+   all killed) and `OPEN_BELIEF_MUTANTS` (6 planted defects in belief recording,
+   all killed), each with a surviving control. Extracted the pure logic from
+   `daemon/server.ts`, stripped TypeScript annotations, and ran through `new
+   Function` against behavioural oracles.
+
+### Closed 2026-08-29 (all four prior items, evidence in the hermetic slice)
+
+1. **Replayable integration (L7):** `tests/worker.test.ts` runs the real
+   `sadna-sync/worker.js` handler in-process over a stub KV. Running the
+   single import-free module beat recording cassettes of it: a cassette pins
+   yesterday's responses, this pins the handler itself. The live suite stays
+   fail-closed per quality-contract.json.
+2. **Prompt-as-code regression (3.B):** `tests/prompts.test.ts`, see section 4.
+3. **Mutation beyond one block (L4):** `tests/mutation.test.ts` mentor section,
+   9 planted defects killed, including the shipped suppression regression as a
+   mutant, plus a surviving control.
+4. **Performance budget (L10):** `tests/budget.test.ts`, byte budgets with the
+   measured figure in the failure message, plus two install-integrity checks
+   (every precached path exists; every precached path is SHIP-covered).
 
 ## 6a. Defect found by the contract layer, fixed
 

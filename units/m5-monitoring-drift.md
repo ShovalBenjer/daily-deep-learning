@@ -20,6 +20,10 @@ Groundedness drift שונה: הוא לא על המשתמשים אלא על המ�
 
 **Evaluation cadence, תדירות הערכה** היא ההחלטה כמה פעמים ובאיזו צורה מריצים evaluation. שתי גישות עיקריות: triggered (כשיש deploy חדש) ו-scheduled (כל לילה על sample מהיום הקודם). הגישה הנכונה בפרודקשן היא שתיהן: triggered לוודא שלא שברת כלום, scheduled לזהות drift.
 
+```widget
+{"type":"decay","title":"Drift Monitor: צפה כיצד Groundedness Score יורד לאורך זמן ללא עדכון ספריה"}
+```
+
 ```concepts
 {"items":[{"id":"data-drift","t":"Data Drift","he":"סחיפת נתונים","d":"שינוי בהתפלגות קלטי המודל לאורך זמן; זוהה על ידי השוואה לחלון ייחוס בסיסי.","rel":["concept-drift","groundedness-trend"],"node":"azure-core"},{"id":"concept-drift","t":"Concept Drift","he":"סחיפת קונספט","d":"שינוי בקשר בין הקלט לבין התשובה הנכונה; דורש ground truth או evaluator proxy.","rel":["data-drift"],"node":"azure-core"},{"id":"safety-metric-trend","t":"Safety Metric Trend","he":"מגמת מדד בטיחות","d":"מעקב אחר שיעור הפעלת content filter לאורך זמן; עלייה פתאומית מאותתת על שינוי אוכלוסיה או תיאום jailbreak.","rel":["content-filter","data-drift"],"node":"azure-core"},{"id":"groundedness-trend","t":"Groundedness Trend","he":"מגמת עיגון","d":"ריצת groundedness evaluator מתוזמנת על sample מהתנועה; יורדת כשהספריה מתיישנת.","rel":["data-drift","rai-evaluator"],"node":"azure-core"},{"id":"evaluation-cadence","t":"Evaluation Cadence","he":"תדירות הערכה","d":"שילוב של triggered evaluation על deploy חדש ו-scheduled evaluation לילי לזיהוי drift.","rel":["groundedness-trend","safety-metric-trend"],"node":"azure-core"}]}
 ```

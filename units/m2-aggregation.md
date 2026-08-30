@@ -141,6 +141,10 @@ SELECT AVG(COALESCE(score, 0)) FROM scores;
 {"id":"u-m2-aggregation-q3","tree":"systems","skill":"sql","q":"לטבלה עם שורות: score=90, 80, NULL. מה מחזיר AVG(score)?","options":["56.67","85.0","NULL","שגיאה"],"answer":1,"explain":"AVG מחשבת (90+80)/2=85.0 כי NULL מודלגת. אם NULL מייצג 0, יש להשתמש ב-AVG(COALESCE(score,0))."}
 ```
 
+```widget
+{"type":"algviz","algo":"partition-row","title":"GROUP BY: צפה כיצד שורות מתקבצות לקבוצות לפני אגרגציה"}
+```
+
 ```concepts
 {"items":[{"id":"c-aggregate-function","t":"Aggregate function","he":"פונקציית אגרגציה","d":"פונקציה שמקבלת קבוצת שורות ומחזירה ערך סקלרי: COUNT, SUM, AVG, MIN, MAX","rel":["c-group-by-clause","c-having-clause"],"node":"sql-core"},{"id":"c-group-by-clause","t":"GROUP BY","he":"קיבוץ","d":"מחלק שורות לקבוצות לפי ערכי עמודה; כל עמודה ב-SELECT חייבת להיות ב-GROUP BY או בתוך aggregate","rel":["c-aggregate-function","c-having-clause"],"node":"sql-core"},{"id":"c-having-clause","t":"HAVING","he":"סינון קבוצות","d":"מסנן קבוצות אחרי GROUP BY; יכול להשתמש ב-aggregate; WHERE לא יכול","rel":["c-group-by-clause","c-aggregate-function"],"node":"sql-core"},{"id":"c-count-null","t":"COUNT(*) vs COUNT(col)","he":"ספירה עם NULL","d":"COUNT(*) סופר כל השורות; COUNT(col) מדלג על NULL; SUM/AVG/MIN/MAX מדלגים גם הם","rel":["c-aggregate-function"],"node":"sql-core"}]}
 ```

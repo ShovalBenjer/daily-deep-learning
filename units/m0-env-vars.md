@@ -129,6 +129,10 @@ echo $TOKEN
 {"id":"u-m0-env-vars-f1","tree":"systems","skill":"sdlc","prompt":"איזו פקודה מריצה script.sh בתוך ה-shell הנוכחי במקום בתהליך ילד, כך שהגדרות ה-export שבו יחולו על ה-shell?","answer":"source","alt":["source script.sh",". script.sh","."],"explain":"source (או . ) מריץ את הפקודות בתהליך ה-shell הנוכחי. בניגוד ל-bash script.sh שפותח תהליך ילד, source גורם לשינויים ב-export ובמשתנים להיות גלויים ב-shell שקרא אותו."}
 ```
 
+```widget
+{"type":"kv-calc","title":"Environment Variables: צפה כיצד KEY=VALUE עובר בירושה בין תהליכים"}
+```
+
 ```concepts
 {"items":[{"id":"env-vars","t":"Environment variable","he":"משתנה סביבה","d":"רשומת KEY=VALUE שמערכת ההפעלה מחזיקה לכל תהליך; נגישה לתהליכים ילדים בירושה","rel":["env-inheritance","shell-variable","dotenv-file"]},{"id":"env-inheritance","t":"Environment inheritance","he":"ירושת סביבה","d":"תהליך ילד מתחיל עם עותק של הסביבה של ההורה; שינויים בעותק אינם גלויים להורה","rel":["env-vars","process"]},{"id":"shell-variable","t":"Shell variable","he":"משתנה shell","d":"משתנה פנימי ל-shell שלא עובר לתהליכים ילדים אלא לאחר export","rel":["env-vars"]},{"id":"dotenv-file","t":".env file","he":"קובץ .env","d":"קובץ dev-only שמגדיר משתני סביבה מקומיים; לעולם לא מחויב ל-git","rel":["env-vars"]}]}
 ```

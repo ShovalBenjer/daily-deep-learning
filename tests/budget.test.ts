@@ -14,9 +14,9 @@ const root = (p: string) => new URL('../' + p, import.meta.url);
 const HTML = readFileSync(root('index.html'), 'utf8');
 const SW = readFileSync(root('sw.js'), 'utf8');
 
-//: The one inline <script> that is the entire client. 179212 bytes measured
-//: 2026-08-30 after 13 interactive widgets (+hash-lookup, trie-insert,
-//: partition-row). Raising is allowed, silently drifting is not.
+//: The one inline <script> that is the entire client. 179980 bytes measured
+//: 2026-08-30 after 16 interactive widgets (+tool-loop, rag-pipeline,
+//: stream-wiring, cvS refactor). Raising is allowed, silently drifting is not.
 const INLINE_SCRIPT_BUDGET = 180_000;
 
 //: Everything sw.js precaches before the app works offline: what a phone pays

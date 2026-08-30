@@ -125,6 +125,10 @@ print(response.choices[0].message.content)
 {"id":"u-m5-rag-on-azure-q2","tree":"ops","skill":"azure-foundry","q":"מה מאפשר Hybrid search ב-Azure AI Search?","options":["הרצת שני LLM שונים במקביל","מיזוג BM25 ו-vector search דרך RRF לרשימת דירוג אחת","פיצול השאילתה לשתי שאילתות SQL","השוואת תוצאות מאינדקסים שונים"],"answer":1,"explain":"Hybrid search מריץ BM25 (מילות מפתח) ו-vector search (סמנטי) במקביל ומשקלל את הדירוגים דרך Reciprocal Rank Fusion (RRF). ה-LLM ה-cross-encoder (semantic ranker) הוא שלב נוסף אחר כך."}
 ```
 
+```widget
+{"type":"algviz","algo":"rag-pipeline","title":"RAG Pipeline: צפה בארבעת שלבי RAG — פיצול, הטמעה, חיפוש, יצירה"}
+```
+
 ```concepts
 {"items":[{"id":"rag-pattern","t":"RAG (Retrieval-Augmented Generation)","he":"הרחבת הקשר בזמן ריצה","d":"דפוס שבו שלב אחזור שולח שאילתה למסד ידע חיצוני ומוסיף את הקטעים שהוחזרו ל-prompt לפני יצירת התשובה.","rel":["chunking","vector-search","hybrid-search","groundedness"],"node":"azure-core"},{"id":"chunking","t":"Chunking","he":"פיצול קטעים","d":"חיתוך מסמך לקטעים של 256-512 טוקנים; יחידת האינדוקס הבסיסית ב-RAG. קטע גדול מדי פוגע בדיוק; קטע קטן מדי שוחק הקשר.","rel":["rag-pattern","vector-search"],"node":"azure-core"},{"id":"vector-search","t":"Vector Search","he":"חיפוש וקטורי","d":"מציאת K הקטעים הקרובים ביותר לוקטור השאילתה, מומש ב-Azure AI Search דרך HNSW.","rel":["rag-pattern","hybrid-search"],"node":"azure-core"},{"id":"hybrid-search","t":"Hybrid Search","he":"חיפוש היברידי","d":"מיזוג BM25 (מילות מפתח) ו-vector search דרך Reciprocal Rank Fusion (RRF) לרשימת דירוג מאוחדת. בדרך כלל מדויק יותר מכל אחד בנפרד.","rel":["vector-search","semantic-ranker","rag-pattern"],"node":"azure-core"},{"id":"semantic-ranker","t":"Semantic Ranker","he":"דורג סמנטי","d":"מודל cross-encoder ב-Azure AI Search שמדרג מחדש את Top 50 תוצאות החיפוש לפי רלוונטיות עמוקה לשאילתה. דורש SKU S1 ומעלה.","rel":["hybrid-search","rag-pattern"],"node":"azure-core"}]}
 ```

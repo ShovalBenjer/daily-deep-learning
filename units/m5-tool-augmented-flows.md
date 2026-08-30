@@ -158,6 +158,10 @@ Tool calling שווה את התקורה כש: המידע משתנה בזמן א�
 {"id":"u-m5-tool-augmented-flows-q2","tree":"ops","skill":"azure-foundry","q":"מה חייב לקדום להודעת role='tool' ברשימת ה-messages?","options":["הודעת user המקורית","הודעת assistant שמכילה את tool_calls המבוקשת","הודעת system עם הגדרת הכלי","אין דרישה לסדר מסוים"],"answer":1,"explain":"הרצף המחויב הוא: assistant message עם tool_calls, ואחריה הודעות tool עם tool_call_id תואם. ה-API מחזיר שגיאה אם מנסים לשלוח הודעת tool ללא הודעת assistant מקדימה שביקשה את אותה קריאה."}
 ```
 
+```widget
+{"type":"algviz","algo":"tool-loop","title":"Agent Loop: צפה כיצד המודל קורא לכלים בלולאה עד finish_reason=stop"}
+```
+
 ```concepts
 {"items":[{"id":"function-calling","t":"Function calling","he":"קריאת פונקציה","d":"מנגנון המאפשר למודל שפה לבקש הפעלה של כלי חיצוני: המודל מחזיר JSON עם שם ופרמטרים, הקוד מפעיל ומחזיר את התוצאה.","rel":["tool-call","tool-result","foundry-sdk"],"node":"azure-core"},{"id":"tool-call","t":"Tool call","he":"קריאת כלי","d":"בקשה בודדת שמודל מחזיר ב-tool_calls; מכילה id ייחודי, שם פונקציה וארגומנטים ב-JSON.","rel":["function-calling","tool-result"],"node":"azure-core"},{"id":"tool-result","t":"Tool result","he":"תוצאת כלי","d":"הודעה עם role='tool' ו-tool_call_id תואם שמחזירה את פלט הפונקציה למודל.","rel":["tool-call","function-calling"],"node":"azure-core"},{"id":"parallel-tool-calls","t":"Parallel tool calls","he":"קריאות כלים מקביליות","d":"כשמודל מחזיר כמה tool_calls בתגובה אחת; כולן חייבות להתבצע ולהוחזר לפני הקריאה הבאה.","rel":["tool-call","function-calling"],"node":"azure-core"}]}
 ```

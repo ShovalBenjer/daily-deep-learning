@@ -167,6 +167,10 @@ anti-join חוזר ב-m2-aggregation (לקוחות ללא רכישה) וב-m2-ga
 {"id":"u-m2-joins-drill-f1","tree":"systems","skill":"sql","prompt":"כתוב את המילים החסרות כדי למצוא מוצרים שמעולם לא הוזמנו. products(id, name), order_items(product_id).\n\nSELECT p.id, p.name\nFROM products p\n___ JOIN order_items oi ON p.id = oi.product_id\nWHERE oi.product_id ___;","answer":"LEFT / IS NULL","alt":["left / is null","LEFT / IS NULL","LEFT\nIS NULL"],"explain":"LEFT JOIN שומר את כל products. WHERE oi.product_id IS NULL מחזיר רק מוצרים שאין להם שורה תואמת ב-order_items - כלומר מוצרים שלא הוזמנו. anti-join קלאסי."}
 ```
 
+```widget
+{"type":"algviz","algo":"join-matcher","title":"JOIN Matcher: צפה כיצד שורות מתאימות ב-LEFT / INNER / FULL OUTER"}
+```
+
 ```concepts
 {"items":[{"id":"c-anti-join","t":"Anti-join","he":"צירוף שלילי","d":"LEFT JOIN WHERE right_id IS NULL: מחזיר שורות שאין להן התאמה בטבלה הימנית","rel":["c-left-join","c-null-in-join"],"node":"sql-core"},{"id":"c-join-fanout","t":"Join fanout","he":"כפל שורות","d":"צירוף על עמודה שאינה PRIMARY KEY מכפיל שורות; SUM לאחר מכן גדל שלא כדין","rel":["c-inner-join","c-left-join"],"node":"sql-core"}]}
 ```

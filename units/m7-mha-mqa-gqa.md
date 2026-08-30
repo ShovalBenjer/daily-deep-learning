@@ -72,6 +72,10 @@ MQA נשמעת אידיאלית: cache קטן פי 32, decode מהיר בהרב�
 
 GQA שומרת G > 1 זוגות KV שונים: כל קבוצה של ראשים מתמחה בנקודת מבט שונה. בפועל, 8 ראשי KV במקום 32 מאפשרים איכות כמעט זהה לMHA, עם cache קטן פי 4.
 
+```widget
+{"type":"kv-calc","title":"KV Cache Calculator: שנה H ו-G וצפה כיצד גודל ה-cache משתנה","L":32,"H":32,"dh":128,"S":4096,"b":2}
+```
+
 ```concepts
 {"items":[{"id":"c-mha","t":"Multi-Head Attention","he":"קשב רב-ראשי","d":"כל אחד מ-H ראשי ה-attention מחזיק K ו-V עצמאיים; cache גדול, איכות גבוהה","rel":["c-mqa","c-gqa","c-kv-cache"],"node":"llm-core"},{"id":"c-mqa","t":"Multi-Query Attention","he":"שאילתות מרובות","d":"H ראשי query חולקים ראש KV יחיד; מצמצם cache פי H אך פוגע באיכות במודלים גדולים","rel":["c-mha","c-gqa","c-kv-cache"],"node":"llm-core"},{"id":"c-gqa","t":"Group-Query Attention","he":"שאילתות קבוצתיות","d":"H ראשי query מחולקים ל-G קבוצות, כל קבוצה חולקת זוג KV; G ראשי KV, פשרה בין MHA ל-MQA; הבחירה של Llama-3, Mistral, Gemma","rel":["c-mha","c-mqa","c-kv-cache"],"node":"llm-core"}]}
 ```

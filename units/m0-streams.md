@@ -82,6 +82,10 @@ stdin, stdout, stderr הם מה שמאפשר pipes: הפקודה הבאה בשר
 {"id":"u-m0-streams-f1","tree":"systems","skill":"sdlc","prompt":"איזה מספר מחזירה תוכנית שהסתיימה בהצלחה בתור exit code?","answer":"0","alt":["אפס","zero"],"explain":"קוד יציאה 0 פירושו הצלחה בכל shells של POSIX. כל מספר שאינו 0 מסמן כישלון."}
 ```
 
+```widget
+{"type":"algviz","algo":"stream-wiring","title":"Stream Wiring: צפה כיצד stdin, stdout ו-stderr מתחברים מחדש"}
+```
+
 ```concepts
 {"items":[{"id":"stdin","t":"stdin","he":"כניסה תקנית","d":"ערוץ הקלט התקני של תוכנית, מתאר קובץ 0, מחובר למקלדת כברירת מחדל","rel":["stdout","stderr"]},{"id":"stdout","t":"stdout","he":"יציאה תקנית","d":"ערוץ הפלט התקני של תוכנית, מתאר קובץ 1","rel":["stdin","stderr"]},{"id":"stderr","t":"stderr","he":"יציאה שגויה","d":"ערוץ נפרד לשגיאות ואזהרות, מתאר קובץ 2","rel":["stdout","stdin"]},{"id":"exit-code","t":"Exit code","he":"קוד יציאה","d":"מספר שלם שתוכנית מחזירה כשנסגרת, 0 הצלחה כל שאר כישלון","rel":["stdin","stdout","stderr"]},{"id":"file-descriptor","t":"File descriptor","he":"מתאר קובץ","d":"מספר שלם שמזהה ערוץ פתוח של תוכנית","rel":["stdin","stdout","stderr"]}]}
 ```

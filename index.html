@@ -856,6 +856,7 @@ function buildWidget(d) {
 }
 
 /* ---- algviz: watch the algorithm run (the VisuAlgo pattern, RL-native) ---- */
+function cvS(cv,H){const W=cv.clientWidth||320,d=Math.min(devicePixelRatio,2);cv.width=W*d;cv.height=H*d;cv.style.height=H+'px';const c=cv.getContext('2d');c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,W,H);return[W,c];}
 const ALGS = {
   'binary-search': {
     name: 'Binary Search',
@@ -873,29 +874,20 @@ const ALGS = {
       if (s.arr[s.mid] < s.target) { s.lo = s.mid + 1; return { line: 4, note: s.arr[s.mid] + ' < יעד, זזים ימינה' }; }
       s.hi = s.mid - 1; return { line: 5, note: s.arr[s.mid] + ' > יעד, זזים שמאלה' };
     },
-    draw(s, cv) {
-      const W = cv.clientWidth || 320, H = 120, dpr = Math.min(devicePixelRatio, 2);
-      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
-      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
-      const n = s.arr.length, bw = Math.min(38, (W - 8) / n), x0 = (W - bw * n) / 2;
-      x.textAlign = 'center'; x.textBaseline = 'middle';
-      s.arr.forEach((v, i) => {
-        const inR = i >= s.lo && i <= s.hi;
-        const px = x0 + i * bw;
-        x.fillStyle = i === s.found ? themeC('--green') : i === s.mid ? themeC('--gold') : inR ? themeC('--panel') : 'transparent';
-        x.globalAlpha = i === s.mid || i === s.found ? 1 : inR ? 1 : 0.25;
-        x.fillRect(px + 1, 34, bw - 2, 40);
-        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 34, bw - 2, 40);
-        x.fillStyle = i === s.mid || i === s.found ? '#14101a' : themeC('--ink');
-        x.font = '12px "IBM Plex Mono"'; x.fillText(v, px + bw / 2, 54);
-        x.globalAlpha = 1;
-      });
-      x.fillStyle = themeC('--faded'); x.font = '11px "IBM Plex Mono"';
-      x.fillText('lo=' + s.lo, x0 + s.lo * bw + bw / 2, 90);
-      if (s.hi >= 0 && s.hi !== s.lo) x.fillText('hi=' + s.hi, x0 + s.hi * bw + bw / 2, 90);
-      x.fillStyle = themeC('--gold'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
-      x.fillText('יעד: ' + s.target + ' · השוואות: ' + s.ops, W / 2, 14);
-    }
+    draw(s,cv){const[W,x]=cvS(cv,120);
+      const n=s.arr.length,bw=Math.min(38,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      s.arr.forEach((v,i)=>{const inR=i>=s.lo&&i<=s.hi,px=x0+i*bw;
+        x.fillStyle=i===s.found?themeC('--green'):i===s.mid?themeC('--gold'):inR?themeC('--panel'):'transparent';
+        x.globalAlpha=i===s.mid||i===s.found?1:inR?1:.25;
+        x.fillRect(px+1,34,bw-2,40);x.strokeStyle=themeC('--line');x.strokeRect(px+1,34,bw-2,40);
+        x.fillStyle=i===s.mid||i===s.found?'#14101a':themeC('--ink');
+        x.font='12px "IBM Plex Mono"';x.fillText(v,px+bw/2,54);x.globalAlpha=1;});
+      x.fillStyle=themeC('--faded');x.font='11px "IBM Plex Mono"';
+      x.fillText('lo='+s.lo,x0+s.lo*bw+bw/2,90);
+      if(s.hi>=0&&s.hi!==s.lo)x.fillText('hi='+s.hi,x0+s.hi*bw+bw/2,90);
+      x.fillStyle=themeC('--gold');x.font='700 12px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('יעד: '+s.target+' · השוואות: '+s.ops,W/2,14);}
   },
   'returns-backward': {
     name: 'Discounted Returns (backward)',
@@ -909,33 +901,21 @@ const ALGS = {
       s.t--; s.G = s.r[s.t] + s.g * s.G; s.out[s.t] = s.G; s.ops++;
       return { line: 2, note: `G = ${s.r[s.t]} + ${s.g}·${(s.out[s.t + 1] ?? 0).toFixed(2)} = ${s.G.toFixed(2)}` };
     },
-    draw(s, cv) {
-      const W = cv.clientWidth || 320, H = 150, dpr = Math.min(devicePixelRatio, 2);
-      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
-      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
-      const n = s.r.length, bw = Math.min(46, (W - 8) / n), x0 = (W - bw * n) / 2;
-      x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
-      x.fillText('rewards', x0 - 2 + bw * n + 2 > W ? W - 30 : x0 + bw * n + 2, 30);
-      s.r.forEach((v, i) => {
-        const px = x0 + i * bw, cur = i === s.t;
-        x.fillStyle = cur ? themeC('--gold') : themeC('--panel');
-        x.fillRect(px + 1, 20, bw - 2, 26);
-        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 20, bw - 2, 26);
-        x.fillStyle = cur ? '#14101a' : themeC('--ink'); x.font = '12px "IBM Plex Mono"';
-        x.fillText(v, px + bw / 2, 33);
-      });
-      s.out.forEach((v, i) => {
-        const px = x0 + i * bw, has = v !== null;
-        x.fillStyle = has ? themeC('--green') : 'transparent'; x.globalAlpha = has ? .9 : .2;
-        x.fillRect(px + 1, 78, bw - 2, 30);
-        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 78, bw - 2, 30);
-        x.globalAlpha = 1;
-        if (has) { x.fillStyle = '#0c1410'; x.font = '11px "IBM Plex Mono"'; x.fillText(v.toFixed(2), px + bw / 2, 93); }
-      });
-      x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
-      x.fillText('G (מהסוף להתחלה ←)', W / 2, 128);
-    }
+    draw(s,cv){const[W,x]=cvS(cv,150);
+      const n=s.r.length,bw=Math.min(46,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      x.fillStyle=themeC('--faded');x.font='11px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('rewards',x0+bw*n+2>W?W-30:x0+bw*n+2,30);
+      s.r.forEach((v,i)=>{const px=x0+i*bw,cur=i===s.t;
+        x.fillStyle=cur?themeC('--gold'):themeC('--panel');
+        x.fillRect(px+1,20,bw-2,26);x.strokeStyle=themeC('--line');x.strokeRect(px+1,20,bw-2,26);
+        x.fillStyle=cur?'#14101a':themeC('--ink');x.font='12px "IBM Plex Mono"';x.fillText(v,px+bw/2,33);});
+      s.out.forEach((v,i)=>{const px=x0+i*bw,has=v!==null;
+        x.fillStyle=has?themeC('--green'):'transparent';x.globalAlpha=has?.9:.2;
+        x.fillRect(px+1,78,bw-2,30);x.strokeStyle=themeC('--line');x.strokeRect(px+1,78,bw-2,30);x.globalAlpha=1;
+        if(has){x.fillStyle='#0c1410';x.font='11px "IBM Plex Mono"';x.fillText(v.toFixed(2),px+bw/2,93);}});
+      x.fillStyle=themeC('--faded');x.font='11px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('G (מהסוף להתחלה ←)',W/2,128);}
   },
   'gaps-islands': {
     name: 'Gaps & Islands (id - ROW_NUMBER)',
@@ -956,17 +936,14 @@ const ALGS = {
       return { line: 3, note: `id=${r.id}, rn=${r.rn}, grp=${r.id}-${r.rn}=${r.grp}` };
     },
     draw(s, cv) {
-      const W = cv.clientWidth || 320, H = 160, dpr = Math.min(devicePixelRatio, 2);
-      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
-      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
-      const n = s.rows.length, bw = Math.min(48, (W - 16) / n), x0 = (W - bw * n) / 2;
-      x.textAlign = 'center'; x.textBaseline = 'middle';
-      const grpColors = {};
-      let ci = 0;
-      const palette = [themeC('--green'), themeC('--gold'), themeC('--oracle'), themeC('--architect'), themeC('--warden')];
-      s.rows.forEach(r => { if (!(r.grp in grpColors)) grpColors[r.grp] = palette[ci++ % palette.length]; });
-      x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
-      x.fillText('id', x0 - 14, 24); x.fillText('rn', x0 - 14, 58); x.fillText('grp', x0 - 14, 92);
+      const [W, x] = cvS(cv, 160);
+      const n=s.rows.length,bw=Math.min(48,(W-16)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      const grpColors={};let ci=0;
+      const palette=[themeC('--green'),themeC('--gold'),themeC('--oracle'),themeC('--architect'),themeC('--warden')];
+      s.rows.forEach(r=>{if(!(r.grp in grpColors))grpColors[r.grp]=palette[ci++%palette.length];});
+      x.fillStyle=themeC('--faded');x.font='11px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('id',x0-14,24);x.fillText('rn',x0-14,58);x.fillText('grp',x0-14,92);
       s.rows.forEach((r, i) => {
         const px = x0 + i * bw, vis = i <= s.cur;
         x.fillStyle = i === s.cur ? themeC('--gold') : themeC('--panel');
@@ -1031,9 +1008,7 @@ const ALGS = {
       return { done: true, line: 5, note: 'FULL OUTER: ' + s.rightOnly.length + ' שורות ימניות ללא התאמה' };
     },
     draw(s, cv) {
-      const W = cv.clientWidth || 320, H = 200, dpr = Math.min(devicePixelRatio, 2);
-      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
-      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const [W, x] = cvS(cv, 200);
       const colW = W / 3, rh = 24, pad = 4;
       function drawTable(label, rows, cx, yOff, keyFn, valFn, hl) {
         x.fillStyle = themeC('--faded'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
@@ -1092,9 +1067,7 @@ const ALGS = {
       return { line: improved ? 5 : 3, note: `+${added} -${removed} → sum=${s.sum}` + (improved ? ' ★ best חדש!' : '') };
     },
     draw(s, cv) {
-      const W = cv.clientWidth || 320, H = 130, dpr = Math.min(devicePixelRatio, 2);
-      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
-      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const [W, x] = cvS(cv, 130);
       const n = s.arr.length, bw = Math.min(48, (W - 16) / n), x0 = (W - bw * n) / 2;
       x.textAlign = 'center'; x.textBaseline = 'middle';
       const left = s.phase === 'init' ? 0 : s.left, right = s.phase === 'init' ? s.k - 1 : s.right;
@@ -1121,6 +1094,72 @@ const ALGS = {
       x.fillText('k=' + s.k + '  צעדים: ' + s.ops, W / 2, 116);
     }
   },
+  'stack-parens': {
+    name: 'Stack (Parentheses)',
+    code: ['for ch in s:','  if opener: push','  if closer matches: pop','  else: invalid'],
+    init(p) { const s=p.s||'([{}])({})'; return {s,i:0,stack:[],ok:true}; },
+    step(st) {
+      if (!st.ok||st.i>=st.s.length) return {done:true,line:0,note:st.ok&&!st.stack.length?'תקין!':'לא תקין'};
+      const ch=st.s[st.i],M={')':'(',']':'[','}':'{'};st.i++;
+      if ('([{'.includes(ch)){st.stack.push(ch);return {line:1,note:'push '+ch};}
+      if (!st.stack.length||st.stack.at(-1)!==M[ch]){st.ok=false;return {line:3,note:ch+' חוסר התאמה'};}
+      st.stack.pop();return {line:2,note:'pop '+M[ch]+' ← '+ch};
+    },
+    draw(s,cv) {
+      const[W,x]=cvS(cv,110);
+      const n=s.s.length,bw=Math.min(30,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      [...s.s].forEach((ch,i)=>{
+        const px=x0+i*bw,cur=i===s.i-1;
+        x.fillStyle=cur?themeC('--gold'):i<s.i?themeC('--panel'):'transparent';
+        x.globalAlpha=i<s.i?1:.25;
+        x.fillRect(px+1,4,bw-2,26);x.strokeStyle=themeC('--line');x.strokeRect(px+1,4,bw-2,26);
+        x.fillStyle=cur?'#14101a':themeC('--ink');x.font='13px "IBM Plex Mono"';x.fillText(ch,px+bw/2,17);x.globalAlpha=1;
+      });
+      const sW=22,sX=W/2-sW*s.stack.length/2;
+      s.stack.forEach((ch,i)=>{
+        const sy=90-i*20;
+        x.fillStyle=i===s.stack.length-1?themeC('--oracle'):themeC('--panel');
+        x.fillRect(sX+i*sW,sy,sW-2,18);x.strokeStyle=themeC('--line');x.strokeRect(sX+i*sW,sy,sW-2,18);
+        x.fillStyle=themeC('--ink');x.font='12px "IBM Plex Mono"';x.fillText(ch,sX+i*sW+sW/2-1,sy+9);
+      });
+      x.fillStyle=themeC('--faded');x.font='10px "Rubik","Noto Sans Hebrew",sans-serif';x.fillText('stack',sX-22,100);
+    }
+  },
+  'heap-topk': {
+    name: 'Heap Top-k',
+    code: ['heap = []','for x in nums:','  push(x)','  if len>k: pop min','result = heap'],
+    init(p) { const nums=p.nums||[5,1,8,3,9,2,7]; return {nums,k:p.k||3,heap:[],i:0,popped:null}; },
+    step(s) {
+      if (s.i>=s.nums.length) return {done:true,line:4,note:'top-'+s.k+': ['+s.heap.slice().sort((a,b)=>b-a).join(',')+']'};
+      const v=s.nums[s.i];s.i++;s.popped=null;
+      s.heap.push(v);s.heap.sort((a,b)=>a-b);
+      if (s.heap.length>s.k){s.popped=s.heap.shift();return {line:3,note:'push '+v+', pop '+s.popped};}
+      return {line:2,note:'push '+v};
+    },
+    draw(s,cv) {
+      const[W,x]=cvS(cv,100);
+      const n=s.nums.length,bw=Math.min(36,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      s.nums.forEach((v,i)=>{
+        const px=x0+i*bw,cur=i===s.i-1;
+        x.fillStyle=cur?themeC('--gold'):i<s.i?themeC('--panel'):'transparent';
+        x.globalAlpha=i<s.i?1:.25;
+        x.fillRect(px+1,4,bw-2,26);x.strokeStyle=themeC('--line');x.strokeRect(px+1,4,bw-2,26);
+        x.fillStyle=cur?'#14101a':themeC('--ink');x.font='12px "IBM Plex Mono"';x.fillText(v,px+bw/2,17);x.globalAlpha=1;
+      });
+      const hW=28,hX=(W-hW*s.heap.length)/2;
+      s.heap.forEach((v,i)=>{
+        x.fillStyle=i===0?themeC('--oracle'):themeC('--green');x.globalAlpha=.7;
+        x.fillRect(hX+i*hW,50,hW-2,24);x.globalAlpha=1;
+        x.strokeStyle=themeC('--line');x.strokeRect(hX+i*hW,50,hW-2,24);
+        x.fillStyle='#14101a';x.font='12px "IBM Plex Mono"';x.fillText(v,hX+i*hW+hW/2-1,62);
+      });
+      x.fillStyle=themeC('--faded');x.font='10px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('min-heap (k='+s.k+')',W/2,90);
+      if (s.popped!==null){x.fillStyle=themeC('--red');x.font='11px "IBM Plex Mono"';x.fillText('popped: '+s.popped,W/2,42);}
+    }
+  },
   'two-pointers': {
     name: 'Two Pointers (Converging)',
     code: ['i = 0, j = n-1', 'while i < j:', '  s = arr[i] + arr[j]', '  if s == target: return', '  if s > target: j--', '  else: i++'],
@@ -1137,9 +1176,7 @@ const ALGS = {
       const old = s.i; s.i++; return { line: 5, note: `${s.arr[old]}+${s.arr[s.j]}=${s.sum} < ${s.target}, i++` };
     },
     draw(s, cv) {
-      const W = cv.clientWidth || 320, H = 120, dpr = Math.min(devicePixelRatio, 2);
-      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
-      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const [W, x] = cvS(cv, 120);
       const n = s.arr.length, bw = Math.min(42, (W - 16) / n), x0 = (W - bw * n) / 2;
       x.textAlign = 'center'; x.textBaseline = 'middle';
       s.arr.forEach((v, i) => {
@@ -1159,6 +1196,213 @@ const ALGS = {
       x.fillStyle = themeC('--green'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
       x.fillText('יעד: ' + s.target + '  sum=' + s.sum + '  השוואות: ' + s.ops, W / 2, 14);
     }
+  },
+  'bst-search': {
+    name: 'BST Search',
+    code: ['node = root','while node:','  if val == node: found','  if val < node: left','  else: right'],
+    init(p) {
+      const v=p.vals||[8,3,10,1,6,14,4,7,13],ns=v.map(v=>({v,l:null,r:null}));
+      for(let i=1;i<ns.length;i++){let c=ns[0];for(;;){if(ns[i].v<c.v){if(!c.l){c.l=ns[i];break;}c=c.l;}else{if(!c.r){c.r=ns[i];break;}c=c.r;}}}
+      return {root:ns[0],t:p.target||7,cur:ns[0],p:[],f:false};
+    },
+    step(s) {
+      if(s.f||!s.cur) return {done:true,line:s.f?2:1,note:s.f?'found '+s.t:'not in tree'};
+      s.p.push(s.cur.v);
+      if(s.cur.v===s.t){s.f=true;return {line:2,note:s.t+'=='+s.cur.v};}
+      if(s.t<s.cur.v){const o=s.cur;s.cur=s.cur.l;return {line:3,note:s.t+'<'+o.v};}
+      const o=s.cur;s.cur=s.cur.r;return {line:4,note:s.t+'>'+o.v};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,140);
+      c.textAlign='center';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const R=14;!function d(n,x,y,g){if(!n)return;
+        if(n.l){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(x-g,y+38-R);c.stroke();d(n.l,x-g,y+38,g/2);}
+        if(n.r){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(x+g,y+38-R);c.stroke();d(n.r,x+g,y+38,g/2);}
+        const v=s.p.includes(n.v);c.fillStyle=v&&s.f&&n.v===s.t?themeC('--green'):v?themeC('--gold'):themeC('--panel');
+        c.beginPath();c.arc(x,y,R,0,7);c.fill();c.strokeStyle=themeC('--line');c.stroke();
+        c.fillStyle=v?'#14101a':themeC('--ink');c.fillText(n.v,x,y);
+      }(s.root,W/2,22,W/5);
+    }
+  },
+  'list-reverse': {
+    name: 'List Reverse',
+    code: ['prev=None; curr=head','while curr:','  nxt=curr.next','  curr.next=prev','  prev,curr=curr,nxt'],
+    init(p) {const v=p.vals||[1,2,3,4,5];return {v,p:-1,c:0,r:[]};},
+    step(s) {
+      if(s.c>=s.v.length) return {done:true,line:0,note:'done: '+s.r.join('<-')};
+      s.r.unshift(s.v[s.c]);const n='prev<-'+s.v[s.c]+' curr->'+(s.c+1<s.v.length?s.v[s.c+1]:'None');
+      s.p=s.c;s.c++;return {line:s.c<s.v.length?2:4,note:n};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,72);
+      const n=s.v.length,bw=Math.min(50,(W-20)/n),x0=(W-bw*n)/2;
+      c.textAlign='center';c.textBaseline='middle';c.font='12px "IBM Plex Mono"';
+      s.v.forEach((v,i)=>{const px=x0+i*bw,d=i<s.c;
+        c.fillStyle=i===s.p?themeC('--green'):i===s.c?themeC('--gold'):d?themeC('--green'):themeC('--panel');
+        c.globalAlpha=d?.6:1;c.fillRect(px+1,16,bw-2,26);c.strokeStyle=themeC('--line');c.strokeRect(px+1,16,bw-2,26);
+        c.fillStyle=d||i===s.p?'#0c1410':i===s.c?'#14101a':themeC('--ink');c.fillText(v,px+bw/2,29);
+        if(i<n-1&&!d){c.fillStyle=themeC('--faded');c.fillText('→',px+bw-1,29);}c.globalAlpha=1;});
+      if(s.r.length){c.fillStyle=themeC('--faded');c.font='11px "Rubik",sans-serif';c.fillText(s.r.join('←'),W/2,56);}
+    }
+  },
+  'hash-lookup': {
+    name: 'Hash Complement Lookup',
+    code: ['for i,x in nums:','  comp = target - x','  if comp in seen: found','  seen[x] = i'],
+    init(p) {const a=p.nums||[2,7,11,15,1,8];return {a,t:p.target||9,seen:{},i:0,f:null};},
+    step(s) {
+      if(s.f||s.i>=s.a.length) return {done:true,line:s.f?2:0,note:s.f||'not found'};
+      const x=s.a[s.i],c=s.t-x;
+      if(c in s.seen){s.f=x+'+'+c+'='+s.t+' (i='+s.seen[c]+','+s.i+')';return {line:2,note:s.f};}
+      s.seen[x]=s.i;s.i++;return {line:3,note:'seen['+x+']='+s.seen[x]+', comp='+c+' not in seen'};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,90);
+      const n=s.a.length,bw=Math.min(42,(W-8)/n),x0=(W-bw*n)/2;
+      c.textAlign='center';c.textBaseline='middle';c.font='12px "IBM Plex Mono"';
+      s.a.forEach((v,i)=>{const px=x0+i*bw,done=i<s.i,cur=i===s.i;
+        c.fillStyle=s.f&&(v===s.a[s.i]||v===s.t-s.a[s.i])?themeC('--green'):cur?themeC('--gold'):done?themeC('--panel'):'transparent';
+        c.globalAlpha=done||cur?1:.25;c.fillRect(px+1,4,bw-2,26);c.strokeStyle=themeC('--line');c.strokeRect(px+1,4,bw-2,26);
+        c.fillStyle=cur?'#14101a':themeC('--ink');c.fillText(v,px+bw/2,17);c.globalAlpha=1;});
+      const keys=Object.keys(s.seen);if(keys.length){
+        const sw=Math.min(32,(W-8)/keys.length),sx=(W-sw*keys.length)/2;
+        c.font='10px "IBM Plex Mono"';c.fillStyle=themeC('--faded');c.fillText('seen{}',20,58);
+        keys.forEach((k,i)=>{const px=sx+i*sw;c.fillStyle=themeC('--oracle');c.globalAlpha=.5;
+          c.fillRect(px+1,48,sw-2,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(px+1,48,sw-2,20);
+          c.fillStyle='#14101a';c.fillText(k,px+sw/2,58);});
+      }
+      c.fillStyle=themeC('--faded');c.font='10px "Rubik",sans-serif';c.fillText('target='+s.t,W/2,82);
+    }
+  },
+  'trie-insert': {
+    name: 'Trie Insert/Search',
+    code: ['node = root','for ch in word:','  if ch not in node:','    create node','  descend to node[ch]','mark is_end'],
+    init(p) {
+      const ws=p.words||['cat','car','card'];
+      const root={ch:'',c:{},e:false};
+      return {root,ws,wi:0,ci:0,cur:root,path:[],phase:'insert',done:false};
+    },
+    step(s) {
+      if(s.done) return {done:true,line:0,note:'done'};
+      if(s.wi>=s.ws.length){s.done=true;return {done:true,line:0,note:s.ws.length+' words inserted'};}
+      const w=s.ws[s.wi];
+      if(s.ci>=w.length){s.cur.e=true;s.wi++;s.ci=0;s.cur=s.root;s.path=['root'];
+        return {line:5,note:'mark end: "'+w+'"'};}
+      const ch=w[s.ci];const created=!s.cur.c[ch];
+      if(created) s.cur.c[ch]={ch,c:{},e:false};
+      s.cur=s.cur.c[ch];s.path.push(ch);s.ci++;
+      return {line:created?3:4,note:(created?'new ':'go ')+'"'+ch+'" ('+s.path.join('→')+')'};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,120);
+      c.textAlign='center';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const R=12;let q=[{n:s.root,x:W/2,y:16}],drawn=[];
+      while(q.length){const{n,x,y}=q.shift();drawn.push({n,x,y});
+        const ks=Object.keys(n.c),tot=ks.length;if(!tot)continue;
+        const sp=Math.min(50,W/(tot+1));
+        ks.forEach((k,i)=>{const cx=x+(i-(tot-1)/2)*sp,cy=y+32;
+          c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(cx,cy-R);c.stroke();
+          q.push({n:n.c[k],x:cx,y:cy});});}
+      drawn.forEach(({n,x,y})=>{const isCur=n===s.cur;
+        c.fillStyle=isCur?themeC('--gold'):n.e?themeC('--green'):themeC('--panel');
+        c.beginPath();c.arc(x,y,R,0,7);c.fill();c.strokeStyle=themeC('--line');c.stroke();
+        c.fillStyle=isCur?'#14101a':themeC('--ink');c.fillText(n.ch||'*',x,y);});
+      if(s.wi<s.ws.length){c.fillStyle=themeC('--faded');c.font='10px "Rubik",sans-serif';
+        c.fillText('inserting: "'+s.ws[s.wi]+'" ('+s.path.join('→')+')',W/2,H-6);}
+    }
+  },
+  'partition-row': {
+    name: 'Window ROW_NUMBER',
+    code: ['PARTITION BY region','ORDER BY amount DESC','ROW_NUMBER() assigns rn','rn=1 per partition → top'],
+    init(p) {
+      const rows=p.rows||[{r:'N',n:'Alice',a:500},{r:'N',n:'Bob',a:300},{r:'S',n:'Carol',a:400},{r:'S',n:'Dana',a:200},{r:'S',n:'Eve',a:100}];
+      rows.sort((a,b)=>a.r<b.r?-1:a.r>b.r?1:b.a-a.a);
+      return {rows,i:0,rn:[],part:null,pn:0};
+    },
+    step(s) {
+      if(s.i>=s.rows.length) return {done:true,line:3,note:'done: filter rn=1 for top per group'};
+      const r=s.rows[s.i];if(r.r!==s.part){s.part=r.r;s.pn=0;}
+      s.pn++;s.rn.push(s.pn);s.i++;
+      return {line:2,note:r.n+' ('+r.r+') amount='+r.a+' → rn='+s.pn};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,Math.max(80,s.rows.length*22+30));
+      c.textAlign='start';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const cols=[30,90,170,220],rh=20;
+      c.fillStyle=themeC('--faded');c.font='700 10px "Rubik",sans-serif';
+      ['rgn','name','amount','rn'].forEach((h,i)=>c.fillText(h,cols[i],10));
+      c.font='11px "IBM Plex Mono"';
+      let prevR='';s.rows.forEach((r,i)=>{const y=22+i*rh,vis=i<s.i,cur=i===s.i-1;
+        const newP=r.r!==prevR;prevR=r.r;
+        if(newP&&i>0){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(10,y-2);c.lineTo(W-10,y-2);c.stroke();}
+        c.globalAlpha=vis?1:.3;
+        if(cur){c.fillStyle=themeC('--gold');c.globalAlpha=.2;c.fillRect(8,y-2,W-16,rh);c.globalAlpha=1;}
+        c.fillStyle=vis?themeC('--ink'):themeC('--faded');
+        c.fillText(r.r,cols[0],y+8);c.fillText(r.n,cols[1],y+8);c.fillText(r.a,cols[2],y+8);
+        if(vis){const rn=s.rn[i];c.fillStyle=rn===1?themeC('--green'):themeC('--ink');
+          c.fillText(rn,cols[3],y+8);}
+        c.globalAlpha=1;});
+    }
+  },
+  'tool-loop': {
+    name:'Agent Tool Loop',
+    code:['msgs=[user]','resp=chat(msgs)','if tool_calls:','  run, append result','  goto 2','else: answer'],
+    init(){return{ms:[{r:'user',t:'200 ILS in USD?'}],si:0,dn:false};},
+    step(s){if(s.dn)return{done:true,line:5,note:'done'};
+      const p=(r,t)=>s.ms.push({r,t});
+      switch(s.si){case 0:p('ast','call get_rate');s.si=1;return{line:2,note:'model calls get_rate'};
+      case 1:p('tool','0.27');s.si=2;return{line:3,note:'tool: rate=0.27'};
+      case 2:p('ast','call mul(200,.27)');s.si=3;return{line:2,note:'model calls multiply'};
+      case 3:p('tool','54');s.si=4;return{line:3,note:'tool: 54'};
+      default:p('ast','200 ILS = 54 USD');s.dn=true;return{line:5,note:'stop → answer'};}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,Math.max(60,s.ms.length*20+4));
+      c.textBaseline='middle';const cl={user:'--oracle',ast:'--green',tool:'--gold'};
+      s.ms.forEach((m,i)=>{const y=2+i*18;
+        c.fillStyle=themeC(cl[m.r]||'--faded');c.globalAlpha=.18;c.fillRect(4,y,W-8,17);c.globalAlpha=1;
+        c.font='700 8px "Rubik",sans-serif';c.fillStyle=themeC(cl[m.r]||'--ink');c.fillText(m.r,8,y+9);
+        c.font='10px "IBM Plex Mono"';c.fillStyle=themeC('--ink');c.fillText(m.t,42,y+9);
+        if(i===s.ms.length-1){c.strokeStyle=themeC('--gold');c.lineWidth=2;c.strokeRect(4,y,W-8,17);c.lineWidth=1;}});}
+  },
+  'rag-pipeline': {
+    name:'RAG Pipeline',
+    code:['split(doc) → chunks','embed(chunks)','search(query) → top_k','llm(query+top_k) → answer'],
+    init(p){const ch=p.chunks||['A','B','C','D'];return{ch,i:0,tk:[],ans:''};},
+    step(s){if(s.i>3)return{done:true,line:3,note:'done'};
+      switch(s.i){case 0:s.i=1;return{line:0,note:s.ch.length+' chunks'};
+      case 1:s.i=2;return{line:1,note:'embedded as vectors'};
+      case 2:s.tk=[0,2];s.i=3;return{line:2,note:'top 2: '+s.ch[0]+','+s.ch[2]};
+      default:s.ans='grounded';s.i=4;return{line:3,note:'LLM → answer'};}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,s.ans?100:s.i>=3?72:46);
+      const n=s.ch.length,bw=Math.min(56,(W-30)/n),x0=(W-bw*n)/2;
+      c.textAlign='center';c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      s.ch.forEach((ch,i)=>{const px=x0+i*bw,hit=s.tk.includes(i),em=s.i>=2;
+        c.fillStyle=hit?themeC('--green'):em?themeC('--panel'):'transparent';c.globalAlpha=hit?.4:em?.15:.1;
+        c.fillRect(px+1,4,bw-2,22);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(px+1,4,bw-2,22);
+        c.fillStyle=hit?themeC('--green'):themeC('--ink');c.fillText(ch,px+bw/2,15);});
+      if(s.i>=3){c.fillStyle=themeC('--oracle');c.globalAlpha=.12;c.fillRect(16,34,W-32,20);c.globalAlpha=1;
+        c.fillStyle=themeC('--ink');c.fillText('query+top_k→prompt',W/2,44);}
+      if(s.ans){c.fillStyle=themeC('--green');c.globalAlpha=.12;c.fillRect(16,62,W-32,20);c.globalAlpha=1;
+        c.fillStyle=themeC('--ink');c.fillText(s.ans,W/2,72);}}
+  },
+  'stream-wiring': {
+    name:'stdin/stdout/stderr',
+    code:['fd 0,1,2 open','> file: 1→file','2> file: 2→file','a|b: a.1→b.0'],
+    init(){return{i:0,fd:['keyboard','terminal','terminal']};},
+    step(s){if(s.i>3)return{done:true,line:3,note:'done'};
+      switch(s.i){case 0:s.i=1;return{line:0,note:'3 fd open'};
+      case 1:s.fd[1]='out.txt';s.i=2;return{line:1,note:'stdout→file'};
+      case 2:s.fd[2]='err.txt';s.i=3;return{line:2,note:'stderr→file'};
+      default:s.fd[0]='pipe(ls)';s.fd[1]='terminal';s.fd[2]='terminal';s.i=4;return{line:3,note:'pipe'};}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,84);const nm=['0:in','1:out','2:err'],cl=['--oracle','--green','--red'],x1=W-76;
+      c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      s.fd.forEach((t,i)=>{const y=6+i*26;
+        c.fillStyle=themeC(cl[i]);c.globalAlpha=.2;c.fillRect(4,y,58,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(4,y,58,20);
+        c.fillStyle=themeC('--ink');c.fillText(nm[i],8,y+10);
+        c.strokeStyle=themeC('--faded');c.beginPath();c.moveTo(62,y+10);c.lineTo(x1,y+10);c.stroke();
+        c.fillStyle=themeC('--gold');c.globalAlpha=.2;c.fillRect(x1,y,74,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(x1,y,74,20);
+        c.fillStyle=themeC('--ink');c.fillText(t,x1+3,y+10);});}
   }
 };
 
@@ -1308,9 +1552,7 @@ function widgetSeverityFilter(d) {
   });
   w.appendChild(ctr);
   function draw() {
-    const W = cv.clientWidth || 320, H = 170, dpr = Math.min(devicePixelRatio, 2);
-    cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
-    const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+    const[W,x]=cvS(cv,170);
     const n = cats.length, barH = 22, gap = 10, topY = 28;
     const scaleL = 80, scaleR = W - 12, scaleW = scaleR - scaleL;
     x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
@@ -1386,9 +1628,7 @@ function widgetKvCalc(d) {
     const { L, H, dh, S, b } = params;
     const total = 2 * L * H * dh * S * b;
     const perLayer = 2 * H * dh * S * b;
-    const W = cv.clientWidth || 320, HH = 90, dpr = Math.min(devicePixelRatio, 2);
-    cv.width = W * dpr; cv.height = HH * dpr; cv.style.height = HH + 'px';
-    const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, HH);
+    const[W,x]=cvS(cv,90);
     const barW = W - 40, barH = 28, barY = 44;
     const frac = Math.min(total / 2199023255552, 1);
     x.fillStyle = themeC('--panel'); x.globalAlpha = 0.3;

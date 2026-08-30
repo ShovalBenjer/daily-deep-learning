@@ -131,6 +131,10 @@ def next_greater(nums: list[int]) -> list[int]:
 {"id":"u-m1-stack-q1","tree":"systems","skill":"python","q":"מה תחזיר `stack.pop()` על רצף push של 1, 2, 3 לפי הסדר?","options":["1","2","3","IndexError"],"answer":2,"explain":"Stack הוא LIFO -- האחרון שנוסף (3) הוא הראשון שיוצא. pop() מחזיר 3."}
 ```
 
+```widget
+{"type":"algviz","algo":"stack-parens","title":"Stack: צפה כיצד הסוגריים נבדקים עם push ו-pop"}
+```
+
 ```concepts
 {"items":[{"id":"c-stack","t":"Stack","he":"מחסנית","d":"מבנה LIFO: push ו-pop מהראש בלבד, O(1) לשתי הפעולות","rel":["c-lifo","c-monotonic-stack"],"node":"dsa"},{"id":"c-lifo","t":"LIFO","he":"אחרון נכנס ראשון יוצא","d":"תכונת מחסנית: האחרון שנוסף הוא הראשון שיוסר","rel":["c-stack"],"node":"dsa"},{"id":"c-monotonic-stack","t":"Monotonic stack","he":"מחסנית מונוטונית","d":"stack שמשמר סדר ערכים עולה/יורד; פותר בעיות next-greater ב-O(n)","rel":["c-stack"],"node":"dsa"}]}
 ```

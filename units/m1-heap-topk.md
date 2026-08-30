@@ -144,6 +144,10 @@ print(-heapq.heappop(max_heap))  # 9 (הגדול)
 {"id":"u-m1-heap-topk-q2","tree":"systems","skill":"python","q":"מה מורכבות הזמן של מציאת k הגדולים מרשימה של n מספרים באמצעות min-heap בגודל k?","options":["O(k)","O(n)","O(n log k)","O(n log n)"],"answer":2,"explain":"עוברים על כל n מספרים. כל אחד עלול לגרום heapreplace שהוא O(log k). סך הכל O(n log k), שהוא טוב יותר מ-O(n log n) של מיון כשk << n."}
 ```
 
+```widget
+{"type":"algviz","algo":"heap-topk","title":"Heap Top-k: צפה כיצד min-heap שומר רק את k הגדולים"}
+```
+
 ```concepts
 {"items":[{"id":"c-min-heap","t":"Min-heap","he":"ערימת מינימום","d":"עץ בינארי שלם שבו כל צומת קטן מצאאיו; המינימום תמיד בשורש","rel":["c-max-heap","c-heap-invariant"],"node":"dsa"},{"id":"c-max-heap","t":"Max-heap","he":"ערימת מקסימום","d":"עץ בינארי שלם שבו כל צומת גדול מצאאיו; המקסימום תמיד בשורש","rel":["c-min-heap","c-heap-invariant"],"node":"dsa"},{"id":"c-heap-invariant","t":"Heap invariant","he":"מאפיין הערימה","d":"התכונה המבנית שמבטיחה שהשורש תמיד קיצוני; נשמרת על ידי sift-up ו-sift-down","rel":["c-min-heap","c-max-heap"],"node":"dsa"},{"id":"c-top-k","t":"Top-k","he":"k הקיצוניים","d":"בעיית מציאת k האלמנטים הגדולים (או הקטנים) מקבוצה; נפתרת ב-O(n log k) עם heap","rel":["c-min-heap","c-nlargest"],"node":"dsa"},{"id":"c-nlargest","t":"heapq.nlargest","he":"nlargest","d":"פונקציית פייתון שמחזירה k גדולים מאוסף ב-O(n log k) באמצעות min-heap פנימי","rel":["c-top-k","c-min-heap"],"node":"dsa"}]}
 ```

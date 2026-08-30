@@ -28,6 +28,10 @@
 
 **Safety pass rate, שיעור מעבר הבטיחות** מנגנונו שונה מכל האחרים: Foundry מפעיל את ה-content filter על כל `response` בנפרד, בדיוק כמו בזמן אמת, ומחשב את אחוז השורות שעברו בכל קטגוריה: violence, hate, sexual, self-harm. הצגה: `hate_pass_rate: 0.97` פירושו 97% מהתשובות עברו את בדיקת hate.
 
+```widget
+{"type":"severity-filter","title":"Eval Dimensions: סנן תשובות לפי ציוני Groundedness, Relevance ו-Safety"}
+```
+
 ```concepts
 {"items":[{"id":"eval-fabrication","t":"Fabrication Metric","he":"מדד בדיה","d":"מדידת עיגון טענות ב-context; מיושם כ-Groundedness score 1-5 שמחושב על-ידי judge model; ציון נמוך = fabrication.","rel":["groundedness","rai-evaluator"],"node":"azure-core"},{"id":"eval-relevance","t":"Relevance Score","he":"ציון רלוונטיות","d":"judge model בודק האם התשובה מדברת על מה שנשאל; ציון 1-5, לא בודק עובדות.","rel":["rai-evaluator","eval-fabrication"],"node":"azure-core"},{"id":"eval-coherence","t":"Coherence Score","he":"ציון קוהרנטיות","d":"judge model בודק זרימה לוגית פנימית של התשובה; ציון 1-5.","rel":["eval-relevance"],"node":"azure-core"}]}
 ```

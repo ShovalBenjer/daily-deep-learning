@@ -14,11 +14,10 @@ const root = (p: string) => new URL('../' + p, import.meta.url);
 const HTML = readFileSync(root('index.html'), 'utf8');
 const SW = readFileSync(root('sw.js'), 'utf8');
 
-//: The one inline <script> that is the entire client. 165722 bytes measured
-//: 2026-08-30 after 6 interactive widgets (gaps-islands, join-matcher,
-//: severity-filter, sliding-window, two-pointers, kv-calc). Raising is
-//: allowed, silently drifting is not.
-const INLINE_SCRIPT_BUDGET = 170_000;
+//: The one inline <script> that is the entire client. 179980 bytes measured
+//: 2026-08-30 after 16 interactive widgets (+tool-loop, rag-pipeline,
+//: stream-wiring, cvS refactor). Raising is allowed, silently drifting is not.
+const INLINE_SCRIPT_BUDGET = 180_000;
 
 //: Everything sw.js precaches before the app works offline: what a phone pays
 //: on first install. 1337808 bytes measured 2026-08-29, dominated by board art.

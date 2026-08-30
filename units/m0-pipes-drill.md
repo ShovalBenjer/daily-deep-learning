@@ -140,6 +140,10 @@ sort u.txt | uniq -c
 {"id":"u-m0-pipes-drill-f1","tree":"systems","skill":"sdlc","prompt":"איזו פקודה שמים באמצע שרשרת כדי לשמור את מה שעובר בה לקובץ בלי לשבור את הטור?","answer":"tee","alt":["tee file","| tee"],"explain":"tee כותבת את הקלט שלה גם לקובץ וגם ל-stdout, ולכן היא נקודת התבוננות באמצע טור שממשיך לעבוד כרגיל."}
 ```
 
+```widget
+{"type":"algviz","algo":"stream-wiring","title":"Pipe Chain: צפה כיצד שרשרת פקודות מחווטת stdout ל-stdin"}
+```
+
 ```concepts
 {"items":[{"id":"uniq-needs-sort","t":"uniq needs sort","he":"uniq דורשת מיון","d":"uniq מכווצת רק שורות זהות סמוכות, ולכן בלי sort לפניה היא מחזירה תשובה שגויה בלי שגיאה ובקוד יציאה 0","rel":["pipe","sort-numeric"]},{"id":"sort-numeric","t":"Numeric sort","he":"מיון מספרי","d":"sort ברירת מחדל משווה כטקסט ולכן 10 קודם ל-9; sort -n משווה כמספרים","rel":["uniq-needs-sort"]},{"id":"tee","t":"tee","he":"פיצול זרם","d":"כותבת את מה שעובר דרכה גם לקובץ וגם הלאה בטור, ולכן מאפשרת להתבונן באמצע שרשרת בלי לשבור אותה","rel":["pipe","stdout"]}]}
 ```

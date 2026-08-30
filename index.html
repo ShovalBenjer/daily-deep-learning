@@ -1403,6 +1403,73 @@ const ALGS = {
         c.strokeStyle=themeC('--faded');c.beginPath();c.moveTo(62,y+10);c.lineTo(x1,y+10);c.stroke();
         c.fillStyle=themeC('--gold');c.globalAlpha=.2;c.fillRect(x1,y,74,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(x1,y,74,20);
         c.fillStyle=themeC('--ink');c.fillText(t,x1+3,y+10);});}
+  },
+  'layer-stack':{
+    name:'Layer Stack',
+    code:['layer 0','layer 1','layer 2','layer 3'],
+    init(p){const L=p.layers||['Terminal','Shell','Kernel','Hardware'];return{L,i:-1};},
+    step(s){s.i++;if(s.i>=s.L.length)return{done:true,line:s.L.length-1,note:'all layers active'};
+      return{line:s.i,note:'→ '+s.L[s.i]};},
+    draw(s,cv){const[W,c]=cvS(cv,s.L.length*26+4);
+      c.textAlign='center';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const cl=['--oracle','--green','--gold','--red'];
+      s.L.forEach((l,i)=>{const y=2+i*24,on=i<=s.i;
+        c.fillStyle=themeC(cl[i%4]);c.globalAlpha=on?.22:.06;c.fillRect(20,y,W-40,21);c.globalAlpha=1;
+        c.strokeStyle=themeC('--line');c.strokeRect(20,y,W-40,21);
+        c.fillStyle=themeC(on?'--ink':'--faded');c.fillText(l,W/2,y+11);
+        if(i>0&&on){c.strokeStyle=themeC(cl[i%4]);c.beginPath();c.moveTo(W/2,y);c.lineTo(W/2,y-3);c.stroke();}});}
+  },
+  'process-fork':{
+    name:'Process Fork',
+    code:['parent PID=1','fork → child PID=2','child runs','parent waits'],
+    init(){return{ps:[{id:1,nm:'bash',st:'run'}],i:0};},
+    step(s){if(s.i>3)return{done:true,line:3,note:'done'};
+      switch(s.i){case 0:s.i=1;return{line:0,note:'parent running'};
+      case 1:s.ps.push({id:2,nm:'ls',st:'run'});s.ps[0].st='wait';s.i=2;return{line:1,note:'fork → child PID=2'};
+      case 2:s.ps[1].st='exit';s.i=3;return{line:2,note:'child exits'};
+      default:s.ps[0].st='run';s.i=4;return{line:3,note:'parent resumes'};}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,s.ps.length*30+8);
+      c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      const sc={run:'--green',wait:'--gold',exit:'--faded'};
+      s.ps.forEach((p,i)=>{const y=4+i*28;
+        c.fillStyle=themeC(sc[p.st]);c.globalAlpha=p.st==='exit'?.1:.2;c.fillRect(4,y,W-8,24);c.globalAlpha=1;
+        c.strokeStyle=themeC('--line');c.strokeRect(4,y,W-8,24);
+        c.fillStyle=themeC('--ink');c.fillText('PID='+p.id+' '+p.nm+' ['+p.st+']',10,y+12);
+        if(i>0){c.strokeStyle=themeC('--faded');c.beginPath();c.moveTo(30,y);c.lineTo(30,y-4);c.stroke();}});}
+  },
+  'path-scan':{
+    name:'PATH Lookup',
+    code:['read $PATH dirs','for dir in PATH:','  if dir/cmd exists → run','first match wins'],
+    init(p){const D=p.dirs||['/usr/local/bin','/usr/bin','/bin','/snap/bin'];
+      return{D,cmd:p.cmd||'python',hit:1,i:-1,found:false};},
+    step(s){s.i++;if(s.found||s.i>=s.D.length)return{done:true,line:3,note:s.found?'found at '+s.D[s.hit]:'not found'};
+      if(s.i===s.hit){s.found=true;return{line:2,note:s.D[s.i]+'/'+s.cmd+' ✓'};}
+      return{line:1,note:s.D[s.i]+' skip'};},
+    draw(s,cv){const[W,c]=cvS(cv,s.D.length*24+8);
+      c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      s.D.forEach((d,i)=>{const y=4+i*22,hit=i===s.hit&&s.found,scn=i<=s.i;
+        c.fillStyle=themeC(hit?'--green':scn?'--panel':'transparent');c.globalAlpha=hit?.3:scn?.12:.05;
+        c.fillRect(4,y,W-8,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(4,y,W-8,20);
+        c.fillStyle=themeC(hit?'--green':scn?'--ink':'--faded');c.fillText(d+(hit?'/'+s.cmd+' ✓':''),10,y+10);});}
+  },
+  'cte-expand':{
+    name:'CTE Expansion',
+    code:['anchor: root rows','iter 1: children','iter 2: grandchildren','UNION ALL → done'],
+    init(p){const R=p.rows||[['CEO',null]];return{R,all:[...R],i:0,gen:[[...R]]};},
+    step(s){if(s.i>2)return{done:true,line:3,note:s.all.length+' total rows'};
+      switch(s.i){case 0:s.i=1;return{line:0,note:'anchor: '+s.R.length+' rows'};
+      case 1:{const n=[['VP-Eng','CEO'],['VP-Sales','CEO']];s.all.push(...n);s.gen.push(n);s.i=2;return{line:1,note:'+2 children'};}
+      default:{const n=[['Dev1','VP-Eng'],['Dev2','VP-Eng']];s.all.push(...n);s.gen.push(n);s.i=3;return{line:2,note:'+2 grandchildren'};}}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,s.gen.length*32+8);
+      c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      const cl=['--oracle','--green','--gold'];
+      s.gen.forEach((g,gi)=>{const y=4+gi*30,n=g.length,bw=Math.min(80,(W-16)/n);
+        g.forEach((r,ri)=>{const px=8+ri*bw;
+          c.fillStyle=themeC(cl[gi%3]);c.globalAlpha=.18;c.fillRect(px,y,bw-4,24);c.globalAlpha=1;
+          c.strokeStyle=themeC('--line');c.strokeRect(px,y,bw-4,24);
+          c.fillStyle=themeC('--ink');c.fillText(r[0],px+4,y+12);});});}
   }
 };
 

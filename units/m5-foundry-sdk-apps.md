@@ -108,6 +108,10 @@ client = AzureOpenAI(azure_endpoint="...", azure_deployment="chat-prod", api_key
 {"id":"u-m5-foundry-sdk-apps-q2","tree":"ops","skill":"azure-foundry","q":"מהי הדרך הנכונה לקבל ChatCompletionsClient מתוך AIProjectClient?","options":["from azure.ai.inference import ChatCompletionsClient; ChatCompletionsClient(endpoint=...)","client.inference.get_chat_completions_client()","AIProjectClient.chat()","openai.AzureOpenAI(azure_deployment=...)"],"answer":1,"explain":"client.inference.get_chat_completions_client() מחזיר לקוח inference שמחובר לאותו Project ואותן הרשאות. זה מבטיח שהקריאות מנותבות דרך הפרויקט הנכון ולא ישירות."}
 ```
 
+```widget
+{"type":"algviz","algo":"tool-loop","title":"SDK Call Flow: צפה כיצד AIProjectClient קורא למודל ומחזיר תשובה"}
+```
+
 ```concepts
 {"items":[{"id":"foundry-sdk","t":"azure-ai-projects SDK","he":"SDK של Foundry","d":"חבילת פייתון שמעטפת את Azure AI Foundry REST API; AIProjectClient הוא נקודת הכניסה לפריסות, evals ו-agents.","rel":["foundry-project","azure-ai-inference-sdk"],"node":"azure-core"},{"id":"azure-ai-inference-sdk","t":"azure-ai-inference SDK","he":"SDK הסקה","d":"חבילת פייתון שמספקת ChatCompletionsClient; מתקבלת מ-AIProjectClient.inference.get_chat_completions_client() לחיבור אוטומטי לפרויקט.","rel":["foundry-sdk","foundry-project"],"node":"azure-core"},{"id":"ai-project-client","t":"AIProjectClient","he":"לקוח פרויקט","d":"מחלקת ה-Python שמחברת קוד לפרויקט Foundry; מקבלת endpoint ו-DefaultAzureCredential ומספקת גישה לכל משאבי הפרויקט.","rel":["foundry-sdk","foundry-project"],"node":"azure-core"}]}
 ```

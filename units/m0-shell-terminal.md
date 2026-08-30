@@ -109,6 +109,10 @@ POSIX לנתיבי Windows לפני שהתוכנית רואה אותם. ארגו
 {"id":"u-m0-shell-terminal-f1","tree":"systems","skill":"sdlc","prompt":"איזו מהארבע היא תוכנית שמפרשת את הפקודה שלך ומריצה תוכניות אחרות? כתוב את המילה באנגלית.","answer":"shell","alt":["Shell","מעטפת","the shell"],"explain":"ה-shell מפרש ומריץ. הטרמינל מציג, הקונסולה היא מונח היסטורי או כלי דפדפן, וה-prompt הוא רק המחרוזת שמסמנת המתנה."}
 ```
 
+```widget
+{"type":"algviz","algo":"layer-stack","title":"Terminal Stack: צפה בארבע השכבות — Terminal, Shell, Kernel, Hardware"}
+```
+
 ```concepts
 {"items":[{"id":"shell","t":"Shell","he":"מעטפת","d":"תוכנית שמפרשת פקודות ומריצה תוכניות אחרות","rel":["terminal","prompt"]},{"id":"terminal","t":"Terminal","he":"טרמינל","d":"החלון שמציג טקסט ומעביר הקשות, ומריץ shell אחד","rel":["shell","console"]},{"id":"console","t":"Console","he":"קונסולה","d":"היסטורית הטרמינל הראשי של המכונה, היום גם כלי הדפדפן","rel":["terminal"]},{"id":"prompt","t":"Prompt","he":"שורת הזמנה","d":"המחרוזת שה-shell מדפיס כדי לסמן שהוא ממתין לפקודה","rel":["shell"]}]}
 ```

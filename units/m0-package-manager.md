@@ -105,6 +105,10 @@ project-new/  .venv/  Flask 3.1.0
 
 יחידה זו שייכת לבלוק M0 (יסודות מערכת ההפעלה). packages מותקנים לתיקיות מסוימות - ה-**m0-fs-paths** תסביר את המבנה. כלי dev-server שמפעילים `npm start` הם packages שהותקנו ופותחים port - **m0-ports-localhost** מרחיב. בMAST ועל CI/CD, הrequirements.txt שכתבת כאן נהיה הפקודה הראשונה ב-pipeline.
 
+```widget
+{"type":"algviz","algo":"path-scan","title":"Package Resolution: צפה כיצד מנהל חבילות סורק registries עד שמוצא את החבילה","dirs":["local cache","private registry","pypi.org","fallback"],"cmd":"requests"}
+```
+
 ```concepts
 {"items":[{"id":"package-manager","t":"Package Manager","he":"מנהל חבילות","d":"כלי שמוריד, מאמת ומתקין packages מ-registry, ומנהל תלויות ו-lockfiles.","rel":["virtual-env","lockfile","registry"],"node":"os"},{"id":"virtual-env","t":"Virtual Environment","he":"סביבת וירטואל","d":"תיקיה מבודדת עם Python interpreter ו-packages משלה, למניעת קונפליקטים בין פרויקטים.","rel":["package-manager"],"node":"os"},{"id":"lockfile","t":"Lockfile","he":"קובץ נעילה","d":"קובץ שמתעד גרסאות מדויקות של כל תלות, מבטיח builds שניתן לשחזר.","rel":["package-manager"],"node":"os"}]}
 ```

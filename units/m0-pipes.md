@@ -130,6 +130,10 @@ exit: 1
 {"id":"u-m0-pipes-f1","tree":"systems","skill":"sdlc","prompt":"איזו הגדרה של bash גורמת לשרשרת להחזיר את קוד הכישלון הראשון במקום את זה של החוליה האחרונה?","answer":"pipefail","alt":["set -o pipefail","set pipefail"],"explain":"set -o pipefail הופך את קוד היציאה של השרשרת לקוד של החוליה הראשונה שנכשלה, ובלעדיו כישלון באמצע השרשרת נבלע."}
 ```
 
+```widget
+{"type":"algviz","algo":"stream-wiring","title":"Pipe Wiring: צפה כיצד stdout של פקודה מתחבר ל-stdin של הבאה"}
+```
+
 ```concepts
 {"items":[{"id":"pipe","t":"Pipe","he":"צינור","d":"מחבר את stdout של פקודה ל-stdin של הבאה; שתיהן רצות במקביל כתהליכים נפרדים ו-stderr לא נכנס","rel":["stdout","stdin","pipe-buffer"]},{"id":"pipe-buffer","t":"Pipe buffer","he":"חוצץ הצינור","d":"אזור זיכרון קבוע בין כותב לקורא, 64KB כברירת מחדל בלינוקס","rel":["pipe","backpressure"]},{"id":"backpressure","t":"Backpressure","he":"לחץ חוזר","d":"כשהחוצץ מלא הכתיבה נחסמת עד שהקורא מפנה מקום, ולכן קצב השרשרת נקבע על ידי החוליה האיטית","rel":["pipe-buffer","pipe"]},{"id":"sigpipe","t":"SIGPIPE","he":"אות צינור שבור","d":"נשלח לכותב כשהקורא סגר את קצהו; ברירת המחדל היא סיום התהליך, ולכן head עוצרת את מי שלפניה","rel":["pipe","exit-code"]},{"id":"pipefail","t":"pipefail","he":"כשל שרשרת","d":"ברירת המחדל מחזירה את קוד החוליה האחרונה בלבד; set -o pipefail מחזיר את הכישלון הראשון","rel":["exit-code","pipe"]}]}
 ```

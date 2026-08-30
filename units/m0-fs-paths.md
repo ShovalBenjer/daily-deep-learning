@@ -122,6 +122,10 @@ print(data)
 {"id":"u-m0-fs-paths-f1","tree":"systems","skill":"sdlc","prompt":"איזו פקודה בשורת הפקודה מדפיסה את תיקיית העבודה הנוכחית של ה-shell?","answer":"pwd","alt":["pwd -P","$PWD","echo $PWD"],"explain":"pwd מדפיס את ה-cwd של תהליך ה-shell. זו התיקייה שכל נתיב יחסי שתריץ ממנה ייפתר ביחס אליה, ולכן היא הדבר הראשון לבדוק כשנתיב יחסי לא מוצא קובץ."}
 ```
 
+```widget
+{"type":"algviz","algo":"trie-insert","title":"Path Resolution: צפה כיצד נתיב נפתר כמו חיפוש ב-trie של עץ הקבצים"}
+```
+
 ```concepts
 {"items":[{"id":"fs-paths","t":"Filesystem path","he":"נתיב במערכת הקבצים","d":"מחרוזת שמזהה מיקום בעץ הקבצים, בנויה מרכיבים המופרדים בתו מפריד","rel":["absolute-path","relative-path","cwd","path-separator"]},{"id":"absolute-path","t":"Absolute path","he":"נתיב מוחלט","d":"נתיב שמתחיל מהשורש ומזהה קובץ חד משמעית ללא תלות בתיקיית העבודה","rel":["fs-paths","relative-path"]},{"id":"relative-path","t":"Relative path","he":"נתיב יחסי","d":"נתיב שנפתר ביחס לתיקיית העבודה של התהליך, ולכן מצביע על יעד אחר מכל תיקייה","rel":["fs-paths","cwd"]},{"id":"cwd","t":"Current working directory","he":"תיקיית עבודה נוכחית","d":"תכונה של תהליך שכל נתיב יחסי שלו נפתר ביחס אליה; משתנה עם cd ונקראת עם pwd","rel":["fs-paths","relative-path","process"]},{"id":"path-separator","t":"Path separator","he":"תו מפריד נתיב","d":"התו שמפריד רכיבי נתיב: / ב-POSIX ו-\\ ב-Windows, שמקבל גם /","rel":["fs-paths"]},{"id":"path-traversal","t":"Path traversal","he":"מעבר נתיב","d":"חולשה שבה קלט משתמש המכיל .. יוצא מהתיקייה המיועדת; נחסמת בפתירה לנתיב מוחלט ובדיקת הכלה","rel":["fs-paths","relative-path"]}]}
 ```

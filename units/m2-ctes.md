@@ -178,6 +178,10 @@ CTE מחבר בין **m2-window-functions** (שמצריך CTE לסינון) לב
 {"id":"u-m2-ctes-q3","tree":"systems","skill":"sql","q":"למה לא ניתן לכתוב WHERE ROW_NUMBER() OVER (...) = 1 ישירות, ואיזה פתרון CTE נותן?","options":["כי ROW_NUMBER מחזיר טקסט ולא מספר","כי window function מחושבת אחרי WHERE; CTE מאפשר לחשב אותה בשלב הפנימי ואז לסנן בחיצוני","כי OVER אסור עם ORDER BY","כי WHERE מאפשר רק תנאי על עמודות גולמיות"],"answer":1,"explain":"סדר ביצוע SQL: FROM, WHERE, SELECT. Window function חיה ב-SELECT, ולכן WHERE לא יכול להשתמש בתוצאתה. CTE שם את ה-SELECT הפנימי (עם window function) בתוך WITH, ומאפשר לשאילתה החיצונית לסנן בWHERE."}
 ```
 
+```widget
+{"type":"algviz","algo":"cte-expand","title":"Recursive CTE: צפה כיצד anchor + UNION ALL מרחיבים היררכיה שורה אחר שורה"}
+```
+
 ```concepts
 {"items":[{"id":"c-cte","t":"Common Table Expression","he":"ביטוי טבלה משותף","d":"result set זמני עם שם, מוגדר ב-WITH ותקף לאורך אותה שאילתה","rel":["c-with-clause","c-recursive-cte"],"node":"sql-core"},{"id":"c-with-clause","t":"WITH clause","he":"סעיף WITH","d":"מגדיר CTE אחד או יותר לפני ה-SELECT; כל CTE יכול להתייחס לקודמים","rel":["c-cte","c-recursive-cte"],"node":"sql-core"},{"id":"c-recursive-cte","t":"Recursive CTE","he":"CTE רקורסיבי","d":"CTE המכיל anchor term וrecursive term מחוברים ב-UNION ALL; מאפשר ניווט בהיררכיות וייצור רצפים","rel":["c-cte","c-anchor-term"],"node":"sql-core"},{"id":"c-anchor-term","t":"Anchor term","he":"חוליית עוגן","d":"החלק הלא-רקורסיבי של recursive CTE; מייצר את השורות ההתחלתיות","rel":["c-recursive-cte"],"node":"sql-core"}]}
 ```

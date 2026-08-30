@@ -87,6 +87,10 @@ PTU נראה "בטוח" כי מובטח throughput. אך PTU גובה לפי ש�
 {"id":"u-m5-foundry-model-selection-q2","tree":"ops","skill":"azure-foundry","q":"מהו ההבדל הארגוני בין Hub ל-Project ב-Azure AI Foundry?","options":["Hub ו-Project הם שמות נרדפים לאותו משאב","Hub מחזיק compute, connections ומדיניות IAM משותפים; Project הוא namespace מבודד בתוך Hub","Project מחזיק את ה-compute; Hub הוא namespace","Hub שייך למנוי; Project שייך ל-resource group"],"answer":1,"explain":"Hub הוא שכבת השיתוף (compute, connections, IAM); Project הוא namespace מבודד עם storage, managed identity ו-deployments משלו. הקוד עובד תמיד דרך Project."}
 ```
 
+```widget
+{"type":"algviz","algo":"layer-stack","title":"Foundry Architecture: צפה בשכבות Hub, Project, Deployment ו-Endpoint","layers":["Azure AI Foundry Hub","Project (namespace)","Deployment (model)","Endpoint (traffic)"]}
+```
+
 ```concepts
 {"items":[{"id":"foundry-hub","t":"Azure AI Foundry Hub","he":"Hub של Foundry","d":"משאב Azure המחזיק compute, connections ומדיניות IAM משותפת לכמה Projects.","rel":["foundry","foundry-project"]},{"id":"foundry-project","t":"Azure AI Foundry Project","he":"פרויקט Foundry","d":"namespace מבודד בתוך Hub עם storage, managed identity ו-deployments משלו; נקודת הכניסה בקוד.","rel":["foundry-hub","deployment-types"]},{"id":"model-catalog","t":"Azure AI Foundry Model Catalog","he":"קטלוג מודלים","d":"ממשק ב-Foundry לסינון והשוואת מודלים מ-Azure OpenAI, שותפים (Meta, Mistral, Cohere, Phi) ו-Hugging Face לפני פריסה.","rel":["foundry","deployment-types"]}]}
 ```

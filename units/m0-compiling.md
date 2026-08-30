@@ -167,6 +167,10 @@ console.log(add(2, "3"));
 {"id":"u-m0-compiling-f1","tree":"systems","skill":"sdlc","prompt":"באיזו תיקייה Python שומר את ה-bytecode שנוצר מקובץ מקור?","answer":"__pycache__","alt":["pycache","__pycache__/"],"explain":"הקובץ נשמר כ-__pycache__/<name>.cpython-<version>.pyc. ה-magic number בתחילתו קושר אותו לגרסת פרשן מסוימת."}
 ```
 
+```widget
+{"type":"algviz","algo":"stream-wiring","title":"Compile Pipeline: צפה כיצד מקור עובר דרך קומפיילר, bytecode ו-VM"}
+```
+
 ```concepts
 {"items":[{"id":"compilation","t":"Compilation","he":"קומפילציה","d":"תרגום קוד לייצוג אחר לפני ההרצה; היעד אינו חייב להיות שפת מכונה, ולכן גם Python מקמפלת","rel":["bytecode","machine-code"]},{"id":"bytecode","t":"Bytecode","he":"קוד ביניים","d":"הוראות קומפקטיות עבור מכונה וירטואלית ולא עבור מעבד; Python שומר אותן ב-__pycache__ עם magic number שקושר אותן לגרסה","rel":["compilation","virtual-machine"]},{"id":"machine-code","t":"Machine code","he":"קוד מכונה","d":"הוראות שהמעבד מבצע ישירות, היעד של C ו-Rust ולא של Python או TypeScript","rel":["compilation","bytecode"]},{"id":"virtual-machine","t":"Interpreter / VM","he":"מפרש","d":"התוכנית שקוראת bytecode ומבצעת אותו; בלעדיה קובץ pyc חסר משמעות","rel":["bytecode"]},{"id":"type-erasure","t":"Type erasure","he":"מחיקת טיפוסים","d":"טיפוסי TypeScript קיימים רק במקור ונמחקים בתרגום, ולכן לא נשאר מהם דבר בזמן ריצה","rel":["transpile-vs-typecheck","compilation"]},{"id":"transpile-vs-typecheck","t":"Transpile versus typecheck","he":"תרגום מול בדיקת טיפוסים","d":"שתי פעולות נפרדות: bundler מתרגם ומוחק טיפוסים, ורק tsc בודק אותם; פרויקט שמריץ רק את הראשון אינו מוגן","rel":["type-erasure"]},{"id":"constant-folding","t":"Constant folding","he":"קיפול קבועים","d":"חישוב בזמן קומפילציה של ביטוי שערכו ידוע מראש, כך ש-1+2 הופך ל-LOAD_CONST 3","rel":["compilation","bytecode"]}]}
 ```

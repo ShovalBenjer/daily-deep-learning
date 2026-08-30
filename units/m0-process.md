@@ -92,6 +92,10 @@ Get-Process | Select-Object Id, Name | Sort-Object Name | Select-Object -First 2
 {"id":"u-m0-process-f1","tree":"systems","skill":"sdlc","prompt":"המספר הייחודי שמערכת ההפעלה מחלקת לכל תהליך ברגע שנוצר נקרא ___. כתוב את הקיצור באנגלית.","answer":"PID","alt":["pid","process id","Process ID"],"explain":"PID הוא Process ID, מזהה תהליך. הוא ייחודי בכל רגע נתון על המכונה, אבל לאחר שתהליך מסתיים ה-PID שלו יכול להתפנות לשימוש חוזר."}
 ```
 
+```widget
+{"type":"algviz","algo":"process-fork","title":"Process Fork: צפה כיצד תהליך אב יוצר תהליך בן עם fork"}
+```
+
 ```concepts
 {"items":[{"id":"process","t":"Process","he":"תהליך","d":"מופע רץ של תוכנית, עם PID, מרחב זיכרון וירטואלי ומצב משלו","rel":["process-id","process-state","shell"]},{"id":"process-id","t":"PID","he":"מזהה תהליך","d":"מספר שלם ייחודי שהקרנל מחלק לכל תהליך ברגע שנוצר","rel":["process"]},{"id":"process-state","t":"Process state","he":"מצב תהליך","d":"אחד ממצבים: running, sleeping, zombie, terminated; ניתן לראות ב-ps","rel":["process"]}]}
 ```

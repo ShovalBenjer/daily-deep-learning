@@ -138,6 +138,10 @@ python -m pip install <package>
 {"id":"u-m0-path-lookup-f1","tree":"systems","skill":"sdlc","prompt":"איזו פקודה מראה את כל המועמדים לשם פקודה, כולל builtins ו-aliases, ולא רק את הראשון?","answer":"type -a","alt":["type","type-a"],"explain":"type הוא builtin ולכן רואה aliases ו-builtins שגם which לא רואה. הדגל -a מציג את כל ההתאמות לפי הסדר במקום את המנצח בלבד."}
 ```
 
+```widget
+{"type":"algviz","algo":"path-scan","title":"PATH Lookup: צפה כיצד ה-shell סורק את תיקיות PATH עד ההתאמה הראשונה"}
+```
+
 ```concepts
 {"items":[{"id":"path-var","t":"PATH","he":"נתיב חיפוש","d":"רשימה מסודרת של תיקיות שה-shell סורק לפי הסדר עד ההתאמה הראשונה; הסדר הוא המידע, לא רק התוכן","rel":["shell","command-lookup"]},{"id":"command-lookup","t":"Command lookup order","he":"סדר איתור פקודה","d":"alias, אחר כך builtin, ורק אז PATH תיקייה אחר תיקייה; שם עם לוכסן עוקף את כל זה","rel":["path-var","shell-builtin"]},{"id":"shell-builtin","t":"Shell builtin","he":"פקודה מובנית","d":"ממומשת בתוך ה-shell ואין לה קובץ; cd חייבת להיות כזו כי תהליך נפרד לא יכול לשנות את התיקייה של ההורה","rel":["command-lookup","shell"]},{"id":"command-hash","t":"Command hash table","he":"מטמון איתור","d":"bash זוכר איפה מצא כל פקודה כדי לא לחפש שוב; hash -r מנקה כשגרסה חדשה לא נתפסת","rel":["path-var","command-lookup"]}]}
 ```

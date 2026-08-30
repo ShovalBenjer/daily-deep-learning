@@ -219,6 +219,10 @@ d[[1, 2]] = "hello"   # TypeError: unhashable type: 'list'
 {"id":"u-m1-arrays-hashing-q2","tree":"systems","skill":"python","q":"בפתרון Two Sum עם complement lookup, מה שומרים ב-dict?","options":["הסכום הנוכחי","את הערך ואינדקסו: {value: index}","את האינדקסים בלבד","את המשלים (target - x) של כל ערך"],"answer":1,"explain":"שומרים {value: index} כדי שכשנמצא complement, נוכל להחזיר את שני האינדקסים. המשלים אינו מה ששומרים אלא מה שמחפשים."}
 ```
 
+```widget
+{"type":"algviz","algo":"hash-lookup","title":"Hash Complement Lookup: צפה כיצד dict מאפשר Two Sum ב-O(n)"}
+```
+
 ```concepts
 {"items":[{"id":"dynamic-array","t":"Dynamic Array","he":"מערך דינמי","d":"מערך שמכפיל את גודלו כשמתמלא; הוספה לסוף היא O(1) מופחת. Python list.","rel":["hash-table","amortized-cost"]},{"id":"hash-table","t":"Hash Table","he":"טבלת גיבוב","d":"מבנה שממפה מפתח לערך בזמן O(1) ממוצע דרך פונקציית גיבוב. Python dict ו-set.","rel":["dynamic-array","hash-function","collision"]},{"id":"hash-function","t":"Hash Function","he":"פונקציית גיבוב","d":"פונקציה שממירה מפתח שרירותי לאינדקס שלם. חייבת להיות עקבית: אותו קלט תמיד אותה תוצאה.","rel":["hash-table","collision"]},{"id":"collision","t":"Collision","he":"התנגשות","d":"מצב שבו שתי מפתחות שונות ממופות לאותו bucket. Python מטפל בזה פנימית.","rel":["hash-table","hash-function"]},{"id":"amortized-cost","t":"Amortized Cost","he":"עלות מופחתת","d":"עלות ממוצעת לפעולה על פני סדרה ארוכה; הוספה ל-list היא O(1) מופחת למרות resizes נדירים.","rel":["dynamic-array"]},{"id":"frequency-count","t":"Frequency Count","he":"ספירת תדרים","d":"Pattern שבונה Counter/dict כדי לספור כמה פעמים מופיע כל ערך. בסיס של אנגרמות ו-top-k.","rel":["hash-table"]},{"id":"complement-lookup","t":"Complement Lookup","he":"חיפוש משלים","d":"Pattern שלכל x בודק אם target-x כבר ב-dict. בסיס של Two Sum ומשפחתו.","rel":["hash-table"]}]}
 ```

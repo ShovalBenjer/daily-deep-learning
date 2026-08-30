@@ -36,6 +36,10 @@ FROM   ranked
 WHERE  rn = 1;
 ```
 
+```widget
+{"type":"algviz","algo":"partition-row","title":"Dedup: צפה כיצד ROW_NUMBER מזהה כפילויות עם PARTITION BY"}
+```
+
 ```concepts
 {"items":[{"id":"c-dedup","t":"Duplicate row","he":"כפילות שורה","d":"שורה שחולקת ערכי מפתח עסקי עם שורה אחרת; הגדרת המפתח עסקית, לא טכנית","rel":["c-rn-dedup"],"node":"sql-core"},{"id":"c-rn-dedup","t":"ROW_NUMBER deduplication","he":"דה-כפילות עם ROW_NUMBER","d":"PARTITION BY מפתח עסקי, ORDER BY כלל ניצחון; שמור rn=1 בלבד; tiebreaker ייחודי נדרש לדטרמיניזם","rel":["c-dedup"],"node":"sql-core"}]}
 ```

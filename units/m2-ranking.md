@@ -135,6 +135,10 @@ SELECT * FROM ranked WHERE rnk <= 2;
 {"id":"u-m2-ranking-f1","tree":"systems","skill":"sql","prompt":"Complete the function name that divides rows into 4 equal buckets:\n\nSELECT emp_id, salary, ________(4) OVER (ORDER BY salary DESC) AS quartile FROM emp;","answer":"NTILE","alt":["ntile"],"explain":"NTILE(n) divides rows into n equal groups and assigns each row a bucket number from 1 to n. NTILE(4) creates four quartiles ordered by salary descending."}
 ```
 
+```widget
+{"type":"algviz","algo":"partition-row","title":"Ranking: צפה כיצד ROW_NUMBER, RANK ו-DENSE_RANK ממספרים שורות"}
+```
+
 ```concepts
 {"items":[{"id":"topn-per-group","t":"Top-N per group","he":"N ראשונים לכל קבוצה","d":"תבנית CTE+ROW_NUMBER לחילוץ N השורות בעלות הערך הגבוה ביותר לכל ערך partition","rel":["c-row-number","c-rank-dense-rank","c-window-function"],"node":"sql-core"},{"id":"ntile","t":"NTILE(n)","he":"חלוקה לדליים","d":"מחלק שורות ל-n קבוצות שוות ומחזיר מספר קבוצה; שימושי לאחוזונים","rel":["c-rank-dense-rank","topn-per-group"],"node":"sql-core"}]}
 ```

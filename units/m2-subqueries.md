@@ -158,6 +158,10 @@ NOT EXISTS לא מתייחס לשוויון ערכים, ולכן NULL ב-`d.id` 
 
 יחידה זו שייכת לבלוק M2 (SQL). היא בונה על הידע בצירופים (m2-joins) ובאגרגציה (m2-aggregation). יחד עם CTE (m2-ctes), תת-שאילתות הן הכלי שמאפשר לפרק שאילתות מורכבות לשלבים קריאים. היחידה הבאה m2-ranking עושה שימוש כבד ב-EXISTS ו-NOT EXISTS לפתרון בעיות דירוג ומציאת כפילויות.
 
+```widget
+{"type":"algviz","algo":"join-matcher","title":"EXISTS Matcher: צפה כיצד שורות מתאימות ב-IN / EXISTS / NOT EXISTS"}
+```
+
 ```concepts
 {"items":[{"id":"subquery","t":"Subquery","he":"תת-שאילתה","d":"בלוק SELECT המוקן בתוך שאילתה אחרת, בWHERE, FROM או SELECT","rel":["correlated-subquery","scalar-subquery"],"node":"sql-core"},{"id":"correlated-subquery","t":"Correlated subquery","he":"תת-שאילתה מתואמת","d":"תת-שאילתה המתייחסת לעמודה מהשאילתה החיצונית ורצה מחדש לכל שורה","rel":["subquery"],"node":"sql-core"},{"id":"scalar-subquery","t":"Scalar subquery","he":"תת-שאילתה סקלרית","d":"תת-שאילתה המחזירה בדיוק שורה אחת ועמודה אחת","rel":["subquery"],"node":"sql-core"},{"id":"exists-subquery","t":"EXISTS","he":"EXISTS","d":"אופרטור בוליאני שמחזיר TRUE אם תת-שאילתה מחזירה לפחות שורה אחת","rel":["subquery","correlated-subquery"],"node":"sql-core"},{"id":"not-in-null","t":"NOT IN with NULL trap","he":"מלכודת NULL ב-NOT IN","d":"NOT IN עם תת-שאילתה שמחזירה NULL מחזיר אפס שורות, NOT EXISTS הוא הפתרון","rel":["subquery","exists-subquery"],"node":"sql-core"}]}
 ```

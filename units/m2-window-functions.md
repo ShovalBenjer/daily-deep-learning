@@ -128,6 +128,10 @@ SUM(amount) OVER (ORDER BY amount)  -- frame ברירת מחדל: RANGE
 {"id":"u-m2-window-functions-q3","tree":"systems","skill":"sql","q":"מדוע `WHERE ROW_NUMBER() OVER (ORDER BY ts) = 1` גורמת לשגיאה?","options":["ROW_NUMBER דורש PARTITION BY","Window functions מחושבות אחרי WHERE, ולכן אינן זמינות ב-WHERE","ROW_NUMBER מחזיר NULL ב-WHERE","Window functions אסורות בשאילתות עם ORDER BY"],"answer":1,"explain":"סדר הביצוע: FROM -> WHERE -> SELECT. פונקציית חלון מחושבת בשלב SELECT, לאחר WHERE. הפתרון: עטוף ב-CTE ואז סנן ב-WHERE של השאילתה החיצונית."}
 ```
 
+```widget
+{"type":"algviz","algo":"partition-row","title":"Window ROW_NUMBER: צפה כיצד ROW_NUMBER ממספר שורות בכל partition"}
+```
+
 ```concepts
 {"items":[{"id":"c-window-function","t":"Window function","he":"פונקציית חלון","d":"פונקציית SQL שרצה על חלון שורות, מוסיפה עמודה לכל שורה ואינה מקפלת את הקלט","rel":["c-over-clause","c-aggregate-function"],"node":"sql-core"},{"id":"c-over-clause","t":"OVER()","he":"סעיף חלון","d":"מגדיר את חלון השורות שפונקציית חלון רואה; יכול לכלול PARTITION BY ו-ORDER BY","rel":["c-window-function","c-partition-by-win"],"node":"sql-core"},{"id":"c-partition-by-win","t":"PARTITION BY (window)","he":"חלוקה בחלון","d":"מפצל את שורות החלון לתתי-קבוצות; הפונקציה מאופסת בכל קבוצה ללא כיווץ שורות","rel":["c-over-clause","c-group-by-clause"],"node":"sql-core"},{"id":"c-row-number","t":"ROW_NUMBER()","he":"מספור שורות","d":"מחזיר מספר רץ ייחודי בתוך החלון; קשרים שוברים באקראי","rel":["c-window-function","c-rank-dense-rank"],"node":"sql-core"},{"id":"c-rank-dense-rank","t":"RANK / DENSE_RANK","he":"דירוג","d":"RANK מדלג בקשרים (1,1,3); DENSE_RANK לא מדלג (1,1,2)","rel":["c-row-number","c-window-function"],"node":"sql-core"},{"id":"c-lag-lead","t":"LAG / LEAD","he":"שורה קודמת/הבאה","d":"LAG מחזיר ערך n שורות אחורה; LEAD n שורות קדימה; NULL בקצוות","rel":["c-window-function","c-over-clause"],"node":"sql-core"}]}
 ```

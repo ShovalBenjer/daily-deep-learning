@@ -1281,6 +1281,110 @@ const ALGS = {
         if(i<n-1&&!d){c.fillStyle=themeC('--faded');c.fillText('→',px+bw-1,29);}c.globalAlpha=1;});
       if(s.r.length){c.fillStyle=themeC('--faded');c.font='11px "Rubik",sans-serif';c.fillText(s.r.join('←'),W/2,56);}
     }
+  },
+  'hash-lookup': {
+    name: 'Hash Complement Lookup',
+    code: ['for i,x in nums:','  comp = target - x','  if comp in seen: found','  seen[x] = i'],
+    init(p) {const a=p.nums||[2,7,11,15,1,8];return {a,t:p.target||9,seen:{},i:0,f:null};},
+    step(s) {
+      if(s.f||s.i>=s.a.length) return {done:true,line:s.f?2:0,note:s.f||'not found'};
+      const x=s.a[s.i],c=s.t-x;
+      if(c in s.seen){s.f=x+'+'+c+'='+s.t+' (i='+s.seen[c]+','+s.i+')';return {line:2,note:s.f};}
+      s.seen[x]=s.i;s.i++;return {line:3,note:'seen['+x+']='+s.seen[x]+', comp='+c+' not in seen'};
+    },
+    draw(s,cv) {
+      const W=cv.clientWidth||320,H=90,dp=Math.min(devicePixelRatio,2);
+      cv.width=W*dp;cv.height=H*dp;cv.style.height=H+'px';
+      const c=cv.getContext('2d');c.setTransform(dp,0,0,dp,0,0);c.clearRect(0,0,W,H);
+      const n=s.a.length,bw=Math.min(42,(W-8)/n),x0=(W-bw*n)/2;
+      c.textAlign='center';c.textBaseline='middle';c.font='12px "IBM Plex Mono"';
+      s.a.forEach((v,i)=>{const px=x0+i*bw,done=i<s.i,cur=i===s.i;
+        c.fillStyle=s.f&&(v===s.a[s.i]||v===s.t-s.a[s.i])?themeC('--green'):cur?themeC('--gold'):done?themeC('--panel'):'transparent';
+        c.globalAlpha=done||cur?1:.25;c.fillRect(px+1,4,bw-2,26);c.strokeStyle=themeC('--line');c.strokeRect(px+1,4,bw-2,26);
+        c.fillStyle=cur?'#14101a':themeC('--ink');c.fillText(v,px+bw/2,17);c.globalAlpha=1;});
+      const keys=Object.keys(s.seen);if(keys.length){
+        const sw=Math.min(32,(W-8)/keys.length),sx=(W-sw*keys.length)/2;
+        c.font='10px "IBM Plex Mono"';c.fillStyle=themeC('--faded');c.fillText('seen{}',20,58);
+        keys.forEach((k,i)=>{const px=sx+i*sw;c.fillStyle=themeC('--oracle');c.globalAlpha=.5;
+          c.fillRect(px+1,48,sw-2,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(px+1,48,sw-2,20);
+          c.fillStyle='#14101a';c.fillText(k,px+sw/2,58);});
+      }
+      c.fillStyle=themeC('--faded');c.font='10px "Rubik",sans-serif';c.fillText('target='+s.t,W/2,82);
+    }
+  },
+  'trie-insert': {
+    name: 'Trie Insert/Search',
+    code: ['node = root','for ch in word:','  if ch not in node:','    create node','  descend to node[ch]','mark is_end'],
+    init(p) {
+      const ws=p.words||['cat','car','card'];
+      const root={ch:'',c:{},e:false};
+      return {root,ws,wi:0,ci:0,cur:root,path:[],phase:'insert',done:false};
+    },
+    step(s) {
+      if(s.done) return {done:true,line:0,note:'done'};
+      if(s.wi>=s.ws.length){s.done=true;return {done:true,line:0,note:s.ws.length+' words inserted'};}
+      const w=s.ws[s.wi];
+      if(s.ci>=w.length){s.cur.e=true;s.wi++;s.ci=0;s.cur=s.root;s.path=['root'];
+        return {line:5,note:'mark end: "'+w+'"'};}
+      const ch=w[s.ci];const created=!s.cur.c[ch];
+      if(created) s.cur.c[ch]={ch,c:{},e:false};
+      s.cur=s.cur.c[ch];s.path.push(ch);s.ci++;
+      return {line:created?3:4,note:(created?'new ':'go ')+'"'+ch+'" ('+s.path.join('→')+')'};
+    },
+    draw(s,cv) {
+      const W=cv.clientWidth||320,H=120,dp=Math.min(devicePixelRatio,2);
+      cv.width=W*dp;cv.height=H*dp;cv.style.height=H+'px';
+      const c=cv.getContext('2d');c.setTransform(dp,0,0,dp,0,0);c.clearRect(0,0,W,H);
+      c.textAlign='center';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const R=12;let q=[{n:s.root,x:W/2,y:16}],drawn=[];
+      while(q.length){const{n,x,y}=q.shift();drawn.push({n,x,y});
+        const ks=Object.keys(n.c),tot=ks.length;if(!tot)continue;
+        const sp=Math.min(50,W/(tot+1));
+        ks.forEach((k,i)=>{const cx=x+(i-(tot-1)/2)*sp,cy=y+32;
+          c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(cx,cy-R);c.stroke();
+          q.push({n:n.c[k],x:cx,y:cy});});}
+      drawn.forEach(({n,x,y})=>{const isCur=n===s.cur;
+        c.fillStyle=isCur?themeC('--gold'):n.e?themeC('--green'):themeC('--panel');
+        c.beginPath();c.arc(x,y,R,0,7);c.fill();c.strokeStyle=themeC('--line');c.stroke();
+        c.fillStyle=isCur?'#14101a':themeC('--ink');c.fillText(n.ch||'*',x,y);});
+      if(s.wi<s.ws.length){c.fillStyle=themeC('--faded');c.font='10px "Rubik",sans-serif';
+        c.fillText('inserting: "'+s.ws[s.wi]+'" ('+s.path.join('→')+')',W/2,H-6);}
+    }
+  },
+  'partition-row': {
+    name: 'Window ROW_NUMBER',
+    code: ['PARTITION BY region','ORDER BY amount DESC','ROW_NUMBER() assigns rn','rn=1 per partition → top'],
+    init(p) {
+      const rows=p.rows||[{r:'N',n:'Alice',a:500},{r:'N',n:'Bob',a:300},{r:'S',n:'Carol',a:400},{r:'S',n:'Dana',a:200},{r:'S',n:'Eve',a:100}];
+      rows.sort((a,b)=>a.r<b.r?-1:a.r>b.r?1:b.a-a.a);
+      return {rows,i:0,rn:[],part:null,pn:0};
+    },
+    step(s) {
+      if(s.i>=s.rows.length) return {done:true,line:3,note:'done: filter rn=1 for top per group'};
+      const r=s.rows[s.i];if(r.r!==s.part){s.part=r.r;s.pn=0;}
+      s.pn++;s.rn.push(s.pn);s.i++;
+      return {line:2,note:r.n+' ('+r.r+') amount='+r.a+' → rn='+s.pn};
+    },
+    draw(s,cv) {
+      const W=cv.clientWidth||320,H=Math.max(80,s.rows.length*22+30),dp=Math.min(devicePixelRatio,2);
+      cv.width=W*dp;cv.height=H*dp;cv.style.height=H+'px';
+      const c=cv.getContext('2d');c.setTransform(dp,0,0,dp,0,0);c.clearRect(0,0,W,H);
+      c.textAlign='start';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const cols=[30,90,170,220],rh=20;
+      c.fillStyle=themeC('--faded');c.font='700 10px "Rubik",sans-serif';
+      ['rgn','name','amount','rn'].forEach((h,i)=>c.fillText(h,cols[i],10));
+      c.font='11px "IBM Plex Mono"';
+      let prevR='';s.rows.forEach((r,i)=>{const y=22+i*rh,vis=i<s.i,cur=i===s.i-1;
+        const newP=r.r!==prevR;prevR=r.r;
+        if(newP&&i>0){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(10,y-2);c.lineTo(W-10,y-2);c.stroke();}
+        c.globalAlpha=vis?1:.3;
+        if(cur){c.fillStyle=themeC('--gold');c.globalAlpha=.2;c.fillRect(8,y-2,W-16,rh);c.globalAlpha=1;}
+        c.fillStyle=vis?themeC('--ink'):themeC('--faded');
+        c.fillText(r.r,cols[0],y+8);c.fillText(r.n,cols[1],y+8);c.fillText(r.a,cols[2],y+8);
+        if(vis){const rn=s.rn[i];c.fillStyle=rn===1?themeC('--green'):themeC('--ink');
+          c.fillText(rn,cols[3],y+8);}
+        c.globalAlpha=1;});
+    }
   }
 };
 

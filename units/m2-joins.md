@@ -101,7 +101,9 @@ JOIN   orders    AS o ON c.customer_id = o.customer_id;
 
 בראיון: "ה-INNER JOIN הוא ברירת המחדל הנכונה כשיודעים שהשדה הזר לעולם לא NULL. LEFT JOIN נכון כשצריך לשמור שורות גם בהיעדר התאמה." אם מראיין שואל "מתי תשתמש ב-FULL OUTER", התשובה הנכונה היא "כשמחפש פערים משני הכיוונים, למשל user_id שקיים ב-events אבל לא ב-users, ולהיפך."
 
-<!-- widget-request: algviz: join-matcher: animated venn-row diagram showing LEFT/INNER/FULL OUTER result sets side by side for a 3×2 example table pair -->
+```widget
+{"type":"algviz","algo":"join-matcher","title":"JOIN Matcher: צפה כיצד שורות מתאימות ב-LEFT / INNER / FULL OUTER"}
+```
 
 ## חיבור
 

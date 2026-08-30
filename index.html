@@ -850,6 +850,7 @@ function buildWidget(d) {
   if (d.type === 'decay') return widgetDecay(d);
   if (d.type === 'gridworld') return widgetGridworld(d);
   if (d.type === 'algviz') return widgetAlgviz(d);
+  if (d.type === 'severity-filter') return widgetSeverityFilter(d);
   return null;
 }
 
@@ -933,6 +934,140 @@ const ALGS = {
       });
       x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
       x.fillText('G (מהסוף להתחלה ←)', W / 2, 128);
+    }
+  },
+  'gaps-islands': {
+    name: 'Gaps & Islands (id - ROW_NUMBER)',
+    code: ['ids = sorted input', 'for i = 0 to n-1:', '  rn = i + 1', '  grp = id[i] - rn', '  record (id, rn, grp)'],
+    init(p) {
+      const ids = p.ids || [101, 102, 103, 106, 107, 110];
+      return { ids, rows: ids.map((id, i) => ({ id, rn: i + 1, grp: id - (i + 1) })), cur: -1, islands: [] };
+    },
+    step(s) {
+      s.cur++;
+      if (s.cur >= s.rows.length) {
+        const groups = {};
+        s.rows.forEach(r => { (groups[r.grp] = groups[r.grp] || []).push(r.id); });
+        s.islands = Object.values(groups).map(g => ({ start: g[0], end: g[g.length - 1] }));
+        return { done: true, line: 0, note: s.islands.length + ' איים נמצאו: ' + s.islands.map(i => i.start === i.end ? '' + i.start : i.start + '-' + i.end).join(', ') };
+      }
+      const r = s.rows[s.cur];
+      return { line: 3, note: `id=${r.id}, rn=${r.rn}, grp=${r.id}-${r.rn}=${r.grp}` };
+    },
+    draw(s, cv) {
+      const W = cv.clientWidth || 320, H = 160, dpr = Math.min(devicePixelRatio, 2);
+      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const n = s.rows.length, bw = Math.min(48, (W - 16) / n), x0 = (W - bw * n) / 2;
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      const grpColors = {};
+      let ci = 0;
+      const palette = [themeC('--green'), themeC('--gold'), themeC('--oracle'), themeC('--architect'), themeC('--warden')];
+      s.rows.forEach(r => { if (!(r.grp in grpColors)) grpColors[r.grp] = palette[ci++ % palette.length]; });
+      x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('id', x0 - 14, 24); x.fillText('rn', x0 - 14, 58); x.fillText('grp', x0 - 14, 92);
+      s.rows.forEach((r, i) => {
+        const px = x0 + i * bw, vis = i <= s.cur;
+        x.fillStyle = i === s.cur ? themeC('--gold') : themeC('--panel');
+        x.globalAlpha = vis ? 1 : 0.25;
+        x.fillRect(px + 1, 10, bw - 2, 28);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 10, bw - 2, 28);
+        x.fillStyle = i === s.cur ? '#14101a' : themeC('--ink'); x.font = '12px "IBM Plex Mono"';
+        x.fillText(r.id, px + bw / 2, 24);
+        x.fillStyle = themeC('--panel');
+        x.fillRect(px + 1, 44, bw - 2, 28);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 44, bw - 2, 28);
+        x.fillStyle = themeC('--ink'); x.font = '12px "IBM Plex Mono"';
+        x.fillText(vis ? r.rn : '', px + bw / 2, 58);
+        x.fillStyle = vis ? grpColors[r.grp] : 'transparent';
+        x.globalAlpha = vis ? 0.35 : 0.1;
+        x.fillRect(px + 1, 78, bw - 2, 28);
+        x.globalAlpha = 1;
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 78, bw - 2, 28);
+        x.fillStyle = vis ? grpColors[r.grp] : themeC('--faded'); x.font = '700 12px "IBM Plex Mono"';
+        x.fillText(vis ? r.grp : '', px + bw / 2, 92);
+      });
+      if (s.islands.length) {
+        x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif'; x.fillStyle = themeC('--ink');
+        x.fillText('איים: ' + s.islands.map(i => i.start === i.end ? '' + i.start : i.start + '-' + i.end).join('  '), W / 2, 130);
+      }
+      x.fillStyle = themeC('--faded'); x.font = '10px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('grp = id - rn', W / 2, 150);
+    }
+  },
+  'join-matcher': {
+    name: 'JOIN Matcher',
+    code: ['for each row a in A:', '  for each row b in B:', '    if a.key == b.key:', '      emit matched(a, b)', '  if no match: emit (a, NULL)  -- LEFT', 'for unmatched b: emit (NULL, b) -- FULL'],
+    init(p) {
+      const A = p.A || [{ key: 1, v: 'x' }, { key: 2, v: 'y' }, { key: 4, v: 'z' }];
+      const B = p.B || [{ key: 2, v: 'a' }, { key: 3, v: 'b' }];
+      return { A, B, mode: 0, ai: 0, bi: 0, phase: 'scan', matched: [], leftOnly: [], rightOnly: [],
+               bMatched: new Set(), done: false };
+    },
+    step(s) {
+      if (s.done) return { done: true, line: 0, note: 'סיום' };
+      if (s.mode === 0) {
+        if (s.ai >= s.A.length) {
+          s.mode = 1; s.bi = 0;
+          const unmatched = s.B.filter((_, i) => !s.bMatched.has(i));
+          s.rightOnly = unmatched;
+          if (unmatched.length === 0) { s.done = true; return { done: true, line: 5, note: 'אין שורות ימניות ללא התאמה' }; }
+          return { line: 5, note: `בודק ${s.B.length - s.bMatched.size} שורות ימניות ללא התאמה` };
+        }
+        const a = s.A[s.ai];
+        const bIdx = s.B.findIndex((b, i) => b.key === a.key && !s.bMatched.has(i));
+        if (bIdx >= 0) {
+          s.bMatched.add(bIdx);
+          s.matched.push({ a, b: s.B[bIdx] });
+          s.ai++;
+          return { line: 3, note: `התאמה: A.key=${a.key} = B.key=${s.B[bIdx].key}` };
+        }
+        s.leftOnly.push(a);
+        s.ai++;
+        return { line: 4, note: `אין התאמה ל-A.key=${a.key} → LEFT: (${a.v}, NULL)` };
+      }
+      s.done = true;
+      return { done: true, line: 5, note: 'FULL OUTER: ' + s.rightOnly.length + ' שורות ימניות ללא התאמה' };
+    },
+    draw(s, cv) {
+      const W = cv.clientWidth || 320, H = 200, dpr = Math.min(devicePixelRatio, 2);
+      cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+      const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const colW = W / 3, rh = 24, pad = 4;
+      function drawTable(label, rows, cx, yOff, keyFn, valFn, hl) {
+        x.fillStyle = themeC('--faded'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+        x.textAlign = 'center'; x.fillText(label, cx, yOff);
+        rows.forEach((r, i) => {
+          const y = yOff + 6 + i * (rh + pad);
+          const isHl = hl && hl(r, i);
+          x.fillStyle = isHl ? themeC('--gold') : themeC('--panel'); x.globalAlpha = isHl ? 0.5 : 0.7;
+          x.fillRect(cx - colW * 0.4, y, colW * 0.8, rh); x.globalAlpha = 1;
+          x.strokeStyle = themeC('--line'); x.strokeRect(cx - colW * 0.4, y, colW * 0.8, rh);
+          x.fillStyle = isHl ? '#14101a' : themeC('--ink'); x.font = '12px "IBM Plex Mono"';
+          x.fillText(keyFn(r) + ' | ' + valFn(r), cx, y + rh / 2);
+        });
+      }
+      drawTable('A', s.A, colW * 0.5, 16, r => r.key, r => r.v,
+        (r, i) => i === s.ai - 1 && s.mode === 0);
+      drawTable('B', s.B, colW * 1.5, 16, r => r.key, r => r.v,
+        (r, i) => s.bMatched.has(i));
+      const results = [];
+      const green = themeC('--green'), gold = themeC('--gold'), red = themeC('--red');
+      s.matched.forEach(m => results.push({ txt: `${m.a.key}:${m.a.v} ⟷ ${m.b.key}:${m.b.v}`, col: green, label: 'INNER' }));
+      s.leftOnly.forEach(a => results.push({ txt: `${a.key}:${a.v} ⟷ NULL`, col: gold, label: 'LEFT' }));
+      s.rightOnly.forEach(b => results.push({ txt: `NULL ⟷ ${b.key}:${b.v}`, col: red, label: 'FULL' }));
+      x.fillStyle = themeC('--faded'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.textAlign = 'center'; x.fillText('תוצאה', colW * 2.5, 16);
+      results.forEach((r, i) => {
+        const y = 22 + i * (rh + pad);
+        x.fillStyle = r.col; x.globalAlpha = 0.3;
+        x.fillRect(colW * 2.5 - colW * 0.45, y, colW * 0.9, rh); x.globalAlpha = 1;
+        x.strokeStyle = themeC('--line'); x.strokeRect(colW * 2.5 - colW * 0.45, y, colW * 0.9, rh);
+        x.fillStyle = themeC('--ink'); x.font = '11px "IBM Plex Mono"';
+        x.fillText(r.txt, colW * 2.5, y + rh / 2);
+        x.fillStyle = r.col; x.font = '700 9px "Rubik", "Noto Sans Hebrew", sans-serif';
+        x.fillText(r.label, colW * 2.5 + colW * 0.35, y + 6);
+      });
     }
   }
 };
@@ -1053,6 +1188,78 @@ function widgetGridworld(d) {
   });
   ctr.querySelector('button').onclick = reset;
   requestAnimationFrame(reset);
+  return w;
+}
+
+function widgetSeverityFilter(d) {
+  const cats = d.categories || ['violence', 'hate', 'sexual', 'self-harm'];
+  const catHe = { violence: 'אלימות', hate: 'שנאה', sexual: 'מיני', 'self-harm': 'פגיעה עצמית' };
+  const bands = [
+    { name: 'Safe', he: 'בטוח', max: 1, col: '--green' },
+    { name: 'Low', he: 'נמוך', max: 3, col: '--gold' },
+    { name: 'Medium', he: 'בינוני', max: 5, col: '--oracle' },
+    { name: 'High', he: 'גבוה', max: 7, col: '--red' }
+  ];
+  const w = widgetShell(d.title || 'Content Safety: סף חומרה לפי קטגוריה');
+  const cv = document.createElement('canvas'); w.appendChild(cv);
+  const ro = document.createElement('div'); ro.className = 'w-readout'; w.appendChild(ro);
+  const ctr = document.createElement('div'); ctr.className = 'w-controls'; ctr.style.flexWrap = 'wrap';
+  const thresholds = {};
+  cats.forEach(c => { thresholds[c] = d.defaults?.[c] ?? 2; });
+  ctr.innerHTML = cats.map(c =>
+    `<label style="display:inline-flex;align-items:center;gap:4px;margin:4px 8px"><span>${catHe[c] || c}</span>` +
+    `<input type="range" min="0" max="7" step="1" value="${thresholds[c]}" data-cat="${c}" aria-label="סף ${catHe[c] || c}">` +
+    `<b>${thresholds[c]}</b></label>`
+  ).join('');
+  w.appendChild(ctr);
+  function draw() {
+    const W = cv.clientWidth || 320, H = 170, dpr = Math.min(devicePixelRatio, 2);
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+    const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+    const n = cats.length, barH = 22, gap = 10, topY = 28;
+    const scaleL = 80, scaleR = W - 12, scaleW = scaleR - scaleL;
+    x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
+    x.textAlign = 'center';
+    for (let s = 0; s <= 7; s++) {
+      const sx = scaleL + (s / 7) * scaleW;
+      x.fillStyle = themeC('--faded'); x.fillText(s, sx, topY - 6);
+    }
+    bands.forEach(b => {
+      const x0 = scaleL + ((b.max <= 1 ? 0 : bands[bands.indexOf(b) - 1]?.max ?? 0) / 7) * scaleW;
+      const x1 = scaleL + (b.max / 7) * scaleW;
+      x.fillStyle = themeC(b.col); x.globalAlpha = 0.12;
+      x.fillRect(x0, topY, x1 - x0, n * (barH + gap));
+      x.globalAlpha = 1;
+      x.fillStyle = themeC(b.col); x.font = '700 9px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText(b.he, (x0 + x1) / 2, topY + n * (barH + gap) + 14);
+    });
+    cats.forEach((c, i) => {
+      const y = topY + i * (barH + gap);
+      const thr = thresholds[c];
+      const thrX = scaleL + (thr / 7) * scaleW;
+      x.fillStyle = themeC('--panel'); x.globalAlpha = 0.4;
+      x.fillRect(scaleL, y, scaleW, barH); x.globalAlpha = 1;
+      x.strokeStyle = themeC('--line'); x.strokeRect(scaleL, y, scaleW, barH);
+      x.fillStyle = themeC('--red'); x.globalAlpha = 0.25;
+      x.fillRect(thrX, y, scaleR - thrX, barH); x.globalAlpha = 1;
+      x.fillStyle = themeC('--gold'); x.fillRect(thrX - 2, y - 2, 4, barH + 4);
+      x.fillStyle = themeC('--ink'); x.font = '12px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.textAlign = 'right'; x.fillText(catHe[c] || c, scaleL - 6, y + barH / 2 + 4);
+    });
+    x.textAlign = 'center';
+    const blocked = cats.filter(c => thresholds[c] <= 2).length;
+    const open = cats.length - blocked;
+    ro.innerHTML = `חסום ברמה נמוכה: <b>${blocked}</b> · מתיר עד בינוני+: <b>${open}</b>`;
+  }
+  ctr.querySelectorAll('input').forEach(inp => {
+    inp.oninput = () => {
+      thresholds[inp.dataset.cat] = +inp.value;
+      inp.nextElementSibling.textContent = inp.value;
+      draw();
+    };
+  });
+  requestAnimationFrame(draw);
+  addEventListener('resize', draw, { passive: true });
   return w;
 }
 

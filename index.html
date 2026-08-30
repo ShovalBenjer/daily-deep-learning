@@ -1232,67 +1232,54 @@ const ALGS = {
   },
   'bst-search': {
     name: 'BST Search',
-    code: ['node = root','while node:','  if val == node: found','  if val < node: go left','  else: go right'],
+    code: ['node = root','while node:','  if val == node: found','  if val < node: left','  else: right'],
     init(p) {
-      const vals=p.vals||[8,3,10,1,6,14,4,7,13];
-      const ns=vals.map(v=>({v,l:null,r:null}));
-      for(let i=1;i<ns.length;i++){let c=ns[0];while(true){if(ns[i].v<c.v){if(!c.l){c.l=ns[i];break;}c=c.l;}else{if(!c.r){c.r=ns[i];break;}c=c.r;}}}
-      return {root:ns[0],target:p.target||7,cur:ns[0],path:[],found:false};
+      const v=p.vals||[8,3,10,1,6,14,4,7,13],ns=v.map(v=>({v,l:null,r:null}));
+      for(let i=1;i<ns.length;i++){let c=ns[0];for(;;){if(ns[i].v<c.v){if(!c.l){c.l=ns[i];break;}c=c.l;}else{if(!c.r){c.r=ns[i];break;}c=c.r;}}}
+      return {root:ns[0],t:p.target||7,cur:ns[0],p:[],f:false};
     },
     step(s) {
-      if(s.found||!s.cur) return {done:true,line:s.found?2:1,note:s.found?s.target+' נמצא!':s.target+' לא בעץ'};
-      s.path.push(s.cur.v);
-      if(s.cur.v===s.target){s.found=true;return {line:2,note:s.target+' == '+s.cur.v+' נמצא!'};}
-      if(s.target<s.cur.v){const p=s.cur;s.cur=s.cur.l;return {line:3,note:s.target+' < '+p.v+' שמאלה'};}
-      const p=s.cur;s.cur=s.cur.r;return {line:4,note:s.target+' > '+p.v+' ימינה'};
+      if(s.f||!s.cur) return {done:true,line:s.f?2:1,note:s.f?'found '+s.t:'not in tree'};
+      s.p.push(s.cur.v);
+      if(s.cur.v===s.t){s.f=true;return {line:2,note:s.t+'=='+s.cur.v};}
+      if(s.t<s.cur.v){const o=s.cur;s.cur=s.cur.l;return {line:3,note:s.t+'<'+o.v};}
+      const o=s.cur;s.cur=s.cur.r;return {line:4,note:s.t+'>'+o.v};
     },
     draw(s,cv) {
-      const W=cv.clientWidth||320,H=140,dpr=Math.min(devicePixelRatio,2);
-      cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
-      const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
-      const R=14;x.textAlign='center';x.textBaseline='middle';x.font='11px "IBM Plex Mono"';
-      function dn(nd,cx,cy,sp){
-        if(!nd)return;
-        if(nd.l){x.strokeStyle=themeC('--line');x.beginPath();x.moveTo(cx,cy+R);x.lineTo(cx-sp,cy+38-R);x.stroke();dn(nd.l,cx-sp,cy+38,sp/2);}
-        if(nd.r){x.strokeStyle=themeC('--line');x.beginPath();x.moveTo(cx,cy+R);x.lineTo(cx+sp,cy+38-R);x.stroke();dn(nd.r,cx+sp,cy+38,sp/2);}
-        const vis=s.path.includes(nd.v),cur=s.cur&&s.cur.v===nd.v&&s.found;
-        x.fillStyle=cur?themeC('--green'):vis?themeC('--gold'):themeC('--panel');
-        x.beginPath();x.arc(cx,cy,R,0,Math.PI*2);x.fill();x.strokeStyle=themeC('--line');x.stroke();
-        x.fillStyle=vis?'#14101a':themeC('--ink');x.fillText(nd.v,cx,cy);
-      }
-      dn(s.root,W/2,22,W/5);
+      const W=cv.clientWidth||320,H=140,dp=Math.min(devicePixelRatio,2);
+      cv.width=W*dp;cv.height=H*dp;cv.style.height=H+'px';
+      const c=cv.getContext('2d');c.setTransform(dp,0,0,dp,0,0);c.clearRect(0,0,W,H);
+      c.textAlign='center';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const R=14;!function d(n,x,y,g){if(!n)return;
+        if(n.l){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(x-g,y+38-R);c.stroke();d(n.l,x-g,y+38,g/2);}
+        if(n.r){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(x+g,y+38-R);c.stroke();d(n.r,x+g,y+38,g/2);}
+        const v=s.p.includes(n.v);c.fillStyle=v&&s.f&&n.v===s.t?themeC('--green'):v?themeC('--gold'):themeC('--panel');
+        c.beginPath();c.arc(x,y,R,0,7);c.fill();c.strokeStyle=themeC('--line');c.stroke();
+        c.fillStyle=v?'#14101a':themeC('--ink');c.fillText(n.v,x,y);
+      }(s.root,W/2,22,W/5);
     }
   },
   'list-reverse': {
-    name: 'Linked List Reverse',
-    code: ['prev = None','curr = head','while curr:','  nxt = curr.next','  curr.next = prev','  prev = curr; curr = nxt'],
-    init(p) {
-      const vals=p.vals||[1,2,3,4,5];
-      return {vals,prev:-1,curr:0,nxt:-1,reversed:[],phase:0};
-    },
+    name: 'List Reverse',
+    code: ['prev=None; curr=head','while curr:','  nxt=curr.next','  curr.next=prev','  prev,curr=curr,nxt'],
+    init(p) {const v=p.vals||[1,2,3,4,5];return {v,p:-1,c:0,r:[]};},
     step(s) {
-      if(s.curr>=s.vals.length) return {done:true,line:0,note:'prev הוא ראש הרשימה ההפוכה'};
-      s.nxt=s.curr+1;s.reversed.unshift(s.vals[s.curr]);
-      const note='prev←'+s.vals[s.curr]+' curr→'+(s.nxt<s.vals.length?s.vals[s.nxt]:'None');
-      s.prev=s.curr;s.curr=s.nxt;
-      return {line:s.curr<s.vals.length?3:5,note};
+      if(s.c>=s.v.length) return {done:true,line:0,note:'done: '+s.r.join('<-')};
+      s.r.unshift(s.v[s.c]);const n='prev<-'+s.v[s.c]+' curr->'+(s.c+1<s.v.length?s.v[s.c+1]:'None');
+      s.p=s.c;s.c++;return {line:s.c<s.v.length?2:4,note:n};
     },
     draw(s,cv) {
-      const W=cv.clientWidth||320,H=80,dpr=Math.min(devicePixelRatio,2);
-      cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
-      const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
-      const n=s.vals.length,bw=Math.min(50,(W-20)/n),x0=(W-bw*n)/2;
-      x.textAlign='center';x.textBaseline='middle';x.font='12px "IBM Plex Mono"';
-      s.vals.forEach((v,i)=>{
-        const px=x0+i*bw,done=i<s.curr;
-        x.fillStyle=i===s.prev?themeC('--green'):i===s.curr?themeC('--gold'):done?themeC('--green'):themeC('--panel');
-        x.globalAlpha=done?.6:1;x.fillRect(px+1,20,bw-2,28);
-        x.strokeStyle=themeC('--line');x.strokeRect(px+1,20,bw-2,28);
-        x.fillStyle=done||i===s.prev?'#0c1410':i===s.curr?'#14101a':themeC('--ink');x.fillText(v,px+bw/2,34);
-        if(i<n-1&&!done){x.fillStyle=themeC('--faded');x.fillText('→',px+bw-1,34);}
-        x.globalAlpha=1;
-      });
-      if(s.reversed.length){x.fillStyle=themeC('--faded');x.font='11px "Rubik","Noto Sans Hebrew",sans-serif';x.fillText('הפוכה: '+s.reversed.join('←'),W/2,62);}
+      const W=cv.clientWidth||320,H=72,dp=Math.min(devicePixelRatio,2);
+      cv.width=W*dp;cv.height=H*dp;cv.style.height=H+'px';
+      const c=cv.getContext('2d');c.setTransform(dp,0,0,dp,0,0);c.clearRect(0,0,W,H);
+      const n=s.v.length,bw=Math.min(50,(W-20)/n),x0=(W-bw*n)/2;
+      c.textAlign='center';c.textBaseline='middle';c.font='12px "IBM Plex Mono"';
+      s.v.forEach((v,i)=>{const px=x0+i*bw,d=i<s.c;
+        c.fillStyle=i===s.p?themeC('--green'):i===s.c?themeC('--gold'):d?themeC('--green'):themeC('--panel');
+        c.globalAlpha=d?.6:1;c.fillRect(px+1,16,bw-2,26);c.strokeStyle=themeC('--line');c.strokeRect(px+1,16,bw-2,26);
+        c.fillStyle=d||i===s.p?'#0c1410':i===s.c?'#14101a':themeC('--ink');c.fillText(v,px+bw/2,29);
+        if(i<n-1&&!d){c.fillStyle=themeC('--faded');c.fillText('→',px+bw-1,29);}c.globalAlpha=1;});
+      if(s.r.length){c.fillStyle=themeC('--faded');c.font='11px "Rubik",sans-serif';c.fillText(s.r.join('←'),W/2,56);}
     }
   }
 };

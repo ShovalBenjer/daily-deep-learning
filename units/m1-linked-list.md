@@ -201,6 +201,10 @@ def removeElements(head, val):
 
 **בראיונות** - שאלות linked list בודקות יכולת מניפולציה של מצביעים, לא מבנה נתונים מעשי. אל תמירו למערך כדי לפשט: זה מחמיץ את הנקודה שהמראיין בוחן.
 
+```widget
+{"type":"algviz","algo":"list-reverse","title":"Linked List Reverse: צפה כיצד prev, curr, nxt הופכים את הרשימה"}
+```
+
 ```concepts
 {"items":[{"id":"c-linked-list","t":"Linked List","he":"רשימה מקושרת","d":"רצף של צמתים שכל אחד מצביע לבאה; גישה לאינדקס O(n), הוספה לראש O(1)","rel":["c-ll-node","c-ll-dummy-head"]},{"id":"c-ll-node","t":"Node","he":"צומת","d":"אובייקט עם val ו-next; האבן הבסיסית של רשימה מקושרת ועצים","rel":["c-linked-list"]},{"id":"c-ll-dummy-head","t":"Dummy Head","he":"ראש בובה","d":"צומת זמנית לפני הראש האמיתי; מאחדת טיפול בכל הצמתים כולל הראש","rel":["c-linked-list"]}]}
 ```

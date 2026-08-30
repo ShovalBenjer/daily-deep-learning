@@ -214,6 +214,10 @@ def is_valid_bst(root, min_val=float('-inf'), max_val=float('inf')):
 {"id":"u-m1-bst-f1","tree":"systems","skill":"python","prompt":"בפונקציית bst_delete, כשלצומת יש שני ילדים, מחפשים את ה-Inorder Successor. היכן הוא נמצא תמיד?","answer":"הצומת השמאלי ביותר בתת-העץ הימני","alt":["leftmost node in right subtree","הכי שמאל בתת עץ ימין"],"explain":"Inorder successor הוא הערך הקטן ביותר שגדול מהצומת הנוכחי. הוא נמצא תמיד בעלה השמאלי ביותר של תת-העץ הימני."}
 ```
 
+```widget
+{"type":"algviz","algo":"bst-search","title":"BST Search: צפה כיצד החיפוש יורד בעץ שמאלה או ימינה"}
+```
+
 ```concepts
 {"items":[{"id":"c-bst","t":"Binary Search Tree","he":"עץ חיפוש בינארי","d":"עץ בינארי שבו לכל צומת, כל ערך בתת-עץ שמאלי קטן ממנו וכל ערך בתת-עץ ימני גדול ממנו.","rel":["c-binary-tree-node","c-bst-inorder","c-degenerate-tree"],"node":"dsa"},{"id":"c-bst-inorder","t":"BST Inorder Property","he":"תכונת אינסדר של BST","d":"Inorder traversal (שמאל-שורש-ימין) על BST מחזיר את הערכים ממוינים בסדר עולה.","rel":["c-bst","c-tree-dfs-stack"],"node":"dsa"},{"id":"c-degenerate-tree","t":"Degenerate Tree","he":"עץ מנוון","d":"BST שנוצר מהכנסה ממוינת; מתנוון לרשימה מקושרת עם גובה n, כל הפעולות O(n).","rel":["c-bst"],"node":"dsa"},{"id":"c-inorder-successor","t":"Inorder Successor","he":"ממשיך אינסדר","d":"הצומת הקטן ביותר שגדול מצומת נתון; נמצא בעלה השמאלי ביותר של תת-העץ הימני.","rel":["c-bst","c-bst-inorder"],"node":"dsa"}]}
 ```

@@ -1206,11 +1206,16 @@ function widgetSeverityFilter(d) {
   const ctr = document.createElement('div'); ctr.className = 'w-controls'; ctr.style.flexWrap = 'wrap';
   const thresholds = {};
   cats.forEach(c => { thresholds[c] = d.defaults?.[c] ?? 2; });
-  ctr.innerHTML = cats.map(c =>
-    `<label style="display:inline-flex;align-items:center;gap:4px;margin:4px 8px"><span>${catHe[c] || c}</span>` +
-    `<input type="range" min="0" max="7" step="1" value="${thresholds[c]}" data-cat="${c}" aria-label="סף ${catHe[c] || c}">` +
-    `<b>${thresholds[c]}</b></label>`
-  ).join('');
+  cats.forEach(c => {
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin:4px 8px';
+    const sp = document.createElement('span'); sp.textContent = catHe[c] || c; lbl.appendChild(sp);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = '0'; inp.max = '7';
+    inp.step = '1'; inp.value = String(thresholds[c]); inp.dataset.cat = c;
+    inp.setAttribute('aria-label', 'סף ' + (catHe[c] || c)); lbl.appendChild(inp);
+    const b = document.createElement('b'); b.textContent = String(thresholds[c]); lbl.appendChild(b);
+    ctr.appendChild(lbl);
+  });
   w.appendChild(ctr);
   function draw() {
     const W = cv.clientWidth || 320, H = 170, dpr = Math.min(devicePixelRatio, 2);

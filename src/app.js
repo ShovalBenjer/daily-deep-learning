@@ -1,0 +1,3191 @@
+const $ = s => document.querySelector(s);
+const iso = d => d.toISOString().slice(0, 10);
+const MARKS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
+let index = [], jmap = null, ladder = null, talents = null, plan = null, kodex = null, disco = null, skills = null, syl = null;
+let curriculum = null, goalDefs = null;
+let pageBlocks = [];
+const SYNC_URL = 'https://sadna-sync.shovalb9.workers.dev';
+const syncKey = () => localStorage.getItem('sadna-sync-key') || '';
+const LEVELS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320];
+
+/* ---------- state ---------- */
+const store = {
+  load() {
+    let st = JSON.parse(localStorage.getItem('sadna-state') || 'null');
+    if (!st) st = {};
+    st.read = st.read || []; st.ladder = st.ladder || [];
+    st.answers = st.answers || {};                       // blockId -> {ok, attempts}
+    st.points = st.points || {};                          // tree -> {earned, spent}
+    st.ranks = st.ranks || {};                            // domainId -> rank
+    st.daysDone = st.daysDone || [];                      // explicitly completed days
+    st.lastLevel = st.lastLevel || 1;
+    st.notes = st.notes || [];                            // saved teacher answers
+    st.sidequests = st.sidequests || {};                  // discover layer: taken/done
+    st.skillLevels = st.skillLevels || {};                // ownership ledger overrides
+    st.skillEvidence = st.skillEvidence || {};            // skillId -> [links/notes]
+    st.reviews = st.reviews || {};                        // recall engine: id -> {iv,due,lapses,last}
+    st.armFocus = st.armFocus || null;                    // targeted resume arm (1-7)
+    st.questsDone = st.questsDone || {};                  // "nodeId:rank" -> {d, ev}
+    st.shieldsUsed = st.shieldsUsed || 0;                 // streak shields consumed
+    st.shieldDays = st.shieldDays || [];                  // dates covered by a shield
+    st.unitState = st.unitState || {};                    // unitId -> {closed, skips}: progression, replaces daysDone
+    st.known = st.known || [];                            // concept slugs proven known (placement writes here)
+    st.beliefs = st.beliefs || {};                        // המנטור ledger: id -> {believed, actual, opened, status, retest, src}
+    st.decks = st.decks || {};                            // imported vocabulary decks: deckId -> {on, started}
+    return st;
+  },
+  save() { S.ts = Date.now(); localStorage.setItem('sadna-state', JSON.stringify(S)); schedulePush(); }
+};
+let S = store.load();
+let pushT = null;
+
+//: The Worker stores state under one KV key and rejects a body over 300 KB.
+//: The client has to know that number, because a push that exceeds it fails at
+//: the far end and the learner has no way to find out.
+const SYNC_CAP = 300000;
+//: Last push failure, kept OUT of S deliberately: it would otherwise be pushed
+//: to the Worker and become part of the payload it is reporting on.
+let lastSyncError = null;
+
+function schedulePush() {
+  if (!syncKey()) return;
+  clearTimeout(pushT);
+  pushT = setTimeout(async () => {
+    const body = JSON.stringify(S);
+    // A body over the cap is a guaranteed rejection, so do not spend the request.
+    if (body.length > SYNC_CAP) {
+      lastSyncError = `המצב גדול מדי לסנכרון (${Math.round(body.length / 1024)}KB)`;
+      return;
+    }
+    try {
+      // The old code was fetch(...).catch(() => {}), which only catches network
+      // failure. A 4xx from the Worker resolves normally, so an over-cap or
+      // unauthorised push looked exactly like success and sync could be dead for
+      // weeks without a symptom.
+      const r = await fetch(SYNC_URL, { method: 'POST', keepalive: true,
+        headers: { 'authorization': 'Bearer ' + syncKey(), 'content-type': 'application/json' },
+        body });
+      lastSyncError = r.ok ? null : `הסנכרון נדחה (${r.status})`;
+    } catch {
+      lastSyncError = 'אין רשת, הסנכרון ימתין';
+    }
+  }, 1500);
+}
+async function pullState() {
+  if (!syncKey()) return;
+  try {
+    const r = await fetch(SYNC_URL, { headers: { 'authorization': 'Bearer ' + syncKey() } });
+    const remote = await r.json();
+    if (remote && remote.ts && (!S.ts || remote.ts > S.ts)) {
+      S = Object.assign(store.load(), remote);
+      localStorage.setItem('sadna-state', JSON.stringify(S));
+    }
+  } catch (e) { /* offline is fine */ }
+}
+function enableSync() {
+  const k = prompt('מפתח סנכרון (חד פעמי, מהמסמך שקיבלת):');
+  if (k && k.trim()) { localStorage.setItem('sadna-sync-key', k.trim()); schedulePush(); toast('סנכרון פעיל'); route(); }
+}
+const toggle = (arr, v, on) => { const i = arr.indexOf(v); if (on && i < 0) arr.push(v); if (!on && i >= 0) arr.splice(i, 1); store.save(); };
+const pool = t => { const p = S.points[t] || { earned: 0, spent: 0 }; return p.earned - p.spent; };
+const poolAll = () => talents ? talents.trees.reduce((a, t) => a + pool(t.id), 0) : 0;
+
+let combo = 0;
+/* the motivation engine: resonance (build amplifies income) + arm focus */
+const ARMS = { 1: 'AI Engineer', 2: 'Forward Deployed', 3: 'GTM/RevOps AI', 4: 'Internal AI Builder', 5: 'FullStack SE', 6: 'Data Scientist', 7: 'Data Analyst' };
+const skillOf = sid => (skills && skills.skills || []).find(s => s.id === sid);
+const nodesForSkill = sid => {
+  const out = [];
+  if (talents) talents.trees.forEach(t => t.tiers.forEach(tier => tier.nodes.forEach(n => {
+    if (n.skills && n.skills.includes(sid)) out.push(n);
+  })));
+  return out;
+};
+function resonance(skillTag) {
+  if (!skillTag) return 0;
+  const ranks = nodesForSkill(skillTag).reduce((a, n) => a + nodeRank(n.id), 0);
+  let bonus = Math.min(5, ranks) * 0.1;                       // +10%/rank, cap +50%
+  const sk = skillOf(skillTag);
+  if (S.armFocus && sk && (sk.arms || []).includes(S.armFocus)) bonus *= 2;  // focused arm pays double
+  return bonus;
+}
+const totalSpent = () => Object.values(S.points).reduce((a, p) => a + (p.spent || 0), 0);
+const shieldsAvail = () => Math.floor(totalSpent() / 10) - (S.shieldsUsed || 0);
+
+function award(tree, pts, el, firstTry, skillTag) {
+  if (!tree) tree = 'craft';
+  const lv0 = level();
+  const bonus = Math.round(pts * resonance(skillTag));
+  pts += bonus;
+  S.points[tree] = S.points[tree] || { earned: 0, spent: 0 };
+  S.points[tree].earned += pts;
+  if (firstTry) {
+    combo++;
+    if (combo >= 3 && combo % 3 === 0) { S.points[tree].earned += 1; toast('קומבו x' + combo + '! בונוס +1'); }
+  } else if (firstTry === false) combo = 0;
+  store.save();
+  // performed, not announced: number + burst on the object, scaled by magnitude
+  if (el) { burst(el, 14 + pts * 8 + (firstTry ? 10 : 0)); ptsFloat(el, pts); }
+  else toast('+' + pts + ' נקודות לעץ');
+  sparkState('glad'); sfx.correct();
+  checkAchievements();
+  const lv = level();
+  if (lv > lv0) setTimeout(() => ritual({
+    kicker: 'הסדנה', title: 'רמה ' + lv, xp: totalEarned(),
+    sub: 'סה"כ נקודות בכל העצים', tier: Math.min(4, Math.max(1, Math.floor(lv / 3)))
+  }), 700);
+  paintFolio(); paintRing();
+}
+
+/* gold burst */
+function burst(el, count = 26) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const cv = $('#fx'), dpr = Math.min(devicePixelRatio, 2);
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const P = Array.from({ length: Math.min(count, 80) }, () => {
+    const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 4;
+    return { x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, life: 1, s: 2 + Math.random() * 3 };
+  });
+  const gold = themeC('--gold'), hi = themeC('--gold-hi');
+  let t0 = performance.now();
+  (function fr(now) {
+    const dt = (now - t0) / 16; t0 = now;
+    x.clearRect(0, 0, innerWidth, innerHeight);
+    let alive = false;
+    P.forEach(p => {
+      p.life -= 0.03 * dt; if (p.life <= 0) return;
+      alive = true;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.25 * dt;
+      x.globalAlpha = Math.max(0, p.life);
+      x.fillStyle = Math.random() > .5 ? gold : hi;
+      x.fillRect(p.x, p.y, p.s, p.s);
+    });
+    x.globalAlpha = 1;
+    if (alive) requestAnimationFrame(fr); else x.clearRect(0, 0, innerWidth, innerHeight);
+  })(performance.now());
+}
+
+/* celebration overlay */
+function celebrate(html, onclose) {
+  $('#ovBody').innerHTML = html;
+  $('#overlay').hidden = false;
+  $('#ovClose').onclick = () => { $('#overlay').hidden = true; if (onclose) onclose(); };
+}
+
+/* ---------- the performed interface: ONE spring family, events are performed
+   (motion + numbers + particles together, scaled by magnitude), the
+   celebration is a fixed ritual with streak-tier tells. Design contract in
+   docs/DESIGN-RESEARCH-NEXTGEN-2026-07.md track 3. ---------- */
+const SPRING = 'linear(0, 0.062, 0.226, 0.451, 0.693, 0.916, 1.096, 1.219, 1.281, 1.289, 1.254, 1.19, 1.112, 1.033, 0.965, 0.915, 0.885, 0.875, 0.882, 0.902, 0.929, 0.958, 0.984, 1.004, 1.017, 1.021, 1.02, 1.014, 1.007, 1.001, 0.998, 1)';
+const REDUCED = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim = (el, kf, opt) => (REDUCED() || !el || !el.animate)
+  ? { finished: Promise.resolve() }
+  : el.animate(kf, { easing: SPRING, fill: 'both', ...opt });
+
+function countUp(el, to, { ms = 650, prefix = '', suffix = '' } = {}) {
+  if (!el) return;
+  if (REDUCED()) { el.textContent = prefix + to + suffix; return; }
+  const t0 = performance.now();
+  (function fr(now) {
+    const t = Math.min(1, (now - t0) / ms);
+    const v = Math.round(to * (1 - Math.pow(2, -10 * t)) / (1 - Math.pow(2, -10)));
+    el.textContent = prefix + v + suffix;
+    if (t < 1) requestAnimationFrame(fr); else el.textContent = prefix + to + suffix;
+  })(t0);
+}
+
+function shake(el, mag = 5) {
+  if (!el) return;
+  sparkState('dim'); sfx.wrong();
+  anim(el, [
+    { transform: 'translateX(0)' }, { transform: `translateX(${mag}px)` },
+    { transform: `translateX(${-mag * 0.8}px)` }, { transform: `translateX(${mag * 0.5}px)` },
+    { transform: `translateX(${-mag * 0.25}px)` }, { transform: 'translateX(0)' }
+  ], { duration: 280, easing: 'ease-out' });
+}
+
+/* floating performed number: rises from the answered element with the burst */
+function ptsFloat(el, pts) {
+  if (!el || REDUCED()) return;
+  const r = el.getBoundingClientRect();
+  const f = document.createElement('span');
+  f.className = 'pts-float';
+  document.body.appendChild(f);
+  f.style.left = (r.left + r.width / 2) + 'px';
+  f.style.top = (r.top + 24) + 'px';
+  countUp(f, pts, { ms: 420, prefix: '+' });
+  anim(f, [
+    { transform: 'translate(-50%,0) scale(.6)', opacity: 0 },
+    { transform: 'translate(-50%,-18px) scale(1.15)', opacity: 1, offset: .35 },
+    { transform: 'translate(-50%,-46px) scale(1)', opacity: 0 }
+  ], { duration: 950, easing: 'ease-out' }).finished.then(() => f.remove());
+}
+
+/* "explain this": select ANY text in the page -> floating lens ->
+   the concept card if we have it, else המורה grounded in the sentence */
+function mountExplainLens() {
+  const b = document.createElement('button');
+  b.id = 'selExplain'; b.textContent = 'הסבר לי'; b.hidden = true;
+  document.body.appendChild(b);
+  let selText = '', selCtx = '', hideT = null;
+  document.addEventListener('selectionchange', () => {
+    clearTimeout(hideT);
+    hideT = setTimeout(() => {
+      const s = document.getSelection();
+      const view = $('#view');
+      if (!s || s.isCollapsed || !s.rangeCount || !view) { b.hidden = true; return; }
+      const r = s.getRangeAt(0);
+      if (!view.contains(r.commonAncestorContainer)) { b.hidden = true; return; }
+      selText = s.toString().trim().slice(0, 160);
+      if (selText.length < 2) { b.hidden = true; return; }
+      const host = r.commonAncestorContainer.nodeType === 3
+        ? r.commonAncestorContainer.parentElement : r.commonAncestorContainer;
+      const para = host && host.closest ? host.closest('p,li,h2,h3,blockquote') : null;
+      selCtx = (para ? para.textContent : '').trim().slice(0, 240);
+      const rect = r.getBoundingClientRect();
+      b.style.top = Math.max(8, rect.top - 46) + 'px';
+      b.style.left = Math.min(innerWidth - 96, Math.max(8, rect.left + rect.width / 2 - 42)) + 'px';
+      b.hidden = false;
+    }, 180);
+  });
+  b.onpointerdown = e => e.preventDefault(); // don't steal the selection
+  b.onclick = () => {
+    b.hidden = true;
+    const cs = (kodex && kodex.concepts) || [];
+    const q = selText.toLowerCase();
+    const hit = cs.find(c => c.t.toLowerCase() === q || c.he === selText ||
+      (q.length > 3 && (c.t.toLowerCase().includes(q) || selText.includes(c.t))));
+    if (hit) {
+      kOpen = hit.id; location.hash = '#/kodex';
+      setTimeout(() => { const el = document.getElementById('k-' + hit.id); el && el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 450);
+      return;
+    }
+    openChat(`הסבר לי בפשטות, בעברית, את "${selText}"${selCtx ? `, בהקשר של המשפט: "${selCtx}"` : ''}. `);
+  };
+}
+
+/* bespoke UI sound: WebAudio synthesis in the fiction (no stock assets).
+   Default on; toggled in the header; unlocked by the first touch (iOS). */
+const sfx = (() => {
+  let ctx = null;
+  const on = () => localStorage.getItem('sadna-sound') !== 'off';
+  const ac = () => (ctx = ctx || new (window.AudioContext || window.webkitAudioContext)());
+  function tone(f, t0, dur, type = 'sine', g0 = .16) {
+    try {
+      const c = ac(), o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(g0, c.currentTime + t0);
+      g.gain.exponentialRampToValueAtTime(.001, c.currentTime + t0 + dur);
+      o.connect(g).connect(c.destination);
+      o.start(c.currentTime + t0); o.stop(c.currentTime + t0 + dur + .02);
+    } catch (e) { /* audio unavailable: stay silent */ }
+  }
+  return {
+    unlock() { if (on()) { try { ac().resume(); } catch (e) {} } },
+    correct() { if (on()) { tone(659, 0, .12); tone(880, .09, .2); } },
+    wrong() { if (on()) tone(150, 0, .22, 'triangle', .2); },
+    coin() { if (on()) { tone(988, 0, .09); tone(1319, .07, .22); } },
+    ritual() { if (on()) [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .11, .32)); },
+    isOn: on,
+    toggle() { localStorage.setItem('sadna-sound', on() ? 'off' : 'on'); return on(); }
+  };
+})();
+document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+// sndToggle exists in the DOM already (script sits at the bottom of <body>);
+// set its aria-pressed here, synchronously, so the attribute does not wait on
+// the async boot chain (Promise.allSettled fetches, pullState network round
+// trip). The .off visual class keeps its existing later timing, so appearance
+// is unchanged; this line only makes the ARIA state readable at DOM-read time.
+$('#sndToggle')?.setAttribute('aria-pressed', sfx.isOn() ? 'true' : 'false');
+
+/* ember motes: the workshop's ambient depth layer (idle-killed, motion-gated) */
+function mountMotes() {
+  if (REDUCED()) return;
+  const cv = document.createElement('canvas');
+  cv.id = 'motes'; cv.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(cv);
+  const x = cv.getContext('2d');
+  let W, H, run = true;
+  const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; };
+  size(); addEventListener('resize', size);
+  const N = 14;
+  const P = Array.from({ length: N }, () => ({
+    x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+    r: .8 + Math.random() * 1.7, s: .12 + Math.random() * .3,
+    ph: Math.random() * Math.PI * 2, dx: (Math.random() - .5) * .12
+  }));
+  document.addEventListener('visibilitychange', () => { run = !document.hidden; if (run) requestAnimationFrame(fr); });
+  let t = 0;
+  function fr() {
+    if (!run) return;
+    t += .016;
+    x.clearRect(0, 0, W, H);
+    P.forEach(p => {
+      p.y -= p.s; p.x += p.dx + Math.sin(t + p.ph) * .08;
+      if (p.y < -6) { p.y = H + 6; p.x = Math.random() * W; }
+      const a = .12 + .14 * (Math.sin(t * 1.7 + p.ph) * .5 + .5);
+      x.beginPath(); x.arc(p.x, p.y, p.r, 0, 7);
+      x.fillStyle = `rgba(212,176,110,${a})`; x.fill();
+    });
+    requestAnimationFrame(fr);
+  }
+  requestAnimationFrame(fr);
+}
+
+/* הניצוץ: the workshop spark reacts to the learner (ZZZ mascot principle) */
+let sparkT = null;
+function sparkState(s) {
+  const el = $('#spark'); if (!el) return;
+  el.classList.remove('glad', 'dim');
+  if (!s || REDUCED()) return;
+  void el.offsetWidth;
+  el.classList.add(s);
+  clearTimeout(sparkT);
+  sparkT = setTimeout(() => el.classList.remove('glad', 'dim'), 1700);
+}
+
+/* streak tier tells: the ritual is FIXED, its magnitude is read from the frame */
+const streakTier = n => n >= 30 ? 4 : n >= 14 ? 3 : n >= 7 ? 2 : n >= 3 ? 1 : 0;
+
+/* ---------- חותמות: the achievement seals (derived from state, never tracked twice).
+   Earning seals UPGRADES THE GLYPHS: nav icons gain weight/glow by total seals,
+   each tree's medallions gain ornament rings by its ranks, the spark evolves. */
+const okAnswers = () => Object.values(S.answers).filter(a => a && a.ok);
+const ACHS = [
+  { id: 'streak3', name: 'מתמיד', icon: 'a-flame', t: 1, desc: 'רצף 3 ימים', cond: () => runLength() >= 3 },
+  { id: 'streak7', name: 'מתמיד כסף', icon: 'a-flame', t: 2, desc: 'רצף 7 ימים', cond: () => runLength() >= 7 },
+  { id: 'streak14', name: 'מתמיד זהב', icon: 'a-flame', t: 3, desc: 'רצף 14 ימים', cond: () => runLength() >= 14 },
+  { id: 'streak30', name: 'להבה נצחית', icon: 'a-flame', t: 4, desc: 'רצף 30 ימים', cond: () => runLength() >= 30 },
+  { id: 'ans50', name: 'לומד', icon: 'g-today', t: 1, desc: '50 תשובות נכונות', cond: () => okAnswers().length >= 50 },
+  { id: 'ans150', name: 'משנן', icon: 'g-today', t: 2, desc: '150 תשובות נכונות', cond: () => okAnswers().length >= 150 },
+  { id: 'first25', name: 'מדייק', icon: 'a-arrow', t: 2, desc: '25 נכונות בניסיון ראשון', cond: () => okAnswers().filter(a => a.attempts === 1).length >= 25 },
+  { id: 'calib', name: 'מכויל', icon: 'a-scales', t: 3, desc: 'פער ביטחון-דיוק עד 12 על 20+ שאלות', cond: () => {
+      const c = Object.values(S.answers).filter(a => a && a.conf != null);
+      if (c.length < 20) return false;
+      const avg = c.reduce((x, a) => x + a.conf, 0) / c.length;
+      const acc = 100 * c.filter(a => a.ok).length / c.length;
+      return Math.abs(avg - acc) <= 12;
+    } },
+  { id: 'recall50', name: 'זוכר', icon: 'a-hourglass', t: 2, desc: '50 שליפות מוצלחות', cond: () => Object.keys(S.answers).filter(k => k.includes('@r') && S.answers[k].ok).length >= 50 },
+  { id: 'iron', name: 'זיכרון ברזל', icon: 'a-hourglass', t: 3, desc: 'פריט שרד עד מרווח 60 יום', cond: () => Object.values(S.reviews).some(r => r.iv >= 4) },
+  { id: 'ranks10', name: 'בונה', icon: 'g-map', t: 1, desc: '10 דרגות בעץ', cond: () => Object.values(S.ranks).reduce((a, b) => a + b, 0) >= 10 },
+  { id: 'capstone', name: 'אדריכל', icon: 'a-crown', t: 4, desc: 'קאפסטון ראשון נקנה', cond: () => ['sysdesign', 'craft-master', 'prod-own'].some(id => nodeRank(id) >= 1) },
+  { id: 'vocab', name: 'לשון האומן', icon: 'g-kodex', t: 2, desc: 'סט לשון הסדנה הושלם', cond: () => (S.setBonus || {})['set-vocab'] >= 2 },
+  { id: 'own1', name: 'בעלות ראשונה', icon: 'a-crown', t: 3, desc: 'מיומנות ראשונה הגיעה ליעד', cond: () => !!(skills && skills.skills && skills.skills.some(s => (S.skillLevels[s.id] ?? s.current) >= s.target)) },
+  { id: 'shield1', name: 'ניצול בעור המגן', icon: 'sre', t: 2, desc: 'מגן רצף נשבר והציל אותך', cond: () => (S.shieldsUsed || 0) >= 1 },
+];
+function checkAchievements(silent) {
+  S.ach = S.ach || {};
+  const fresh = ACHS.filter(a => !S.ach[a.id] && (() => { try { return a.cond(); } catch (e) { return false; } })());
+  if (fresh.length) {
+    fresh.forEach(a => S.ach[a.id] = iso(new Date()));
+    store.save();
+    // Never perform a ritual during boot. Several conditions read SEEDED ledger
+    // rows (own1 fires when any skills.json current already meets its target),
+    // so a first-time open would celebrate before any work and, worse, leave a
+    // modal overlay intercepting every tap on the home screen.
+    if (silent) { paintGlyphTier(); return; }
+    const top = fresh.reduce((m, a) => a.t > m.t ? a : m, fresh[0]);
+    setTimeout(() => ritual({ kicker: 'חותם חדש', title: top.name, xp: Object.keys(S.ach).length,
+      sub: top.desc + (fresh.length > 1 ? ' · ועוד ' + (fresh.length - 1) : '') + ' · הגליפים התעצמו', tier: top.t }), 900);
+  }
+  paintGlyphTier();
+}
+function paintGlyphTier() {
+  const n = Object.keys(S.ach || {}).length;
+  document.body.dataset.ach = n >= 12 ? 3 : n >= 7 ? 2 : n >= 3 ? 1 : 0;
+}
+
+function ritual({ kicker, title, sub, xp, tier = 0 }, onclose) {
+  celebrate(`<div class="rt-spark" aria-hidden="true"><img src="assets/art/spark-portrait.webp" alt=""></div>
+    <div class="ov-kicker">${kicker}</div><h2 class="rt-title">${title}</h2>
+    <p class="rt-xp"><b class="rt-num">0</b> XP</p><p class="rt-sub">${sub}</p>`, onclose);
+  sfx.ritual();
+  const ov = $('#overlay'), card = ov.querySelector('.ov-card') || ov.firstElementChild || ov;
+  ov.dataset.tier = tier;
+  const t = ov.querySelector('.rt-title'), n = ov.querySelector('.rt-num'), s = ov.querySelector('.rt-sub');
+  anim(t, [{ transform: 'scale(.7) translateY(10px)', opacity: 0 }, { transform: 'scale(1) translateY(0)', opacity: 1 }], { duration: 520 });
+  anim(s, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 650, easing: 'ease-out' });
+  setTimeout(() => { countUp(n, xp, { ms: 700 }); }, 380);
+  setTimeout(() => { burst(t, 30 + tier * 16); }, 900);
+}
+function currentPost() { const m = location.hash.match(/^#\/(\d{4}-\d{2}-\d{2})$/); return index.find(p => p.date === (m ? m[1] : null)) || index.find(p => !S.daysDone.includes(p.date) && true) || index[0]; }
+function paintRing() {
+  const ring = $('#ring'); if (!ring) return;
+  const total = document.querySelectorAll('#view .qz').length;
+  const done = document.querySelectorAll('#view .qz.answered').length;
+  ring.style.display = total ? '' : 'none';
+  if (!total) return;
+  const C = 2 * Math.PI * 15.5, f = ring.querySelector('.rfg');
+  f.style.strokeDasharray = C;
+  f.style.strokeDashoffset = C * (1 - done / total);
+  ring.querySelector('text').textContent = done + '/' + total;
+}
+let toastT = null;
+function toast(msg) {
+  const el = $('#toastMsg'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 1800);
+}
+function runLength() {
+  // Streak counts COMPLETED days only; shield-covered days count as honorary.
+  const done = new Set([...S.daysDone, ...(S.shieldDays || [])]);
+  let n = 0, d = new Date();
+  if (!done.has(iso(d))) d.setDate(d.getDate() - 1);
+  while (done.has(iso(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+/* a shield auto-shatters to save a streak the morning after a missed day */
+function shieldWatch() {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const b = new Date(); b.setDate(b.getDate() - 2);
+  const done = new Set([...S.daysDone, ...(S.shieldDays || [])]);
+  if (!done.has(iso(y)) && done.has(iso(b)) && shieldsAvail() > 0) {
+    S.shieldDays.push(iso(y)); S.shieldsUsed = (S.shieldsUsed || 0) + 1; store.save();
+    ritual({ kicker: 'מגן רצף', title: 'המגן נשבר במקומך', xp: runLength(),
+      sub: 'יום ' + iso(y) + ' כוסה. הרצף שרד. נותרו ' + shieldsAvail() + ' מגנים.', tier: 1 });
+  }
+}
+const totalEarned = () => Object.values(S.points).reduce((a, p) => a + (p.earned || 0), 0);
+const level = () => { let l = 1; LEVELS.forEach((t, i) => { if (totalEarned() >= t) l = i + 1; }); return l; }
+function paintFolio(txt) {
+  if (txt !== undefined) { $('#folio').textContent = txt; return; }
+  const p = poolAll(), n = runLength(), e = totalEarned(), lv = level();
+  const bits = [];
+  const caps = talents ? ['sysdesign', 'craft-master', 'prod-own'].filter(id => nodeRank(id) >= 1).length : 0;
+  bits.push(['שוליה', 'נאמן', 'אומן', 'רב-אומן'][caps]);
+  if (currentDay) bits.push('יום ' + currentDay);
+  bits.push('רמה ' + lv, e + ' XP');
+  if (combo >= 2) bits.push('קומבו x' + combo);
+  if (p > 0) bits.push(p + ' להשקעה');
+  if (n >= 2) bits.push('רצף ' + n);
+  if (shieldsAvail() > 0) bits.push('מגן ×' + shieldsAvail());
+  if (S.armFocus && ARMS[S.armFocus]) bits.push('מוקד: ' + ARMS[S.armFocus]);
+  $('#folio').textContent = bits.join(' · ');
+  const lo = LEVELS[lv - 1] || 0, hi = LEVELS[lv] || (lo + 80);
+  $('#xpfill').style.width = Math.min(100, ((e - lo) / (hi - lo)) * 100) + '%';
+  // one-glance state on the nav: ripe recalls + spendable points
+  const bT = $('#bdgToday'), bM = $('#bdgMap');
+  if (bT) { const d = dueReviews().length; bT.textContent = d ? (d > 9 ? '9+' : d) : ''; }
+  if (bM) bM.textContent = p > 0 ? (p > 9 ? '9+' : p) : '';
+  if (lv > (S.lastLevel || 1)) {
+    S.lastLevel = lv; store.save();
+    celebrate(`<div class="ov-kicker">עלית רמה</div><h2>רמה ${lv}</h2>
+      <p>${lv >= 4 ? 'מעכשיו הדפים מעמיקים: הוכחות ומקרי כשל.' : 'ההתמדה נצברת. המשך.'}</p>`);
+  }
+}
+
+/* ---------- theme ---------- */
+const applyTheme = t => {
+  document.documentElement.dataset.theme = t;
+  $('#sunIcon').style.display = t === 'dark' ? '' : 'none';
+  $('#moonIcon').style.display = t === 'dark' ? 'none' : '';
+  const tb = $('#themeToggle');
+  tb.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  // Action-oriented label (says what the NEXT press does, not the current
+  // state) is the WAI-ARIA authoring-practice recommendation for a toggle
+  // whose icon already carries current state; it also gives the button a
+  // second, differently-sized observable change alongside aria-pressed.
+  tb.setAttribute('aria-label', t === 'dark' ? 'עבור לתאורה בהירה' : 'עבור לתאורה כהה');
+};
+applyTheme(localStorage.getItem('sadna-theme2') || 'dark');
+$('#themeToggle').onclick = () => {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('sadna-theme2', t); applyTheme(t);
+  toast(t === 'dark' ? 'מצב תאורה: כהה' : 'מצב תאורה: בהיר');
+};
+
+/* ---------- markdown + math ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function renderMarkdown(md) {
+  // Protect KaTeX spans from marked's escape handling, restore after; then
+  // sanitize: generated/ingested content must never execute script (XSS gate).
+  const bank = [];
+  const guarded = md.replace(/(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\))/g,
+    m => { bank.push(m); return '@@MATH' + (bank.length - 1) + '@@'; });
+  let html = marked.parse(guarded);
+  html = html.replace(/@@MATH(\d+)@@/g, (_, i) => bank[+i]);
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true, svg: true },
+    ADD_TAGS: ['details', 'summary'],
+    FORBID_TAGS: ['style', 'form', 'iframe', 'object', 'embed'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'srcdoc']
+  });
+}
+function typeset(el) {
+  if (window.renderMathInElement) {
+    renderMathInElement(el, { delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '\\[', right: '\\]', display: true },
+      { left: '\\(', right: '\\)', display: false }
+    ], throwOnError: false });
+  } else setTimeout(() => typeset(el), 120);
+}
+const setTab = id => document.querySelectorAll('.tabs a').forEach(a => {
+  const on = a.id === id;
+  a.classList.toggle('active', on);
+  if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+});
+const isLtr = s => /^[\x00-\x7F]*$/.test(s.replace(/\s/g, ''));
+
+/* ---------- interactive blocks ---------- */
+function upgradeBlocks(root) {
+  pageBlocks = [];
+  root.querySelectorAll('pre code.language-quiz, pre code.language-fillin, pre code.language-widget, pre code.language-concepts').forEach(code => {
+    let d; try { d = JSON.parse(code.textContent); } catch (e) { return; }
+    if (code.classList.contains('language-concepts')) {
+      const strip = document.createElement('p'); strip.className = 'concept-strip';
+      strip.innerHTML = 'מושגי היום: ' + (d.items || []).map(c =>
+        `<a href="#/kodex" class="chip2 c-chip" data-c="${c.id || ''}">${c.t}</a>`).join(' ');
+      code.closest('pre').replaceWith(strip);
+      return;
+    }
+    const kind = code.classList.contains('language-quiz') ? 'quiz'
+      : code.classList.contains('language-fillin') ? 'fillin' : 'widget';
+    if (kind !== 'widget') pageBlocks.push({ kind, d });
+    const el = kind === 'quiz' ? buildQuiz(d) : kind === 'fillin' ? buildFillin(d) : buildWidget(d);
+    if (el) code.closest('pre').replaceWith(el);
+  });
+}
+
+/* ---------- quiz player (one question at a time) ---------- */
+function openPlayer() {
+  const blocks = pageBlocks.slice();
+  if (!blocks.length) { toast('אין שאלות בדף הזה'); return; }
+  const qp = $('#qplayer'), body = $('#qpBody');
+  qp.hidden = false; document.body.style.overflow = 'hidden';
+  let i = 0; const startPts = totalEarned(); const results = [];
+  function step() {
+    $('#qpProgress').textContent = 'שאלה ' + (i + 1) + ' / ' + blocks.length;
+    body.innerHTML = '';
+    const b = blocks[i];
+    const el = b.kind === 'quiz'
+      ? buildQuiz(b.d, r => { results.push(r); next(); })
+      : buildFillin(b.d, r => { results.push(r); next(); });
+    body.appendChild(el);
+    typeset(body);
+  }
+  function next() { setTimeout(() => { i++; i < blocks.length ? step() : summary(); }, 1500); }
+  function summary() {
+    const ok = results.filter(r => r.ok).length;
+    const first = results.filter(r => r.ok && r.attempts === 1).length;
+    const confs = results.filter(r => r.conf != null);
+    const avgConf = confs.length ? Math.round(confs.reduce((a, r) => a + r.conf, 0) / confs.length) : null;
+    const acc = Math.round(100 * ok / results.length);
+    const gained = totalEarned() - startPts;
+    $('#qpProgress').textContent = 'סיכום';
+    body.innerHTML = `<div class="qp-summary plate">
+      <h2>${ok}/${results.length} נכונות</h2>
+      <p>${first} מהן בניסיון ראשון · ${gained > 0 ? '+' + gained + ' XP' : 'בלי נקודות חדשות'}</p>
+      ${avgConf !== null ? `<p class="qp-cal">כיול: ביטחון ממוצע ${avgConf}% מול דיוק ${acc}% ${Math.abs(avgConf - acc) <= 12 ? '· מכויל יפה' : avgConf > acc ? '· ביטחון יתר, האט' : '· אתה טוב ממה שאתה חושב'}</p>` : ''}
+      <button class="qp-done">חזרה לדף</button></div>`;
+    body.querySelector('.qp-done').onclick = closePlayer;
+  }
+  $('#qpClose').onclick = closePlayer;
+  function closePlayer() { qp.hidden = true; document.body.style.overflow = ''; route(); }
+  step();
+}
+
+/* ---------- recall engine (spaced retrieval; LEARNING-MODEL implementation #2) ----------
+   Simple ladder, not FSRS: Cepeda 2008 found no reliable expanding-vs-uniform
+   difference, so the lever is spacing itself. Items: every past quiz/fillin
+   (options reshuffled so it tests recall, not answer position) + auto cards
+   from the codex concepts. Review attempts are recorded under id@rDATE so the
+   original first-encounter answer is never overwritten. */
+const REV_IV = [1, 3, 7, 21, 60];
+const DAY1 = '2026-07-21';
+const plusDays = (ds, n) => { const t = new Date(ds + 'T12:00:00'); t.setDate(t.getDate() + n); return iso(t); };
+const idToPostDate = id => { const m = /^d(\d+)-/.exec(id); return m ? plusDays(DAY1, +m[1] - 1) : null; };
+
+//: How many cards of a newly opened deck come due per day. A deck is imported
+//: all at once but must not arrive all at once: seeding 70 cards with today's
+//: date turns the recall queue into a wall and the engine into a chore.
+const DECK_PER_DAY = 8;
+
+//: Human names for imported decks. A deck id is a data key; this is what the
+//: learner reads on the shelf.
+const DECK_NAMES = { corporate: 'שפת הארגון' };
+
+function deckOn(id) { return !!(S.decks && S.decks[id] && S.decks[id].on); }
+
+function seedReviews() {
+  const today = iso(new Date());
+  Object.entries(S.answers).forEach(([id, a]) => {
+    if (id.includes('@r') || S.reviews[id] || !idToPostDate(id)) return;
+    S.reviews[id] = { iv: 0, due: plusDays(a.date || today, 1), lapses: 0 };
+  });
+  // A concept with no `deck` is core curriculum: it was taught by a unit the
+  // learner opened, so it is due immediately, exactly as before. A concept that
+  // names a deck is imported vocabulary and stays out of the queue until that
+  // deck is opened, then drips in at DECK_PER_DAY.
+  const staged = {};
+  ((kodex && kodex.concepts) || []).forEach(c => {
+    if (!c.id || !c.d || S.reviews['c-' + c.id]) return;
+    if (!c.deck) { S.reviews['c-' + c.id] = { iv: 0, due: today, lapses: 0 }; return; }
+    if (!deckOn(c.deck)) return;
+    const n = staged[c.deck] = (staged[c.deck] || 0);
+    staged[c.deck]++;
+    const from = (S.decks[c.deck].started) || today;
+    S.reviews['c-' + c.id] = { iv: 0, due: plusDays(from, Math.floor(n / DECK_PER_DAY)), lapses: 0 };
+  });
+  store.save();
+}
+
+function deckCounts() {
+  const out = {};
+  ((kodex && kodex.concepts) || []).forEach(c => {
+    if (!c.deck) return;
+    const d = out[c.deck] = out[c.deck] || { total: 0, seeded: 0 };
+    d.total++;
+    if (S.reviews['c-' + c.id]) d.seeded++;
+  });
+  return out;
+}
+
+function openDeck(id) {
+  S.decks = S.decks || {};
+  S.decks[id] = { on: true, started: iso(new Date()) };
+  store.save(); seedReviews();
+}
+const dueReviews = () => {
+  const today = iso(new Date());
+  return Object.entries(S.reviews).filter(([, r]) => r.due <= today)
+    .sort((a, b) => (a[1].due < b[1].due ? -1 : 1)).map(([id]) => id);
+};
+
+const postBlockCache = {};
+async function fetchPostBlocks(date) {
+  if (postBlockCache[date]) return postBlockCache[date];
+  const map = {};
+  try {
+    const r = await fetch('posts/' + date + '.md');
+    if (r.ok) for (const m of (await r.text()).matchAll(/```(quiz|fillin)\n(.+?)\n```/gs)) {
+      try { const d = JSON.parse(m[2]); if (d.id) map[d.id] = { kind: m[1], d }; } catch (e) { /* skip bad block */ }
+    }
+  } catch (e) { /* offline: skip this post today */ }
+  postBlockCache[date] = map; return map;
+}
+const shuffledIdx = n => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function conceptCard(cid) {
+  const cs = (kodex && kodex.concepts) || [];
+  const c = cs.find(x => x.id === cid);
+  if (!c || !c.d) return null;
+  const others = cs.filter(x => x.id !== cid && x.d && x.d !== c.d).map(x => x.d);
+  if (others.length < 3) return null;
+  const opts = shuffledIdx(others.length).slice(0, 3).map(i => others[i]);
+  const pos = Math.floor(Math.random() * 4);
+  opts.splice(pos, 0, c.d);
+  return { kind: 'quiz', d: { id: 'c-' + cid, tree: null, q: `מהי המשמעות של "${c.t}${c.he ? ' (' + c.he + ')' : ''}"?`, options: opts, answer: pos, explain: c.d } };
+}
+
+async function resolveReviewItems(ids) {
+  const items = [];
+  for (const id of ids) {
+    if (id.startsWith('c-')) { const it = conceptCard(id.slice(2)); if (it) items.push({ id, ...it }); continue; }
+    const date = idToPostDate(id);
+    if (!date) continue;
+    const map = await fetchPostBlocks(date);
+    const hit = map[id];
+    if (!hit) { if (Object.keys(map).length) delete S.reviews[id]; continue; } // post loaded but id gone: prune
+    let d = { ...hit.d };
+    if (hit.kind === 'quiz' && Array.isArray(d.options)) {
+      const ord = shuffledIdx(d.options.length);
+      d = { ...d, options: ord.map(i => d.options[i]), answer: ord.indexOf(d.answer) };
+    }
+    items.push({ id, kind: hit.kind, d });
+  }
+  return items;
+}
+
+function gradeReview(id, r) {
+  const rec = S.reviews[id]; if (!rec) return;
+  const today = iso(new Date());
+  if (!r.ok) { rec.iv = Math.max(0, rec.iv - 1); rec.lapses = (rec.lapses || 0) + 1; rec.due = plusDays(today, 1); }
+  else if (r.attempts === 1 && (r.conf == null || r.conf >= 50)) { rec.iv = Math.min(REV_IV.length - 1, rec.iv + 1); rec.due = plusDays(today, REV_IV[rec.iv]); }
+  else { rec.due = plusDays(today, REV_IV[rec.iv]); } // shaky success: same interval again
+  rec.last = today; store.save();
+}
+
+async function openReview() {
+  const due = dueReviews();
+  if (!due.length) { toast('אין פריטים בשלים לשליפה'); return; }
+  const qp = $('#qplayer'), body = $('#qpBody');
+  qp.hidden = false; document.body.style.overflow = 'hidden';
+  $('#qpProgress').textContent = 'שליפה'; body.innerHTML = '<p class="finish-hint">אוסף פריטים מהארכיון...</p>';
+  const close = () => { qp.hidden = true; document.body.style.overflow = ''; route(); };
+  $('#qpClose').onclick = close;
+  const pool = shuffledIdx(Math.min(due.length, 14)).map(i => due[i]); // interleave trees/days
+  const items = (await resolveReviewItems(pool)).slice(0, 10);
+  if (!items.length) { close(); toast('הפריטים הבשלים לא זמינים כרגע'); return; }
+  let i = 0; const results = []; const stamp = iso(new Date()).replace(/-/g, '');
+  function step() {
+    $('#qpProgress').textContent = 'שליפה ' + (i + 1) + ' / ' + items.length;
+    body.innerHTML = '';
+    const it = items[i];
+    const d = { ...it.d, id: it.d.id + '@r' + stamp };
+    const el = it.kind === 'quiz'
+      ? buildQuiz(d, r => { gradeReview(it.id, r); results.push(r); next(); })
+      : buildFillin(d, r => { gradeReview(it.id, r); results.push(r); next(); });
+    body.appendChild(el); typeset(body);
+  }
+  function next() { setTimeout(() => { i++; i < items.length ? step() : summary(); }, 1500); }
+  function summary() {
+    const ok = results.filter(r => r.ok).length;
+    const acc = Math.round(100 * ok / results.length);
+    const confs = results.filter(r => r.conf != null);
+    const avgConf = confs.length ? Math.round(confs.reduce((a, r) => a + r.conf, 0) / confs.length) : null;
+    const left = dueReviews().length;
+    $('#qpProgress').textContent = 'סיכום שליפה';
+    body.innerHTML = `<div class="qp-summary plate">
+      <h2>${ok}/${results.length} נשלפו</h2>
+      <p>${left ? 'נותרו ' + left + ' בשלים, אפשר סבב נוסף' : 'התור ריק. הפריטים הבאים יבשילו לפי המרווחים'}</p>
+      ${avgConf !== null ? `<p class="qp-cal">כיול: ביטחון ${avgConf}% מול דיוק ${acc}%</p>` : ''}
+      ${left ? '<button class="rv-again">סבב נוסף</button> ' : ''}<button class="qp-done">חזרה לדף</button></div>`;
+    body.querySelector('.qp-done').onclick = close;
+    const ag = body.querySelector('.rv-again'); if (ag) ag.onclick = () => { close(); openReview(); };
+  }
+  step();
+}
+
+/* ---- explorables and micro-games ---- */
+function widgetShell(title) {
+  const w = document.createElement('div'); w.className = 'widget';
+  w.innerHTML = `<div class="w-title">${title}</div>`;
+  return w;
+}
+function themeC(k) { return getComputedStyle(document.documentElement).getPropertyValue(k).trim(); }
+
+function buildWidget(d) {
+  if (d.type === 'decay') return widgetDecay(d);
+  if (d.type === 'gridworld') return widgetGridworld(d);
+  if (d.type === 'algviz') return widgetAlgviz(d);
+  if (d.type === 'severity-filter') return widgetSeverityFilter(d);
+  if (d.type === 'kv-calc') return widgetKvCalc(d);
+  return null;
+}
+
+/* ---- algviz: watch the algorithm run (the VisuAlgo pattern, RL-native) ---- */
+function cvS(cv,H){const W=cv.clientWidth||320,d=Math.min(devicePixelRatio,2);cv.width=W*d;cv.height=H*d;cv.style.height=H+'px';const c=cv.getContext('2d');c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,W,H);return[W,c];}
+const ALGS = {
+  'binary-search': {
+    name: 'Binary Search',
+    code: ['lo = 0, hi = n-1', 'while lo <= hi:', '  mid = (lo+hi)//2', '  if a[mid] == target: return mid', '  if a[mid] < target: lo = mid+1', '  else: hi = mid-1'],
+    init(p) {
+      const arr = p.arr || Array.from({ length: 15 }, (_, i) => 2 * i + ((i * 7) % 3));
+      arr.sort((a, b) => a - b);
+      return { arr, target: p.target ?? arr[11], lo: 0, hi: arr.length - 1, mid: -1, found: -1, phase: 0, ops: 0 };
+    },
+    step(s) {
+      if (s.found >= 0 || s.lo > s.hi) return { done: true, line: 1, note: s.found >= 0 ? 'נמצא באינדקס ' + s.found : 'לא נמצא' };
+      if (s.phase === 0) { s.mid = (s.lo + s.hi) >> 1; s.ops++; s.phase = 1; return { line: 2, note: 'mid = ' + s.mid }; }
+      s.phase = 0;
+      if (s.arr[s.mid] === s.target) { s.found = s.mid; return { line: 3, note: s.arr[s.mid] + ' = יעד. נמצא!' }; }
+      if (s.arr[s.mid] < s.target) { s.lo = s.mid + 1; return { line: 4, note: s.arr[s.mid] + ' < יעד, זזים ימינה' }; }
+      s.hi = s.mid - 1; return { line: 5, note: s.arr[s.mid] + ' > יעד, זזים שמאלה' };
+    },
+    draw(s,cv){const[W,x]=cvS(cv,120);
+      const n=s.arr.length,bw=Math.min(38,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      s.arr.forEach((v,i)=>{const inR=i>=s.lo&&i<=s.hi,px=x0+i*bw;
+        x.fillStyle=i===s.found?themeC('--green'):i===s.mid?themeC('--gold'):inR?themeC('--panel'):'transparent';
+        x.globalAlpha=i===s.mid||i===s.found?1:inR?1:.25;
+        x.fillRect(px+1,34,bw-2,40);x.strokeStyle=themeC('--line');x.strokeRect(px+1,34,bw-2,40);
+        x.fillStyle=i===s.mid||i===s.found?'#14101a':themeC('--ink');
+        x.font='12px "IBM Plex Mono"';x.fillText(v,px+bw/2,54);x.globalAlpha=1;});
+      x.fillStyle=themeC('--faded');x.font='11px "IBM Plex Mono"';
+      x.fillText('lo='+s.lo,x0+s.lo*bw+bw/2,90);
+      if(s.hi>=0&&s.hi!==s.lo)x.fillText('hi='+s.hi,x0+s.hi*bw+bw/2,90);
+      x.fillStyle=themeC('--gold');x.font='700 12px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('יעד: '+s.target+' · השוואות: '+s.ops,W/2,14);}
+  },
+  'returns-backward': {
+    name: 'Discounted Returns (backward)',
+    code: ['G = 0', 'for t = T-1 down to 0:', '  G = r[t] + γ·G', '  out[t] = G'],
+    init(p) {
+      const rewards = p.rewards || [0, 1, 0, 0, 2, 0, 1, 3];
+      return { r: rewards, g: p.gamma ?? 0.9, out: Array(rewards.length).fill(null), t: rewards.length, G: 0, ops: 0 };
+    },
+    step(s) {
+      if (s.t <= 0) return { done: true, line: 0, note: 'סיימנו: out הוא וקטור התשואות' };
+      s.t--; s.G = s.r[s.t] + s.g * s.G; s.out[s.t] = s.G; s.ops++;
+      return { line: 2, note: `G = ${s.r[s.t]} + ${s.g}·${(s.out[s.t + 1] ?? 0).toFixed(2)} = ${s.G.toFixed(2)}` };
+    },
+    draw(s,cv){const[W,x]=cvS(cv,150);
+      const n=s.r.length,bw=Math.min(46,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      x.fillStyle=themeC('--faded');x.font='11px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('rewards',x0+bw*n+2>W?W-30:x0+bw*n+2,30);
+      s.r.forEach((v,i)=>{const px=x0+i*bw,cur=i===s.t;
+        x.fillStyle=cur?themeC('--gold'):themeC('--panel');
+        x.fillRect(px+1,20,bw-2,26);x.strokeStyle=themeC('--line');x.strokeRect(px+1,20,bw-2,26);
+        x.fillStyle=cur?'#14101a':themeC('--ink');x.font='12px "IBM Plex Mono"';x.fillText(v,px+bw/2,33);});
+      s.out.forEach((v,i)=>{const px=x0+i*bw,has=v!==null;
+        x.fillStyle=has?themeC('--green'):'transparent';x.globalAlpha=has?.9:.2;
+        x.fillRect(px+1,78,bw-2,30);x.strokeStyle=themeC('--line');x.strokeRect(px+1,78,bw-2,30);x.globalAlpha=1;
+        if(has){x.fillStyle='#0c1410';x.font='11px "IBM Plex Mono"';x.fillText(v.toFixed(2),px+bw/2,93);}});
+      x.fillStyle=themeC('--faded');x.font='11px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('G (מהסוף להתחלה ←)',W/2,128);}
+  },
+  'gaps-islands': {
+    name: 'Gaps & Islands (id - ROW_NUMBER)',
+    code: ['ids = sorted input', 'for i = 0 to n-1:', '  rn = i + 1', '  grp = id[i] - rn', '  record (id, rn, grp)'],
+    init(p) {
+      const ids = p.ids || [101, 102, 103, 106, 107, 110];
+      return { ids, rows: ids.map((id, i) => ({ id, rn: i + 1, grp: id - (i + 1) })), cur: -1, islands: [] };
+    },
+    step(s) {
+      s.cur++;
+      if (s.cur >= s.rows.length) {
+        const groups = {};
+        s.rows.forEach(r => { (groups[r.grp] = groups[r.grp] || []).push(r.id); });
+        s.islands = Object.values(groups).map(g => ({ start: g[0], end: g[g.length - 1] }));
+        return { done: true, line: 0, note: s.islands.length + ' איים נמצאו: ' + s.islands.map(i => i.start === i.end ? '' + i.start : i.start + '-' + i.end).join(', ') };
+      }
+      const r = s.rows[s.cur];
+      return { line: 3, note: `id=${r.id}, rn=${r.rn}, grp=${r.id}-${r.rn}=${r.grp}` };
+    },
+    draw(s, cv) {
+      const [W, x] = cvS(cv, 160);
+      const n=s.rows.length,bw=Math.min(48,(W-16)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      const grpColors={};let ci=0;
+      const palette=[themeC('--green'),themeC('--gold'),themeC('--oracle'),themeC('--architect'),themeC('--warden')];
+      s.rows.forEach(r=>{if(!(r.grp in grpColors))grpColors[r.grp]=palette[ci++%palette.length];});
+      x.fillStyle=themeC('--faded');x.font='11px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('id',x0-14,24);x.fillText('rn',x0-14,58);x.fillText('grp',x0-14,92);
+      s.rows.forEach((r, i) => {
+        const px = x0 + i * bw, vis = i <= s.cur;
+        x.fillStyle = i === s.cur ? themeC('--gold') : themeC('--panel');
+        x.globalAlpha = vis ? 1 : 0.25;
+        x.fillRect(px + 1, 10, bw - 2, 28);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 10, bw - 2, 28);
+        x.fillStyle = i === s.cur ? '#14101a' : themeC('--ink'); x.font = '12px "IBM Plex Mono"';
+        x.fillText(r.id, px + bw / 2, 24);
+        x.fillStyle = themeC('--panel');
+        x.fillRect(px + 1, 44, bw - 2, 28);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 44, bw - 2, 28);
+        x.fillStyle = themeC('--ink'); x.font = '12px "IBM Plex Mono"';
+        x.fillText(vis ? r.rn : '', px + bw / 2, 58);
+        x.fillStyle = vis ? grpColors[r.grp] : 'transparent';
+        x.globalAlpha = vis ? 0.35 : 0.1;
+        x.fillRect(px + 1, 78, bw - 2, 28);
+        x.globalAlpha = 1;
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 78, bw - 2, 28);
+        x.fillStyle = vis ? grpColors[r.grp] : themeC('--faded'); x.font = '700 12px "IBM Plex Mono"';
+        x.fillText(vis ? r.grp : '', px + bw / 2, 92);
+      });
+      if (s.islands.length) {
+        x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif'; x.fillStyle = themeC('--ink');
+        x.fillText('איים: ' + s.islands.map(i => i.start === i.end ? '' + i.start : i.start + '-' + i.end).join('  '), W / 2, 130);
+      }
+      x.fillStyle = themeC('--faded'); x.font = '10px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('grp = id - rn', W / 2, 150);
+    }
+  },
+  'join-matcher': {
+    name: 'JOIN Matcher',
+    code: ['for each row a in A:', '  for each row b in B:', '    if a.key == b.key:', '      emit matched(a, b)', '  if no match: emit (a, NULL)  -- LEFT', 'for unmatched b: emit (NULL, b) -- FULL'],
+    init(p) {
+      const A = p.A || [{ key: 1, v: 'x' }, { key: 2, v: 'y' }, { key: 4, v: 'z' }];
+      const B = p.B || [{ key: 2, v: 'a' }, { key: 3, v: 'b' }];
+      return { A, B, mode: 0, ai: 0, bi: 0, phase: 'scan', matched: [], leftOnly: [], rightOnly: [],
+               bMatched: new Set(), done: false };
+    },
+    step(s) {
+      if (s.done) return { done: true, line: 0, note: 'סיום' };
+      if (s.mode === 0) {
+        if (s.ai >= s.A.length) {
+          s.mode = 1; s.bi = 0;
+          const unmatched = s.B.filter((_, i) => !s.bMatched.has(i));
+          s.rightOnly = unmatched;
+          if (unmatched.length === 0) { s.done = true; return { done: true, line: 5, note: 'אין שורות ימניות ללא התאמה' }; }
+          return { line: 5, note: `בודק ${s.B.length - s.bMatched.size} שורות ימניות ללא התאמה` };
+        }
+        const a = s.A[s.ai];
+        const bIdx = s.B.findIndex((b, i) => b.key === a.key && !s.bMatched.has(i));
+        if (bIdx >= 0) {
+          s.bMatched.add(bIdx);
+          s.matched.push({ a, b: s.B[bIdx] });
+          s.ai++;
+          return { line: 3, note: `התאמה: A.key=${a.key} = B.key=${s.B[bIdx].key}` };
+        }
+        s.leftOnly.push(a);
+        s.ai++;
+        return { line: 4, note: `אין התאמה ל-A.key=${a.key} → LEFT: (${a.v}, NULL)` };
+      }
+      s.done = true;
+      return { done: true, line: 5, note: 'FULL OUTER: ' + s.rightOnly.length + ' שורות ימניות ללא התאמה' };
+    },
+    draw(s, cv) {
+      const [W, x] = cvS(cv, 200);
+      const colW = W / 3, rh = 24, pad = 4;
+      function drawTable(label, rows, cx, yOff, keyFn, valFn, hl) {
+        x.fillStyle = themeC('--faded'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+        x.textAlign = 'center'; x.fillText(label, cx, yOff);
+        rows.forEach((r, i) => {
+          const y = yOff + 6 + i * (rh + pad);
+          const isHl = hl && hl(r, i);
+          x.fillStyle = isHl ? themeC('--gold') : themeC('--panel'); x.globalAlpha = isHl ? 0.5 : 0.7;
+          x.fillRect(cx - colW * 0.4, y, colW * 0.8, rh); x.globalAlpha = 1;
+          x.strokeStyle = themeC('--line'); x.strokeRect(cx - colW * 0.4, y, colW * 0.8, rh);
+          x.fillStyle = isHl ? '#14101a' : themeC('--ink'); x.font = '12px "IBM Plex Mono"';
+          x.fillText(keyFn(r) + ' | ' + valFn(r), cx, y + rh / 2);
+        });
+      }
+      drawTable('A', s.A, colW * 0.5, 16, r => r.key, r => r.v,
+        (r, i) => i === s.ai - 1 && s.mode === 0);
+      drawTable('B', s.B, colW * 1.5, 16, r => r.key, r => r.v,
+        (r, i) => s.bMatched.has(i));
+      const results = [];
+      const green = themeC('--green'), gold = themeC('--gold'), red = themeC('--red');
+      s.matched.forEach(m => results.push({ txt: `${m.a.key}:${m.a.v} ⟷ ${m.b.key}:${m.b.v}`, col: green, label: 'INNER' }));
+      s.leftOnly.forEach(a => results.push({ txt: `${a.key}:${a.v} ⟷ NULL`, col: gold, label: 'LEFT' }));
+      s.rightOnly.forEach(b => results.push({ txt: `NULL ⟷ ${b.key}:${b.v}`, col: red, label: 'FULL' }));
+      x.fillStyle = themeC('--faded'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.textAlign = 'center'; x.fillText('תוצאה', colW * 2.5, 16);
+      results.forEach((r, i) => {
+        const y = 22 + i * (rh + pad);
+        x.fillStyle = r.col; x.globalAlpha = 0.3;
+        x.fillRect(colW * 2.5 - colW * 0.45, y, colW * 0.9, rh); x.globalAlpha = 1;
+        x.strokeStyle = themeC('--line'); x.strokeRect(colW * 2.5 - colW * 0.45, y, colW * 0.9, rh);
+        x.fillStyle = themeC('--ink'); x.font = '11px "IBM Plex Mono"';
+        x.fillText(r.txt, colW * 2.5, y + rh / 2);
+        x.fillStyle = r.col; x.font = '700 9px "Rubik", "Noto Sans Hebrew", sans-serif';
+        x.fillText(r.label, colW * 2.5 + colW * 0.35, y + 6);
+      });
+    }
+  },
+  'sliding-window': {
+    name: 'Sliding Window (Fixed k)',
+    code: ['sum = Σ arr[0..k-1]', 'best = sum', 'for i = k to n-1:', '  sum += arr[i]', '  sum -= arr[i-k]', '  best = max(best, sum)'],
+    init(p) {
+      const arr = p.arr || [2, 1, 5, 1, 3, 2];
+      const k = p.k || 3;
+      const initSum = arr.slice(0, k).reduce((a, b) => a + b, 0);
+      return { arr, k, sum: initSum, best: initSum, i: k - 1, left: 0, right: k - 1, phase: 'init', ops: 0 };
+    },
+    step(s) {
+      if (s.phase === 'init') { s.phase = 'run'; return { line: 1, note: `חלון ראשון: [${s.arr.slice(0, s.k).join(',')}] = ${s.sum}` }; }
+      s.i++;
+      if (s.i >= s.arr.length) return { done: true, line: 5, note: `סיום. best = ${s.best}` };
+      s.left = s.i - s.k + 1; s.right = s.i;
+      const added = s.arr[s.i], removed = s.arr[s.i - s.k];
+      s.sum += added - removed; s.ops++;
+      const improved = s.sum > s.best;
+      if (improved) s.best = s.sum;
+      return { line: improved ? 5 : 3, note: `+${added} -${removed} → sum=${s.sum}` + (improved ? ' ★ best חדש!' : '') };
+    },
+    draw(s, cv) {
+      const [W, x] = cvS(cv, 130);
+      const n = s.arr.length, bw = Math.min(48, (W - 16) / n), x0 = (W - bw * n) / 2;
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      const left = s.phase === 'init' ? 0 : s.left, right = s.phase === 'init' ? s.k - 1 : s.right;
+      if (right < n) {
+        x.fillStyle = themeC('--gold'); x.globalAlpha = 0.15;
+        x.fillRect(x0 + left * bw - 2, 18, (right - left + 1) * bw + 4, 50);
+        x.globalAlpha = 1;
+      }
+      s.arr.forEach((v, i) => {
+        const px = x0 + i * bw;
+        const inW = i >= left && i <= right;
+        x.fillStyle = inW ? themeC('--gold') : themeC('--panel'); x.globalAlpha = inW ? 1 : 0.4;
+        x.fillRect(px + 1, 26, bw - 2, 36);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 26, bw - 2, 36);
+        x.fillStyle = inW ? '#14101a' : themeC('--ink'); x.font = '13px "IBM Plex Mono"';
+        x.fillText(v, px + bw / 2, 44);
+        x.globalAlpha = 1;
+        x.fillStyle = themeC('--faded'); x.font = '10px "IBM Plex Mono"';
+        x.fillText(i, px + bw / 2, 74);
+      });
+      x.fillStyle = themeC('--green'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('sum=' + s.sum + '  best=' + s.best, W / 2, 96);
+      x.fillStyle = themeC('--faded'); x.font = '10px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('k=' + s.k + '  צעדים: ' + s.ops, W / 2, 116);
+    }
+  },
+  'stack-parens': {
+    name: 'Stack (Parentheses)',
+    code: ['for ch in s:','  if opener: push','  if closer matches: pop','  else: invalid'],
+    init(p) { const s=p.s||'([{}])({})'; return {s,i:0,stack:[],ok:true}; },
+    step(st) {
+      if (!st.ok||st.i>=st.s.length) return {done:true,line:0,note:st.ok&&!st.stack.length?'תקין!':'לא תקין'};
+      const ch=st.s[st.i],M={')':'(',']':'[','}':'{'};st.i++;
+      if ('([{'.includes(ch)){st.stack.push(ch);return {line:1,note:'push '+ch};}
+      if (!st.stack.length||st.stack.at(-1)!==M[ch]){st.ok=false;return {line:3,note:ch+' חוסר התאמה'};}
+      st.stack.pop();return {line:2,note:'pop '+M[ch]+' ← '+ch};
+    },
+    draw(s,cv) {
+      const[W,x]=cvS(cv,110);
+      const n=s.s.length,bw=Math.min(30,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      [...s.s].forEach((ch,i)=>{
+        const px=x0+i*bw,cur=i===s.i-1;
+        x.fillStyle=cur?themeC('--gold'):i<s.i?themeC('--panel'):'transparent';
+        x.globalAlpha=i<s.i?1:.25;
+        x.fillRect(px+1,4,bw-2,26);x.strokeStyle=themeC('--line');x.strokeRect(px+1,4,bw-2,26);
+        x.fillStyle=cur?'#14101a':themeC('--ink');x.font='13px "IBM Plex Mono"';x.fillText(ch,px+bw/2,17);x.globalAlpha=1;
+      });
+      const sW=22,sX=W/2-sW*s.stack.length/2;
+      s.stack.forEach((ch,i)=>{
+        const sy=90-i*20;
+        x.fillStyle=i===s.stack.length-1?themeC('--oracle'):themeC('--panel');
+        x.fillRect(sX+i*sW,sy,sW-2,18);x.strokeStyle=themeC('--line');x.strokeRect(sX+i*sW,sy,sW-2,18);
+        x.fillStyle=themeC('--ink');x.font='12px "IBM Plex Mono"';x.fillText(ch,sX+i*sW+sW/2-1,sy+9);
+      });
+      x.fillStyle=themeC('--faded');x.font='10px "Rubik","Noto Sans Hebrew",sans-serif';x.fillText('stack',sX-22,100);
+    }
+  },
+  'heap-topk': {
+    name: 'Heap Top-k',
+    code: ['heap = []','for x in nums:','  push(x)','  if len>k: pop min','result = heap'],
+    init(p) { const nums=p.nums||[5,1,8,3,9,2,7]; return {nums,k:p.k||3,heap:[],i:0,popped:null}; },
+    step(s) {
+      if (s.i>=s.nums.length) return {done:true,line:4,note:'top-'+s.k+': ['+s.heap.slice().sort((a,b)=>b-a).join(',')+']'};
+      const v=s.nums[s.i];s.i++;s.popped=null;
+      s.heap.push(v);s.heap.sort((a,b)=>a-b);
+      if (s.heap.length>s.k){s.popped=s.heap.shift();return {line:3,note:'push '+v+', pop '+s.popped};}
+      return {line:2,note:'push '+v};
+    },
+    draw(s,cv) {
+      const[W,x]=cvS(cv,100);
+      const n=s.nums.length,bw=Math.min(36,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      s.nums.forEach((v,i)=>{
+        const px=x0+i*bw,cur=i===s.i-1;
+        x.fillStyle=cur?themeC('--gold'):i<s.i?themeC('--panel'):'transparent';
+        x.globalAlpha=i<s.i?1:.25;
+        x.fillRect(px+1,4,bw-2,26);x.strokeStyle=themeC('--line');x.strokeRect(px+1,4,bw-2,26);
+        x.fillStyle=cur?'#14101a':themeC('--ink');x.font='12px "IBM Plex Mono"';x.fillText(v,px+bw/2,17);x.globalAlpha=1;
+      });
+      const hW=28,hX=(W-hW*s.heap.length)/2;
+      s.heap.forEach((v,i)=>{
+        x.fillStyle=i===0?themeC('--oracle'):themeC('--green');x.globalAlpha=.7;
+        x.fillRect(hX+i*hW,50,hW-2,24);x.globalAlpha=1;
+        x.strokeStyle=themeC('--line');x.strokeRect(hX+i*hW,50,hW-2,24);
+        x.fillStyle='#14101a';x.font='12px "IBM Plex Mono"';x.fillText(v,hX+i*hW+hW/2-1,62);
+      });
+      x.fillStyle=themeC('--faded');x.font='10px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('min-heap (k='+s.k+')',W/2,90);
+      if (s.popped!==null){x.fillStyle=themeC('--red');x.font='11px "IBM Plex Mono"';x.fillText('popped: '+s.popped,W/2,42);}
+    }
+  },
+  'two-pointers': {
+    name: 'Two Pointers (Converging)',
+    code: ['i = 0, j = n-1', 'while i < j:', '  s = arr[i] + arr[j]', '  if s == target: return', '  if s > target: j--', '  else: i++'],
+    init(p) {
+      const arr = p.arr || [1, 3, 5, 7, 8, 11, 15];
+      const target = p.target ?? 12;
+      return { arr, target, i: 0, j: arr.length - 1, sum: 0, found: false, ops: 0 };
+    },
+    step(s) {
+      if (s.found || s.i >= s.j) return { done: true, line: 1, note: s.found ? `נמצא: arr[${s.i}]+arr[${s.j}]=${s.target}` : 'לא נמצא זוג' };
+      s.sum = s.arr[s.i] + s.arr[s.j]; s.ops++;
+      if (s.sum === s.target) { s.found = true; return { line: 3, note: `${s.arr[s.i]}+${s.arr[s.j]}=${s.sum} = יעד!` }; }
+      if (s.sum > s.target) { const old = s.j; s.j--; return { line: 4, note: `${s.arr[s.i]}+${s.arr[old]}=${s.sum} > ${s.target}, j--` }; }
+      const old = s.i; s.i++; return { line: 5, note: `${s.arr[old]}+${s.arr[s.j]}=${s.sum} < ${s.target}, i++` };
+    },
+    draw(s, cv) {
+      const [W, x] = cvS(cv, 120);
+      const n = s.arr.length, bw = Math.min(42, (W - 16) / n), x0 = (W - bw * n) / 2;
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      s.arr.forEach((v, i) => {
+        const px = x0 + i * bw;
+        const isI = i === s.i, isJ = i === s.j, inR = i >= s.i && i <= s.j;
+        x.fillStyle = s.found && (isI || isJ) ? themeC('--green') : isI ? themeC('--gold') : isJ ? themeC('--oracle') : themeC('--panel');
+        x.globalAlpha = inR ? 1 : 0.25;
+        x.fillRect(px + 1, 30, bw - 2, 36);
+        x.strokeStyle = themeC('--line'); x.strokeRect(px + 1, 30, bw - 2, 36);
+        x.fillStyle = (isI || isJ) ? '#14101a' : themeC('--ink'); x.font = '13px "IBM Plex Mono"';
+        x.fillText(v, px + bw / 2, 48);
+        x.globalAlpha = 1;
+      });
+      x.font = '11px "IBM Plex Mono"'; x.fillStyle = themeC('--gold');
+      x.fillText('i=' + s.i, x0 + s.i * bw + bw / 2, 80);
+      if (s.j !== s.i) { x.fillStyle = themeC('--oracle'); x.fillText('j=' + s.j, x0 + s.j * bw + bw / 2, 80); }
+      x.fillStyle = themeC('--green'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText('יעד: ' + s.target + '  sum=' + s.sum + '  השוואות: ' + s.ops, W / 2, 14);
+    }
+  },
+  'bst-search': {
+    name: 'BST Search',
+    code: ['node = root','while node:','  if val == node: found','  if val < node: left','  else: right'],
+    init(p) {
+      const v=p.vals||[8,3,10,1,6,14,4,7,13],ns=v.map(v=>({v,l:null,r:null}));
+      for(let i=1;i<ns.length;i++){let c=ns[0];for(;;){if(ns[i].v<c.v){if(!c.l){c.l=ns[i];break;}c=c.l;}else{if(!c.r){c.r=ns[i];break;}c=c.r;}}}
+      return {root:ns[0],t:p.target||7,cur:ns[0],p:[],f:false};
+    },
+    step(s) {
+      if(s.f||!s.cur) return {done:true,line:s.f?2:1,note:s.f?'found '+s.t:'not in tree'};
+      s.p.push(s.cur.v);
+      if(s.cur.v===s.t){s.f=true;return {line:2,note:s.t+'=='+s.cur.v};}
+      if(s.t<s.cur.v){const o=s.cur;s.cur=s.cur.l;return {line:3,note:s.t+'<'+o.v};}
+      const o=s.cur;s.cur=s.cur.r;return {line:4,note:s.t+'>'+o.v};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,140);
+      c.textAlign='center';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const R=14;!function d(n,x,y,g){if(!n)return;
+        if(n.l){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(x-g,y+38-R);c.stroke();d(n.l,x-g,y+38,g/2);}
+        if(n.r){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(x+g,y+38-R);c.stroke();d(n.r,x+g,y+38,g/2);}
+        const v=s.p.includes(n.v);c.fillStyle=v&&s.f&&n.v===s.t?themeC('--green'):v?themeC('--gold'):themeC('--panel');
+        c.beginPath();c.arc(x,y,R,0,7);c.fill();c.strokeStyle=themeC('--line');c.stroke();
+        c.fillStyle=v?'#14101a':themeC('--ink');c.fillText(n.v,x,y);
+      }(s.root,W/2,22,W/5);
+    }
+  },
+  'list-reverse': {
+    name: 'List Reverse',
+    code: ['prev=None; curr=head','while curr:','  nxt=curr.next','  curr.next=prev','  prev,curr=curr,nxt'],
+    init(p) {const v=p.vals||[1,2,3,4,5];return {v,p:-1,c:0,r:[]};},
+    step(s) {
+      if(s.c>=s.v.length) return {done:true,line:0,note:'done: '+s.r.join('<-')};
+      s.r.unshift(s.v[s.c]);const n='prev<-'+s.v[s.c]+' curr->'+(s.c+1<s.v.length?s.v[s.c+1]:'None');
+      s.p=s.c;s.c++;return {line:s.c<s.v.length?2:4,note:n};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,72);
+      const n=s.v.length,bw=Math.min(50,(W-20)/n),x0=(W-bw*n)/2;
+      c.textAlign='center';c.textBaseline='middle';c.font='12px "IBM Plex Mono"';
+      s.v.forEach((v,i)=>{const px=x0+i*bw,d=i<s.c;
+        c.fillStyle=i===s.p?themeC('--green'):i===s.c?themeC('--gold'):d?themeC('--green'):themeC('--panel');
+        c.globalAlpha=d?.6:1;c.fillRect(px+1,16,bw-2,26);c.strokeStyle=themeC('--line');c.strokeRect(px+1,16,bw-2,26);
+        c.fillStyle=d||i===s.p?'#0c1410':i===s.c?'#14101a':themeC('--ink');c.fillText(v,px+bw/2,29);
+        if(i<n-1&&!d){c.fillStyle=themeC('--faded');c.fillText('→',px+bw-1,29);}c.globalAlpha=1;});
+      if(s.r.length){c.fillStyle=themeC('--faded');c.font='11px "Rubik",sans-serif';c.fillText(s.r.join('←'),W/2,56);}
+    }
+  },
+  'hash-lookup': {
+    name: 'Hash Complement Lookup',
+    code: ['for i,x in nums:','  comp = target - x','  if comp in seen: found','  seen[x] = i'],
+    init(p) {const a=p.nums||[2,7,11,15,1,8];return {a,t:p.target||9,seen:{},i:0,f:null};},
+    step(s) {
+      if(s.f||s.i>=s.a.length) return {done:true,line:s.f?2:0,note:s.f||'not found'};
+      const x=s.a[s.i],c=s.t-x;
+      if(c in s.seen){s.f=x+'+'+c+'='+s.t+' (i='+s.seen[c]+','+s.i+')';return {line:2,note:s.f};}
+      s.seen[x]=s.i;s.i++;return {line:3,note:'seen['+x+']='+s.seen[x]+', comp='+c+' not in seen'};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,90);
+      const n=s.a.length,bw=Math.min(42,(W-8)/n),x0=(W-bw*n)/2;
+      c.textAlign='center';c.textBaseline='middle';c.font='12px "IBM Plex Mono"';
+      s.a.forEach((v,i)=>{const px=x0+i*bw,done=i<s.i,cur=i===s.i;
+        c.fillStyle=s.f&&(v===s.a[s.i]||v===s.t-s.a[s.i])?themeC('--green'):cur?themeC('--gold'):done?themeC('--panel'):'transparent';
+        c.globalAlpha=done||cur?1:.25;c.fillRect(px+1,4,bw-2,26);c.strokeStyle=themeC('--line');c.strokeRect(px+1,4,bw-2,26);
+        c.fillStyle=cur?'#14101a':themeC('--ink');c.fillText(v,px+bw/2,17);c.globalAlpha=1;});
+      const keys=Object.keys(s.seen);if(keys.length){
+        const sw=Math.min(32,(W-8)/keys.length),sx=(W-sw*keys.length)/2;
+        c.font='10px "IBM Plex Mono"';c.fillStyle=themeC('--faded');c.fillText('seen{}',20,58);
+        keys.forEach((k,i)=>{const px=sx+i*sw;c.fillStyle=themeC('--oracle');c.globalAlpha=.5;
+          c.fillRect(px+1,48,sw-2,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(px+1,48,sw-2,20);
+          c.fillStyle='#14101a';c.fillText(k,px+sw/2,58);});
+      }
+      c.fillStyle=themeC('--faded');c.font='10px "Rubik",sans-serif';c.fillText('target='+s.t,W/2,82);
+    }
+  },
+  'trie-insert': {
+    name: 'Trie Insert/Search',
+    code: ['node = root','for ch in word:','  if ch not in node:','    create node','  descend to node[ch]','mark is_end'],
+    init(p) {
+      const ws=p.words||['cat','car','card'];
+      const root={ch:'',c:{},e:false};
+      return {root,ws,wi:0,ci:0,cur:root,path:[],phase:'insert',done:false};
+    },
+    step(s) {
+      if(s.done) return {done:true,line:0,note:'done'};
+      if(s.wi>=s.ws.length){s.done=true;return {done:true,line:0,note:s.ws.length+' words inserted'};}
+      const w=s.ws[s.wi];
+      if(s.ci>=w.length){s.cur.e=true;s.wi++;s.ci=0;s.cur=s.root;s.path=['root'];
+        return {line:5,note:'mark end: "'+w+'"'};}
+      const ch=w[s.ci];const created=!s.cur.c[ch];
+      if(created) s.cur.c[ch]={ch,c:{},e:false};
+      s.cur=s.cur.c[ch];s.path.push(ch);s.ci++;
+      return {line:created?3:4,note:(created?'new ':'go ')+'"'+ch+'" ('+s.path.join('→')+')'};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,120);
+      c.textAlign='center';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const R=12;let q=[{n:s.root,x:W/2,y:16}],drawn=[];
+      while(q.length){const{n,x,y}=q.shift();drawn.push({n,x,y});
+        const ks=Object.keys(n.c),tot=ks.length;if(!tot)continue;
+        const sp=Math.min(50,W/(tot+1));
+        ks.forEach((k,i)=>{const cx=x+(i-(tot-1)/2)*sp,cy=y+32;
+          c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(x,y+R);c.lineTo(cx,cy-R);c.stroke();
+          q.push({n:n.c[k],x:cx,y:cy});});}
+      drawn.forEach(({n,x,y})=>{const isCur=n===s.cur;
+        c.fillStyle=isCur?themeC('--gold'):n.e?themeC('--green'):themeC('--panel');
+        c.beginPath();c.arc(x,y,R,0,7);c.fill();c.strokeStyle=themeC('--line');c.stroke();
+        c.fillStyle=isCur?'#14101a':themeC('--ink');c.fillText(n.ch||'*',x,y);});
+      if(s.wi<s.ws.length){c.fillStyle=themeC('--faded');c.font='10px "Rubik",sans-serif';
+        c.fillText('inserting: "'+s.ws[s.wi]+'" ('+s.path.join('→')+')',W/2,H-6);}
+    }
+  },
+  'partition-row': {
+    name: 'Window ROW_NUMBER',
+    code: ['PARTITION BY region','ORDER BY amount DESC','ROW_NUMBER() assigns rn','rn=1 per partition → top'],
+    init(p) {
+      const rows=p.rows||[{r:'N',n:'Alice',a:500},{r:'N',n:'Bob',a:300},{r:'S',n:'Carol',a:400},{r:'S',n:'Dana',a:200},{r:'S',n:'Eve',a:100}];
+      rows.sort((a,b)=>a.r<b.r?-1:a.r>b.r?1:b.a-a.a);
+      return {rows,i:0,rn:[],part:null,pn:0};
+    },
+    step(s) {
+      if(s.i>=s.rows.length) return {done:true,line:3,note:'done: filter rn=1 for top per group'};
+      const r=s.rows[s.i];if(r.r!==s.part){s.part=r.r;s.pn=0;}
+      s.pn++;s.rn.push(s.pn);s.i++;
+      return {line:2,note:r.n+' ('+r.r+') amount='+r.a+' → rn='+s.pn};
+    },
+    draw(s,cv) {
+      const[W,c]=cvS(cv,Math.max(80,s.rows.length*22+30));
+      c.textAlign='start';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const cols=[30,90,170,220],rh=20;
+      c.fillStyle=themeC('--faded');c.font='700 10px "Rubik",sans-serif';
+      ['rgn','name','amount','rn'].forEach((h,i)=>c.fillText(h,cols[i],10));
+      c.font='11px "IBM Plex Mono"';
+      let prevR='';s.rows.forEach((r,i)=>{const y=22+i*rh,vis=i<s.i,cur=i===s.i-1;
+        const newP=r.r!==prevR;prevR=r.r;
+        if(newP&&i>0){c.strokeStyle=themeC('--line');c.beginPath();c.moveTo(10,y-2);c.lineTo(W-10,y-2);c.stroke();}
+        c.globalAlpha=vis?1:.3;
+        if(cur){c.fillStyle=themeC('--gold');c.globalAlpha=.2;c.fillRect(8,y-2,W-16,rh);c.globalAlpha=1;}
+        c.fillStyle=vis?themeC('--ink'):themeC('--faded');
+        c.fillText(r.r,cols[0],y+8);c.fillText(r.n,cols[1],y+8);c.fillText(r.a,cols[2],y+8);
+        if(vis){const rn=s.rn[i];c.fillStyle=rn===1?themeC('--green'):themeC('--ink');
+          c.fillText(rn,cols[3],y+8);}
+        c.globalAlpha=1;});
+    }
+  },
+  'tool-loop': {
+    name:'Agent Tool Loop',
+    code:['msgs=[user]','resp=chat(msgs)','if tool_calls:','  run, append result','  goto 2','else: answer'],
+    init(){return{ms:[{r:'user',t:'200 ILS in USD?'}],si:0,dn:false};},
+    step(s){if(s.dn)return{done:true,line:5,note:'done'};
+      const p=(r,t)=>s.ms.push({r,t});
+      switch(s.si){case 0:p('ast','call get_rate');s.si=1;return{line:2,note:'model calls get_rate'};
+      case 1:p('tool','0.27');s.si=2;return{line:3,note:'tool: rate=0.27'};
+      case 2:p('ast','call mul(200,.27)');s.si=3;return{line:2,note:'model calls multiply'};
+      case 3:p('tool','54');s.si=4;return{line:3,note:'tool: 54'};
+      default:p('ast','200 ILS = 54 USD');s.dn=true;return{line:5,note:'stop → answer'};}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,Math.max(60,s.ms.length*20+4));
+      c.textBaseline='middle';const cl={user:'--oracle',ast:'--green',tool:'--gold'};
+      s.ms.forEach((m,i)=>{const y=2+i*18;
+        c.fillStyle=themeC(cl[m.r]||'--faded');c.globalAlpha=.18;c.fillRect(4,y,W-8,17);c.globalAlpha=1;
+        c.font='700 8px "Rubik",sans-serif';c.fillStyle=themeC(cl[m.r]||'--ink');c.fillText(m.r,8,y+9);
+        c.font='10px "IBM Plex Mono"';c.fillStyle=themeC('--ink');c.fillText(m.t,42,y+9);
+        if(i===s.ms.length-1){c.strokeStyle=themeC('--gold');c.lineWidth=2;c.strokeRect(4,y,W-8,17);c.lineWidth=1;}});}
+  },
+  'rag-pipeline': {
+    name:'RAG Pipeline',
+    code:['split(doc) → chunks','embed(chunks)','search(query) → top_k','llm(query+top_k) → answer'],
+    init(p){const ch=p.chunks||['A','B','C','D'];return{ch,i:0,tk:[],ans:''};},
+    step(s){if(s.i>3)return{done:true,line:3,note:'done'};
+      switch(s.i){case 0:s.i=1;return{line:0,note:s.ch.length+' chunks'};
+      case 1:s.i=2;return{line:1,note:'embedded as vectors'};
+      case 2:s.tk=[0,2];s.i=3;return{line:2,note:'top 2: '+s.ch[0]+','+s.ch[2]};
+      default:s.ans='grounded';s.i=4;return{line:3,note:'LLM → answer'};}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,s.ans?100:s.i>=3?72:46);
+      const n=s.ch.length,bw=Math.min(56,(W-30)/n),x0=(W-bw*n)/2;
+      c.textAlign='center';c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      s.ch.forEach((ch,i)=>{const px=x0+i*bw,hit=s.tk.includes(i),em=s.i>=2;
+        c.fillStyle=hit?themeC('--green'):em?themeC('--panel'):'transparent';c.globalAlpha=hit?.4:em?.15:.1;
+        c.fillRect(px+1,4,bw-2,22);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(px+1,4,bw-2,22);
+        c.fillStyle=hit?themeC('--green'):themeC('--ink');c.fillText(ch,px+bw/2,15);});
+      if(s.i>=3){c.fillStyle=themeC('--oracle');c.globalAlpha=.12;c.fillRect(16,34,W-32,20);c.globalAlpha=1;
+        c.fillStyle=themeC('--ink');c.fillText('query+top_k→prompt',W/2,44);}
+      if(s.ans){c.fillStyle=themeC('--green');c.globalAlpha=.12;c.fillRect(16,62,W-32,20);c.globalAlpha=1;
+        c.fillStyle=themeC('--ink');c.fillText(s.ans,W/2,72);}}
+  },
+  'stream-wiring': {
+    name:'stdin/stdout/stderr',
+    code:['fd 0,1,2 open','> file: 1→file','2> file: 2→file','a|b: a.1→b.0'],
+    init(){return{i:0,fd:['keyboard','terminal','terminal']};},
+    step(s){if(s.i>3)return{done:true,line:3,note:'done'};
+      switch(s.i){case 0:s.i=1;return{line:0,note:'3 fd open'};
+      case 1:s.fd[1]='out.txt';s.i=2;return{line:1,note:'stdout→file'};
+      case 2:s.fd[2]='err.txt';s.i=3;return{line:2,note:'stderr→file'};
+      default:s.fd[0]='pipe(ls)';s.fd[1]='terminal';s.fd[2]='terminal';s.i=4;return{line:3,note:'pipe'};}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,84);const nm=['0:in','1:out','2:err'],cl=['--oracle','--green','--red'],x1=W-76;
+      c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      s.fd.forEach((t,i)=>{const y=6+i*26;
+        c.fillStyle=themeC(cl[i]);c.globalAlpha=.2;c.fillRect(4,y,58,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(4,y,58,20);
+        c.fillStyle=themeC('--ink');c.fillText(nm[i],8,y+10);
+        c.strokeStyle=themeC('--faded');c.beginPath();c.moveTo(62,y+10);c.lineTo(x1,y+10);c.stroke();
+        c.fillStyle=themeC('--gold');c.globalAlpha=.2;c.fillRect(x1,y,74,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(x1,y,74,20);
+        c.fillStyle=themeC('--ink');c.fillText(t,x1+3,y+10);});}
+  },
+  'layer-stack':{
+    name:'Layer Stack',
+    code:['layer 0','layer 1','layer 2','layer 3'],
+    init(p){const L=p.layers||['Terminal','Shell','Kernel','Hardware'];return{L,i:-1};},
+    step(s){s.i++;if(s.i>=s.L.length)return{done:true,line:s.L.length-1,note:'all layers active'};
+      return{line:s.i,note:'→ '+s.L[s.i]};},
+    draw(s,cv){const[W,c]=cvS(cv,s.L.length*26+4);
+      c.textAlign='center';c.textBaseline='middle';c.font='11px "IBM Plex Mono"';
+      const cl=['--oracle','--green','--gold','--red'];
+      s.L.forEach((l,i)=>{const y=2+i*24,on=i<=s.i;
+        c.fillStyle=themeC(cl[i%4]);c.globalAlpha=on?.22:.06;c.fillRect(20,y,W-40,21);c.globalAlpha=1;
+        c.strokeStyle=themeC('--line');c.strokeRect(20,y,W-40,21);
+        c.fillStyle=themeC(on?'--ink':'--faded');c.fillText(l,W/2,y+11);
+        if(i>0&&on){c.strokeStyle=themeC(cl[i%4]);c.beginPath();c.moveTo(W/2,y);c.lineTo(W/2,y-3);c.stroke();}});}
+  },
+  'process-fork':{
+    name:'Process Fork',
+    code:['parent PID=1','fork → child PID=2','child runs','parent waits'],
+    init(){return{ps:[{id:1,nm:'bash',st:'run'}],i:0};},
+    step(s){if(s.i>3)return{done:true,line:3,note:'done'};
+      switch(s.i){case 0:s.i=1;return{line:0,note:'parent running'};
+      case 1:s.ps.push({id:2,nm:'ls',st:'run'});s.ps[0].st='wait';s.i=2;return{line:1,note:'fork → child PID=2'};
+      case 2:s.ps[1].st='exit';s.i=3;return{line:2,note:'child exits'};
+      default:s.ps[0].st='run';s.i=4;return{line:3,note:'parent resumes'};}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,s.ps.length*30+8);
+      c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      const sc={run:'--green',wait:'--gold',exit:'--faded'};
+      s.ps.forEach((p,i)=>{const y=4+i*28;
+        c.fillStyle=themeC(sc[p.st]);c.globalAlpha=p.st==='exit'?.1:.2;c.fillRect(4,y,W-8,24);c.globalAlpha=1;
+        c.strokeStyle=themeC('--line');c.strokeRect(4,y,W-8,24);
+        c.fillStyle=themeC('--ink');c.fillText('PID='+p.id+' '+p.nm+' ['+p.st+']',10,y+12);
+        if(i>0){c.strokeStyle=themeC('--faded');c.beginPath();c.moveTo(30,y);c.lineTo(30,y-4);c.stroke();}});}
+  },
+  'path-scan':{
+    name:'PATH Lookup',
+    code:['read $PATH dirs','for dir in PATH:','  if dir/cmd exists → run','first match wins'],
+    init(p){const D=p.dirs||['/usr/local/bin','/usr/bin','/bin','/snap/bin'];
+      return{D,cmd:p.cmd||'python',hit:1,i:-1,found:false};},
+    step(s){s.i++;if(s.found||s.i>=s.D.length)return{done:true,line:3,note:s.found?'found at '+s.D[s.hit]:'not found'};
+      if(s.i===s.hit){s.found=true;return{line:2,note:s.D[s.i]+'/'+s.cmd+' ✓'};}
+      return{line:1,note:s.D[s.i]+' skip'};},
+    draw(s,cv){const[W,c]=cvS(cv,s.D.length*24+8);
+      c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      s.D.forEach((d,i)=>{const y=4+i*22,hit=i===s.hit&&s.found,scn=i<=s.i;
+        c.fillStyle=themeC(hit?'--green':scn?'--panel':'transparent');c.globalAlpha=hit?.3:scn?.12:.05;
+        c.fillRect(4,y,W-8,20);c.globalAlpha=1;c.strokeStyle=themeC('--line');c.strokeRect(4,y,W-8,20);
+        c.fillStyle=themeC(hit?'--green':scn?'--ink':'--faded');c.fillText(d+(hit?'/'+s.cmd+' ✓':''),10,y+10);});}
+  },
+  'cte-expand':{
+    name:'CTE Expansion',
+    code:['anchor: root rows','iter 1: children','iter 2: grandchildren','UNION ALL → done'],
+    init(p){const R=p.rows||[['CEO',null]];return{R,all:[...R],i:0,gen:[[...R]]};},
+    step(s){if(s.i>2)return{done:true,line:3,note:s.all.length+' total rows'};
+      switch(s.i){case 0:s.i=1;return{line:0,note:'anchor: '+s.R.length+' rows'};
+      case 1:{const n=[['VP-Eng','CEO'],['VP-Sales','CEO']];s.all.push(...n);s.gen.push(n);s.i=2;return{line:1,note:'+2 children'};}
+      default:{const n=[['Dev1','VP-Eng'],['Dev2','VP-Eng']];s.all.push(...n);s.gen.push(n);s.i=3;return{line:2,note:'+2 grandchildren'};}}
+    },
+    draw(s,cv){const[W,c]=cvS(cv,s.gen.length*32+8);
+      c.textBaseline='middle';c.font='10px "IBM Plex Mono"';
+      const cl=['--oracle','--green','--gold'];
+      s.gen.forEach((g,gi)=>{const y=4+gi*30,n=g.length,bw=Math.min(80,(W-16)/n);
+        g.forEach((r,ri)=>{const px=8+ri*bw;
+          c.fillStyle=themeC(cl[gi%3]);c.globalAlpha=.18;c.fillRect(px,y,bw-4,24);c.globalAlpha=1;
+          c.strokeStyle=themeC('--line');c.strokeRect(px,y,bw-4,24);
+          c.fillStyle=themeC('--ink');c.fillText(r[0],px+4,y+12);});});}
+  }
+};
+
+function widgetAlgviz(d) {
+  const algo = ALGS[d.algo]; if (!algo) return null;
+  const w = widgetShell(d.title || 'צפו באלגוריתם רץ: ' + algo.name);
+  const codeEl = document.createElement('div'); codeEl.className = 'av-code';
+  codeEl.innerHTML = algo.code.map((l, i) => `<div class="av-ln" data-l="${i}">${l.replace(/</g, '&lt;')}</div>`).join('');
+  const cv = document.createElement('canvas');
+  const note = document.createElement('div'); note.className = 'w-readout';
+  const ctr = document.createElement('div'); ctr.className = 'w-controls';
+  ctr.innerHTML = `<button class="w-btn av-play">הפעל</button><button class="w-btn av-step">צעד</button>
+    <button class="w-btn av-reset">איפוס</button>מהירות <input type="range" min="1" max="8" value="3" aria-label="מהירות ההדגמה">`;
+  w.appendChild(cv); w.appendChild(codeEl); w.appendChild(note); w.appendChild(ctr);
+  let s, timer = null;
+  const speed = ctr.querySelector('input'), play = ctr.querySelector('.av-play');
+  function highlight(l) { codeEl.querySelectorAll('.av-ln').forEach(e => e.classList.toggle('cur', +e.dataset.l === l)); }
+  function reset() { stop(); s = algo.init(d); algo.draw(s, cv); highlight(-1); note.textContent = ''; }
+  function stop() { if (timer) { clearInterval(timer); timer = null; play.textContent = 'הפעל'; } }
+  function one() {
+    const r = algo.step(s); algo.draw(s, cv); highlight(r.line); note.textContent = r.note || '';
+    if (r.done) { stop(); toast('האלגוריתם סיים'); }
+    return r.done;
+  }
+  play.onclick = () => {
+    if (timer) return stop();
+    play.textContent = 'עצור';
+    timer = setInterval(() => { if (one()) stop(); }, 1400 / +speed.value);
+  };
+  speed.oninput = () => { if (timer) { clearInterval(timer); timer = setInterval(() => { if (one()) stop(); }, 1400 / +speed.value); } };
+  ctr.querySelector('.av-step').onclick = () => { stop(); one(); };
+  ctr.querySelector('.av-reset').onclick = reset;
+  requestAnimationFrame(reset);
+  addEventListener('resize', () => s && algo.draw(s, cv), { passive: true });
+  return w;
+}
+
+function widgetDecay(d) {
+  const w = widgetShell(d.title || 'מעבדה: כוחה של ההנחתה');
+  const cv = document.createElement('canvas'); w.appendChild(cv);
+  const ctr = document.createElement('div'); ctr.className = 'w-controls';
+  ctr.innerHTML = `γ <input type="range" min="0.50" max="0.99" step="0.01" value="${d.gamma || 0.9}" aria-label="מקדם הנחתה גמא"><b></b>`;
+  const ro = document.createElement('div'); ro.className = 'w-readout';
+  w.appendChild(ctr); w.appendChild(ro);
+  const slider = ctr.querySelector('input'), val = ctr.querySelector('b');
+  function draw() {
+    const g = +slider.value; val.textContent = 'γ = ' + g.toFixed(2);
+    const W = cv.clientWidth || 320, H = 150, dpr = Math.min(devicePixelRatio, 2);
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+    const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.clearRect(0, 0, W, H);
+    const N = 16, bw = W / N * 0.62, gap = W / N;
+    for (let k = 0; k < N; k++) {
+      const h = Math.pow(g, k) * (H - 28);
+      x.fillStyle = k === 0 ? themeC('--gold-hi') : themeC('--gold');
+      x.globalAlpha = 0.35 + 0.65 * Math.pow(g, k);
+      x.fillRect(W - (k + 1) * gap + (gap - bw) / 2, H - 18 - h, bw, h);
+      x.globalAlpha = 1;
+    }
+    x.fillStyle = themeC('--faded'); x.font = '11px IBM Plex Mono';
+    x.textAlign = 'right'; x.fillText('k=0', W - 4, H - 4);
+    x.textAlign = 'left'; x.fillText('k=' + (N - 1), 4, H - 4);
+    const sum = 1 / (1 - g), horizon = Math.round(1 / (1 - g));
+    ro.innerHTML = `סכום אינסופי של reward=1: <b>${sum.toFixed(1)}</b> · אופק אפקטיבי ≈ <b>${horizon}</b> צעדים`;
+  }
+  slider.oninput = draw;
+  requestAnimationFrame(draw);
+  addEventListener('resize', draw, { passive: true });
+  return w;
+}
+
+function widgetGridworld(d) {
+  const w = widgetShell(d.title || 'משחק: אתה ה-Policy');
+  const cv = document.createElement('canvas'); w.appendChild(cv);
+  const ro = document.createElement('div'); ro.className = 'w-readout';
+  const ctr = document.createElement('div'); ctr.className = 'w-controls';
+  ctr.innerHTML = `<span>הקש על משבצת שכנה כדי לזוז. מטרה: +1. מלכודת: -1. כל צעד: -0.04.</span><button class="w-btn">איפוס</button>`;
+  w.appendChild(ro); w.appendChild(ctr);
+  const N = 4, GOAL = [0, 0], TRAP = [1, 2], START = [3, 3], gamma = d.gamma || 0.9;
+  let agent, steps, G, disc, done;
+  function reset() { agent = [...START]; steps = 0; G = 0; disc = 1; done = false; paint(); }
+  function cell(px, py) { const s = (cv.clientWidth || 300) / N; return [Math.floor(px / s), Math.floor(py / s)]; }
+  function paint() {
+    const W = cv.clientWidth || 300, s = W / N, H = W, dpr = Math.min(devicePixelRatio, 2);
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+    const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.clearRect(0, 0, W, H);
+    x.strokeStyle = themeC('--line'); x.lineWidth = 1;
+    for (let i = 0; i <= N; i++) {
+      x.beginPath(); x.moveTo(i * s, 0); x.lineTo(i * s, H); x.stroke();
+      x.beginPath(); x.moveTo(0, i * s); x.lineTo(W, i * s); x.stroke();
+    }
+    const box = (c, col, glyph) => {
+      x.fillStyle = col; x.globalAlpha = .25; x.fillRect(c[0] * s + 2, c[1] * s + 2, s - 4, s - 4); x.globalAlpha = 1;
+      x.fillStyle = col; x.font = '700 ' + (s * 0.34) + 'px "Rubik", "Noto Sans Hebrew", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(glyph, c[0] * s + s / 2, c[1] * s + s / 2);
+    };
+    box(GOAL, themeC('--green'), '+1'); box(TRAP, themeC('--red'), '-1');
+    x.beginPath(); x.arc(agent[0] * s + s / 2, agent[1] * s + s / 2, s * 0.22, 0, Math.PI * 2);
+    x.fillStyle = themeC('--gold'); x.shadowColor = themeC('--gold'); x.shadowBlur = 12; x.fill(); x.shadowBlur = 0;
+    ro.innerHTML = done
+      ? `סוף המסלול. צעדים: <b>${steps}</b> · תשואה מונחתת G = <b>${G.toFixed(3)}</b> (γ=${gamma})`
+      : `צעדים: <b>${steps}</b> · תשואה מונחתת עד כה: <b>${G.toFixed(3)}</b>`;
+  }
+  cv.addEventListener('pointerup', e => {
+    if (done) return;
+    const r = cv.getBoundingClientRect();
+    const [cx, cy] = cell(e.clientX - r.left, e.clientY - r.top);
+    if (Math.abs(cx - agent[0]) + Math.abs(cy - agent[1]) !== 1) return;
+    agent = [cx, cy]; steps++;
+    let r_t = -0.04;
+    if (cx === GOAL[0] && cy === GOAL[1]) { r_t += 1; done = true; }
+    if (cx === TRAP[0] && cy === TRAP[1]) { r_t += -1; done = true; }
+    G += disc * r_t; disc *= gamma;
+    paint();
+    if (done) toast(G > 0 ? 'ניצחון. G=' + G.toFixed(3) : 'נפילה. G=' + G.toFixed(3));
+  });
+  ctr.querySelector('button').onclick = reset;
+  requestAnimationFrame(reset);
+  return w;
+}
+
+function widgetSeverityFilter(d) {
+  const cats = d.categories || ['violence', 'hate', 'sexual', 'self-harm'];
+  const catHe = { violence: 'אלימות', hate: 'שנאה', sexual: 'מיני', 'self-harm': 'פגיעה עצמית' };
+  const bands = [
+    { name: 'Safe', he: 'בטוח', max: 1, col: '--green' },
+    { name: 'Low', he: 'נמוך', max: 3, col: '--gold' },
+    { name: 'Medium', he: 'בינוני', max: 5, col: '--oracle' },
+    { name: 'High', he: 'גבוה', max: 7, col: '--red' }
+  ];
+  const w = widgetShell(d.title || 'Content Safety: סף חומרה לפי קטגוריה');
+  const cv = document.createElement('canvas'); w.appendChild(cv);
+  const ro = document.createElement('div'); ro.className = 'w-readout'; w.appendChild(ro);
+  const ctr = document.createElement('div'); ctr.className = 'w-controls'; ctr.style.flexWrap = 'wrap';
+  const thresholds = {};
+  cats.forEach(c => { thresholds[c] = d.defaults?.[c] ?? 2; });
+  cats.forEach(c => {
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin:4px 8px';
+    const sp = document.createElement('span'); sp.textContent = catHe[c] || c; lbl.appendChild(sp);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = '0'; inp.max = '7';
+    inp.step = '1'; inp.value = String(thresholds[c]); inp.dataset.cat = c;
+    inp.setAttribute('aria-label', 'סף ' + (catHe[c] || c)); lbl.appendChild(inp);
+    const b = document.createElement('b'); b.textContent = String(thresholds[c]); lbl.appendChild(b);
+    ctr.appendChild(lbl);
+  });
+  w.appendChild(ctr);
+  function draw() {
+    const[W,x]=cvS(cv,170);
+    const n = cats.length, barH = 22, gap = 10, topY = 28;
+    const scaleL = 80, scaleR = W - 12, scaleW = scaleR - scaleL;
+    x.fillStyle = themeC('--faded'); x.font = '11px "Rubik", "Noto Sans Hebrew", sans-serif';
+    x.textAlign = 'center';
+    for (let s = 0; s <= 7; s++) {
+      const sx = scaleL + (s / 7) * scaleW;
+      x.fillStyle = themeC('--faded'); x.fillText(s, sx, topY - 6);
+    }
+    bands.forEach(b => {
+      const x0 = scaleL + ((b.max <= 1 ? 0 : bands[bands.indexOf(b) - 1]?.max ?? 0) / 7) * scaleW;
+      const x1 = scaleL + (b.max / 7) * scaleW;
+      x.fillStyle = themeC(b.col); x.globalAlpha = 0.12;
+      x.fillRect(x0, topY, x1 - x0, n * (barH + gap));
+      x.globalAlpha = 1;
+      x.fillStyle = themeC(b.col); x.font = '700 9px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.fillText(b.he, (x0 + x1) / 2, topY + n * (barH + gap) + 14);
+    });
+    cats.forEach((c, i) => {
+      const y = topY + i * (barH + gap);
+      const thr = thresholds[c];
+      const thrX = scaleL + (thr / 7) * scaleW;
+      x.fillStyle = themeC('--panel'); x.globalAlpha = 0.4;
+      x.fillRect(scaleL, y, scaleW, barH); x.globalAlpha = 1;
+      x.strokeStyle = themeC('--line'); x.strokeRect(scaleL, y, scaleW, barH);
+      x.fillStyle = themeC('--red'); x.globalAlpha = 0.25;
+      x.fillRect(thrX, y, scaleR - thrX, barH); x.globalAlpha = 1;
+      x.fillStyle = themeC('--gold'); x.fillRect(thrX - 2, y - 2, 4, barH + 4);
+      x.fillStyle = themeC('--ink'); x.font = '12px "Rubik", "Noto Sans Hebrew", sans-serif';
+      x.textAlign = 'right'; x.fillText(catHe[c] || c, scaleL - 6, y + barH / 2 + 4);
+    });
+    x.textAlign = 'center';
+    const blocked = cats.filter(c => thresholds[c] <= 2).length;
+    const open = cats.length - blocked;
+    ro.innerHTML = `חסום ברמה נמוכה: <b>${blocked}</b> · מתיר עד בינוני+: <b>${open}</b>`;
+  }
+  ctr.querySelectorAll('input').forEach(inp => {
+    inp.oninput = () => {
+      thresholds[inp.dataset.cat] = +inp.value;
+      inp.nextElementSibling.textContent = inp.value;
+      draw();
+    };
+  });
+  requestAnimationFrame(draw);
+  addEventListener('resize', draw, { passive: true });
+  return w;
+}
+
+function widgetKvCalc(d) {
+  const w = widgetShell(d.title || 'KV Cache Calculator');
+  const cv = document.createElement('canvas'); w.appendChild(cv);
+  const ro = document.createElement('div'); ro.className = 'w-readout'; w.appendChild(ro);
+  const ctr = document.createElement('div'); ctr.className = 'w-controls'; ctr.style.flexWrap='wrap';
+  const params = {L:d.L||32, H:d.H||8, dh:d.dh||128, S:d.S||4096, b:d.b||2};
+  const labels = { L: 'שכבות L', H: 'ראשי KV H', dh: 'מימד ראש d_h', S: 'טוקנים S', b: 'בתים b' };
+  const ranges = { L: [1, 128, 1], H: [1, 128, 1], dh: [32, 256, 32], S: [128, 131072, 128], b: [1, 4, 1] };
+  Object.keys(params).forEach(k => {
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin:4px 6px';
+    const sp = document.createElement('span'); sp.textContent = labels[k]; lbl.appendChild(sp);
+    const inp = document.createElement('input'); inp.type = 'range';
+    inp.min = ranges[k][0]; inp.max = ranges[k][1]; inp.step = ranges[k][2];
+    inp.value = params[k]; inp.dataset.param = k; lbl.appendChild(inp);
+    const v = document.createElement('b'); v.textContent = params[k]; lbl.appendChild(v);
+    ctr.appendChild(lbl);
+  });
+  w.appendChild(ctr);
+  function fmt(bytes) {
+    if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + ' GB';
+    if (bytes >= 1e6) return (bytes / 1e6).toFixed(1) + ' MB';
+    return (bytes / 1e3).toFixed(0) + ' KB';
+  }
+  function draw() {
+    const { L, H, dh, S, b } = params;
+    const total = 2 * L * H * dh * S * b;
+    const perLayer = 2 * H * dh * S * b;
+    const[W,x]=cvS(cv,90);
+    const barW = W - 40, barH = 28, barY = 44;
+    const frac = Math.min(total / 2199023255552, 1);
+    x.fillStyle = themeC('--panel'); x.globalAlpha = 0.3;
+    x.fillRect(20, barY, barW, barH); x.globalAlpha = 1;
+    const col = total > 16e9 ? themeC('--red') : total > 2e9 ? themeC('--oracle') : themeC('--green');
+    x.fillStyle = col; x.globalAlpha = 0.7;
+    x.fillRect(20, barY, barW * frac, barH); x.globalAlpha = 1;
+    x.strokeStyle = themeC('--line'); x.strokeRect(20, barY, barW, barH);
+    x.fillStyle = themeC('--ink'); x.font = '700 14px "IBM Plex Mono"';
+    x.textAlign = 'center'; x.fillText(fmt(total), W / 2, barY + barH / 2 + 5);
+    x.fillStyle = themeC('--gold'); x.font = '700 12px "Rubik", "Noto Sans Hebrew", sans-serif';
+    x.fillText('2 × L × H × d_h × S × b', W / 2, 28);
+    const pct = total > 0 ? ((total / 16e9) * 100).toFixed(1) : '0';
+    ro.textContent = fmt(total) + ' סה"כ · ' + pct + '% ממשקלי 8B model · ' + fmt(perLayer) + ' לשכבה';
+  }
+  ctr.querySelectorAll('input').forEach(inp => {
+    inp.oninput = () => {
+      params[inp.dataset.param] = +inp.value;
+      inp.nextElementSibling.textContent = inp.value;
+      draw();
+    };
+  });
+  requestAnimationFrame(draw);
+  addEventListener('resize', draw, { passive: true });
+  return w;
+}
+
+// The stored answer keeps a short copy of the question. המנטור works from state
+// alone, and a block id like u-m0-streams-q1 is not something a human recognises
+// months later. Answers written before this existed fall back to their id.
+function qLabel(t) { return String(t || '').replace(/\s+/g, ' ').trim().slice(0, 140); }
+
+function buildQuiz(d, onDone) {
+  const wrap = document.createElement('div'); wrap.className = 'qz'; wrap.dataset.qid = d.id;
+  const dir = isLtr(d.q) ? 'ltr' : 'rtl';
+  wrap.innerHTML = `<p class="qq" dir="${dir}">${d.q}</p><div class="opts"></div>
+    <label class="conf-row">ביטחון <input type="range" min="0" max="100" step="5" value="70" aria-label="ביטחון בתשובה, באחוזים"><b>70%</b></label>
+    <div class="qz-foot"><button class="qz-check" disabled>בדיקה</button>
+    <span class="qz-msg"></span><span class="qz-pts"></span></div>`;
+  const confInp = wrap.querySelector('.conf-row input'), confVal = wrap.querySelector('.conf-row b');
+  confInp.oninput = () => confVal.textContent = confInp.value + '%';
+  const opts = wrap.querySelector('.opts');
+  const btns = d.options.map((o, i) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.dir = isLtr(o) ? 'ltr' : 'rtl';
+    b.textContent = o; b.dataset.i = i; opts.appendChild(b); return b;
+  });
+  const check = wrap.querySelector('.qz-check'), msg = wrap.querySelector('.qz-msg'), pts = wrap.querySelector('.qz-pts');
+  const prior = S.answers[d.id];
+  let selected = -1, attempts = prior ? prior.attempts : 0;
+
+  const finish = (ok, chosen) => {
+    wrap.classList.add('answered');
+    btns.forEach(b => { b.disabled = true; b.classList.remove('sel'); });
+    btns[d.answer].classList.add('right');
+    if (!ok && chosen >= 0 && chosen !== d.answer) btns[chosen].classList.add('wrong');
+    check.remove(); wrap.querySelector('.conf-row').remove();
+    msg.textContent = ok ? 'נכון.' : 'התשובה מסומנת.';
+    msg.className = 'qz-msg ' + (ok ? 'ok' : 'no');
+    if (ok) pts.textContent = attempts === 1 ? '+2' : '+1';
+    if (d.explain) {
+      const ex = document.createElement('p'); ex.className = 'qz-explain';
+      ex.dir = isLtr(d.explain) ? 'ltr' : 'rtl'; ex.textContent = d.explain; wrap.appendChild(ex);
+    }
+    if (onDone) onDone({ ok, attempts, conf: prior ? prior.conf : +confInp.value });
+  };
+  if (prior) { finish(prior.ok, prior.chosen ?? -1); return wrap; }
+
+  btns.forEach(b => b.onclick = () => {
+    btns.forEach(x => x.classList.remove('sel')); b.classList.add('sel');
+    selected = +b.dataset.i; check.disabled = false;
+  });
+  check.onclick = () => {
+    if (selected < 0) return;
+    attempts++;
+    const conf = +confInp.value;
+    if (selected === d.answer) {
+      S.answers[d.id] = { ok: true, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, q: qLabel(d.q), date: iso(new Date()) }; store.save();
+      finish(true, selected); award(d.tree, attempts === 1 ? 2 : 1, wrap, attempts === 1, d.skill);
+    } else if (attempts >= 2) {
+      S.answers[d.id] = { ok: false, attempts, chosen: selected, conf, tree: d.tree, skill: d.skill, q: qLabel(d.q), date: iso(new Date()) }; store.save();
+      combo = 0;
+      finish(false, selected); shake(wrap); paintRing();
+    } else {
+      msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no';
+      btns[selected].classList.add('wrong'); btns[selected].disabled = true;
+      selected = -1; check.disabled = true; shake(wrap, 3);
+    }
+  };
+  return wrap;
+}
+
+function buildFillin(d, onDone) {
+  const wrap = document.createElement('div'); wrap.className = 'qz'; wrap.dataset.qid = d.id;
+  const dir = isLtr(d.prompt) ? 'ltr' : 'rtl';
+  wrap.innerHTML = `<p class="qq" dir="${dir}">${d.prompt}</p>
+    <input class="fill" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="...">
+    <label class="conf-row">ביטחון <input type="range" min="0" max="100" step="5" value="70" aria-label="ביטחון בתשובה, באחוזים"><b>70%</b></label>
+    <div class="qz-foot"><button class="qz-check">בדיקה</button>
+    <span class="qz-msg"></span><span class="qz-pts"></span></div>`;
+  const inp = wrap.querySelector('input.fill'), check = wrap.querySelector('.qz-check'),
+        msg = wrap.querySelector('.qz-msg'), pts = wrap.querySelector('.qz-pts');
+  const confInp = wrap.querySelector('.conf-row input'), confVal = wrap.querySelector('.conf-row b');
+  confInp.oninput = () => confVal.textContent = confInp.value + '%';
+  const norm = s => String(s).replace(/[\s'"׳]/g, '').toLowerCase();
+  const good = [d.answer, ...(d.alt || [])].map(norm);
+  const prior = S.answers[d.id];
+  let attempts = prior ? prior.attempts : 0;
+
+  const finish = ok => {
+    wrap.classList.add('answered');
+    inp.disabled = true; check.remove();
+    const cr = wrap.querySelector('.conf-row'); if (cr) cr.remove();
+    if (!ok) inp.value = d.answer;
+    msg.textContent = ok ? 'נכון.' : 'הפתרון הוצב בשדה.';
+    msg.className = 'qz-msg ' + (ok ? 'ok' : 'no');
+    if (ok) pts.textContent = attempts <= 1 ? '+2' : '+1';
+    if (d.explain) {
+      const ex = document.createElement('p'); ex.className = 'qz-explain';
+      ex.dir = isLtr(d.explain) ? 'ltr' : 'rtl'; ex.textContent = d.explain; wrap.appendChild(ex);
+    }
+    if (onDone) onDone({ ok, attempts, conf: prior ? prior.conf : +confInp.value });
+  };
+  if (prior) { inp.value = prior.val || d.answer; finish(prior.ok); return wrap; }
+
+  check.onclick = () => {
+    if (!inp.value.trim()) return;
+    attempts++;
+    const conf = +confInp.value;
+    if (good.includes(norm(inp.value))) {
+      S.answers[d.id] = { ok: true, attempts, val: inp.value, conf, tree: d.tree, skill: d.skill, q: qLabel(d.prompt), date: iso(new Date()) }; store.save();
+      finish(true); award(d.tree, attempts <= 1 ? 2 : 1, wrap, attempts <= 1, d.skill);
+    } else if (attempts >= 2) {
+      S.answers[d.id] = { ok: false, attempts, val: inp.value, conf, tree: d.tree, skill: d.skill, q: qLabel(d.prompt), date: iso(new Date()) }; store.save();
+      combo = 0; finish(false); shake(wrap); paintRing();
+    } else {
+      msg.textContent = 'לא. ניסיון אחד נוסף.'; msg.className = 'qz-msg no'; shake(wrap, 3);
+    }
+  };
+  return wrap;
+}
+
+/* ---------- today / archive ---------- */
+async function renderPost(i) {
+  const p = index[i]; if (!p) return;
+  setTab('tab-today');
+  const view = $('#view');
+  let md;
+  try { md = await (await fetch('posts/' + p.date + '.md', { cache: 'no-cache' })).text(); }
+  catch (e) { view.innerHTML = '<div id="status">הדף לא זמין כרגע.</div>'; return; }
+
+  const tmp = document.createElement('div');
+  tmp.innerHTML = renderMarkdown(md);
+  const h1 = tmp.querySelector('h1');
+
+  const art = document.createElement('article');
+  if (!localStorage.getItem('sadna-intro-done')) {
+    const ip = document.createElement('div'); ip.className = 'intro-plate plate';
+    ip.innerHTML = `<h2>מה זה הסדנה <span class="alpha-chip">אלפא</span></h2>
+      <p>משחק למידה אישי אחד: דף יומי (קורס RL, תרגול קוד, AI-103, שיקול דעת), כל תשובה נכונה = XP, את ה-XP משקיעים בעץ. המערכת קוראת את הביצועים וכותבת את מחר בהתאם.</p>
+      <p>הזמן בידיים שלך: מינימום 12 דק׳ (הבוחן + מושג אחד), רגיל ~40, צלילה עמוקה 90. ליד כל מדור מופיע אומדן. שבת חזרה, ראשון תיקון.</p>
+      <button class="dismiss">הבנתי, תתחיל</button>`;
+    ip.querySelector('.dismiss').onclick = () => { localStorage.setItem('sadna-intro-done', '1'); ip.remove(); };
+    art.appendChild(ip);
+  }
+  const head = document.createElement('header'); head.className = 'head';
+  head.innerHTML = `<div class="folio-line">שבוע ${p.week} · יום ${p.day} מתוך 70 · ${p.date}</div>
+    <h1>${h1 ? h1.innerHTML : p.title}</h1>`;
+  art.appendChild(head);
+  if (h1) h1.remove();
+
+  let part = null, body = null, mi = 0;
+  const openPart = headingEl => {
+    part = document.createElement('section'); part.className = 'part';
+    const head = document.createElement('div'); head.className = 'part-head';
+    const mark = document.createElement('span'); mark.className = 'mark';
+    mark.textContent = MARKS[Math.min(mi, MARKS.length - 1)]; mi++;
+    head.appendChild(mark);
+    if (headingEl) head.appendChild(headingEl);
+    if (headingEl) {
+      const EST = { 'עיון': 25, 'תרגול': 25, 'AI-103': 15, 'מעקב': 5, 'שיקול דעת': 5 };
+      const pref = Object.keys(EST).find(k => headingEl.textContent.trim().startsWith(k));
+      if (pref) {
+        const tc = document.createElement('span'); tc.className = 'chip2 tchip';
+        tc.textContent = '~' + EST[pref] + ' דק׳';
+        head.appendChild(tc);
+      }
+    }
+    if (headingEl) {
+      const ctx = `בדף של יום ${p.day} (${p.date}), מדור "${headingEl.textContent.trim()}": `;
+      const ask = document.createElement('button');
+      ask.className = 'ask'; ask.textContent = 'שאל את המורה';
+      ask.onclick = () => openChat(ctx);
+      head.appendChild(ask);
+    }
+    part.appendChild(head);
+    body = document.createElement('div'); part.appendChild(body);
+    art.appendChild(part);
+  };
+  [...tmp.childNodes].forEach(node => {
+    if (node.nodeType === 1 && node.tagName === 'H2') openPart(node);
+    else if (body) body.appendChild(node);
+    else if (!(node.nodeType === 3 && !node.textContent.trim())) { openPart(null); body.appendChild(node); }
+  });
+
+  if (!S.daysDone.includes(p.date)) {
+    const fin = document.createElement('div'); fin.className = 'finish-wrap';
+    fin.innerHTML = `<button class="finish-day">סיים את יום ${p.day}</button><span class="finish-hint"></span>`;
+    fin.querySelector('button').onclick = e => {
+      toggle(S.daysDone, p.date, true);
+      burst(e.target, 40);
+      const run = runLength();
+      ritual({
+        kicker: 'הסדנה', title: `יום ${p.day} הושלם`, xp: totalEarned(),
+        sub: `רצף ${run} ימים · הנקודות מחכות בעץ`, tier: streakTier(run)
+      }, () => { location.hash = ''; route(); });
+    };
+    art.appendChild(fin);
+  } else {
+    const donep = document.createElement('p'); donep.className = 'finish-hint';
+    donep.textContent = 'יום ' + p.day + ' הושלם.';
+    art.appendChild(donep);
+  }
+
+  const older = index[i + 1], newer = index[i - 1];
+  const pager = document.createElement('div'); pager.className = 'pager';
+  pager.innerHTML =
+    `<a href="${older ? '#/' + older.date : '#'}" ${older ? '' : 'aria-disabled="true"'}><span>&rsaquo;</span> יום ${older ? older.day : ''}</a>
+     <a href="${newer ? '#/' + newer.date : '#'}" ${newer ? '' : 'aria-disabled="true"'}>יום ${newer ? newer.day : ''} <span>&lsaquo;</span></a>`;
+  art.appendChild(pager);
+
+  view.innerHTML = ''; view.appendChild(art);
+  $('#status').textContent = '';
+  upgradeBlocks(view);
+  typeset(view);
+  if (pageBlocks.length) {
+    const qb = document.createElement('button'); qb.className = 'qbtn';
+    qb.textContent = 'בוחן היום · ' + pageBlocks.length + ' שאלות';
+    qb.onclick = openPlayer;
+    const h = view.querySelector('.head'); h && h.appendChild(qb);
+  }
+  seedReviews();
+  const dueN = dueReviews().length;
+  if (dueN) {
+    const rc = document.createElement('div'); rc.className = 'review-call';
+    rc.innerHTML = `<span>${dueN} פריטים בשלים לשליפה · ~${Math.max(1, Math.round(Math.min(dueN, 10) * 0.5))} דק'<span class="rv-pips" aria-hidden="true">${'<i></i>'.repeat(Math.min(dueN, 10))}</span></span><button class="rv-go">התחל שליפה</button>`;
+    rc.querySelector('.rv-go').onclick = openReview;
+    const h2 = view.querySelector('.head');
+    h2 ? h2.insertAdjacentElement('afterend', rc) : view.prepend(rc);
+  }
+  toggle(S.read, p.date, true);
+  currentDay = p.day;
+  const hint = view.querySelector('.finish-hint');
+  if (hint && !S.daysDone.includes(p.date)) {
+    const total = view.querySelectorAll('.qz').length, done = view.querySelectorAll('.qz.answered').length;
+    if (total > done) hint.textContent = 'נותרו ' + (total - done) + ' משימות בדף';
+  }
+  paintFolio(); paintRing();
+  window.scrollTo(0, 0);
+}
+let currentDay = null;
+
+/* ---------- talent trees ---------- */
+let activeTree = null, selNode = null;
+function renderTalents() {
+  setTab('tab-map');
+  if (!talents || !jmap) { $('#view').innerHTML = '<p class="finish-hint">העץ לא זמין כרגע.</p>'; $('#status').textContent = ''; return; }
+  if (!activeTree) activeTree = talents.trees[0].id;
+  const view = $('#view');
+  view.innerHTML = `<div class="view-head"><h1>העץ</h1>
+    <p>נקודות נצברות מתשובות נכונות בדפים; אתה בוחר איפה להשקיע. שכבה נפתחת אחרי ${talents.tier_gate} נקודות בעץ, וצומת תלוי דורש דרגה 1 בקודמו.</p></div>
+    <div id="flat2d"></div>
+    <div id="sheet"></div>`;
+  $('#status').textContent = '';
+  renderPanel();
+  paintFolio();
+  window.scrollTo(0, 0);
+}
+function gateFor(tree, nodeId) {
+  let ti = 0, node = null;
+  tree.tiers.forEach((tier, i) => tier.nodes.forEach(n => { if (n.id === nodeId) { ti = i; node = n; } }));
+  const st = nodeState(tree, ti, node);
+  return { open: st.open, reqOk: st.reqOk, node };
+}
+const talentNode = id => {
+  if (!talents) return null;
+  for (const t of talents.trees) for (const tier of t.tiers) for (const n of tier.nodes)
+    if (n.id === id) return n;
+  return null;
+};
+// judgment_map still describes the original 17 domains; v2 nodes are self-contained
+const domainOf = id => (jmap && jmap.domains.find(d => d.id === id)) ||
+  (n => n && ({ name: n.name, en: n.en || '', line: n.line || '', rule: n.rule || '' }))(talentNode(id));
+const spentIn = tid => (S.points[tid] || { spent: 0 }).spent;
+function nodeRank(id) { return S.ranks[id] || 0; }
+
+const TREE_TINT = { systems: '--warden', craft: '--architect', ops: '--oracle' };
+/* The glyph language of the board: FILLED emblem silhouettes (Diablo/WoW icon
+   weight, MapleStory readability) — solid shapes with even-odd cutouts so
+   every node reads at 34px on a dark medallion. fill inherits currentColor. */
+const ICON = {
+  os: '<g fill="currentColor"><path fill-rule="evenodd" d="M5 21V8h2V5h2v3h2V5h2v3h2V5h2v3h2v13H5Zm4-6h6v6H9v-6Z"/><path d="M11 3h2v2h-2z" opacity=".7"/></g>',
+  storage: '<g fill="currentColor"><path fill-rule="evenodd" d="M4 10V6.5C4 4.6 7.6 3 12 3s8 1.6 8 3.5V10c0 .8-.6 1.5-1.6 2 1 .5 1.6 1.2 1.6 2v3.5c0 1.9-3.6 3.5-8 3.5s-8-1.6-8-3.5V14c0-.8.6-1.5 1.6-2C4.6 11.5 4 10.8 4 10Zm8 8.6c3.3 0 6-1 6-1.9V15c-1.4.8-3.6 1.2-6 1.2S7.4 15.8 6 15v1.7c0 .9 2.7 1.9 6 1.9Z"/><ellipse cx="12" cy="6.5" rx="6" ry="1.9" opacity=".45"/></g>',
+  net: '<g fill="currentColor"><path d="m6.6 11 8-4.2 1 1.8-8 4.2zM7.6 13.2l8 4.2-1 1.8-8-4.2z"/><circle cx="5.5" cy="12" r="3.1"/><circle cx="18" cy="5.8" r="3.1"/><circle cx="18" cy="18.2" r="3.1"/></g>',
+  search: '<g fill="currentColor"><path fill-rule="evenodd" d="M12 4.5c4.8 0 8.6 3.4 10 7.5-1.4 4.1-5.2 7.5-10 7.5S3.4 16.1 2 12c1.4-4.1 5.2-7.5 10-7.5Zm0 3A4.5 4.5 0 1 0 12 16.5 4.5 4.5 0 0 0 12 7.5Z"/><circle cx="12" cy="12" r="2.2"/></g>',
+  lang: '<g fill="currentColor"><path fill-rule="evenodd" d="M6 3h13a2 2 0 0 1 2 2v2h-3v12.5A2.5 2.5 0 0 1 15.5 22H5a2.5 2.5 0 0 1-2.5-2.5V6A3 3 0 0 1 6 3Zm2 6h7v2H8V9Zm0 4h7v2H8v-2Zm0 4h5v2H8v-2Z"/><path d="M18 5h3v2h-3z" opacity=".5"/></g>',
+  build: '<g fill="currentColor"><path d="M4 15h9v3.5c0 .8-.7 1.5-1.5 1.5h-6A1.5 1.5 0 0 1 4 18.5V15Z"/><path d="M2.5 10H16c2.6 0 4.4-1 5.5-2.4-.2 3.9-3 6.4-7 6.4H8v-2H2.5a1 1 0 0 1 0-2Z"/><path d="M9 4h4v4H9z" opacity=".7"/></g>',
+  api: '<g fill="currentColor"><path fill-rule="evenodd" d="M4 21V9c0-3.9 3.6-6 8-6s8 2.1 8 6v12h-4.5v-5a3.5 3.5 0 0 0-7 0v5H4Z"/><path d="M9 9h6v2H9z" opacity=".4"/></g>',
+  frontend: '<g fill="currentColor"><path fill-rule="evenodd" d="M3 4h18v16H3V4Zm2 5v9h6V9H5Zm8 0v9h6V9h-6Z"/><path d="M5 6h3v1.5H5z" opacity=".5"/></g>',
+  arch: '<g fill="currentColor"><path fill-rule="evenodd" d="M2 21v-2h1V11.5L12 4l9 7.5V19h1v2H2Zm5-2h2.6v-5H7v5Zm7.4 0H17v-5h-2.6v5Z"/><path d="M10.5 9.5h3V12h-3z" opacity=".55"/></g>',
+  aiux: '<g fill="currentColor"><path d="M12 2.5 14.2 8.8 20.5 11l-6.3 2.2L12 19.5 9.8 13.2 3.5 11l6.3-2.2Z"/><path d="m19 15.5.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9Z" opacity=".8"/></g>',
+  product: '<g fill="currentColor"><path fill-rule="evenodd" d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Zm0 3.2a5.8 5.8 0 1 0 0 11.6 5.8 5.8 0 0 0 0-11.6Zm0 3.2a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2Z"/></g>',
+  research: '<g fill="currentColor"><path fill-rule="evenodd" d="M9 3h6v2h-1v4.8l5.4 8.7A2.3 2.3 0 0 1 17.4 22H6.6a2.3 2.3 0 0 1-2-3.5L10 9.8V5H9V3Zm-1.2 13 1.7-2.8h5l1.7 2.8H7.8Z"/><circle cx="10.5" cy="18.5" r="1.1" opacity=".6"/><circle cx="13.8" cy="19.3" r=".8" opacity=".6"/></g>',
+  sre: '<g fill="currentColor"><path fill-rule="evenodd" d="M12 2 20 5.5V11c0 5.3-3.4 9.2-8 11-4.6-1.8-8-5.7-8-11V5.5L12 2Zm-1.4 13.5 6-6.2L15.2 8l-4.6 4.8-1.8-1.9-1.4 1.5 3.2 3.1Z"/></g>',
+  finops: '<g fill="currentColor"><ellipse cx="12" cy="5.5" rx="7" ry="2.7"/><path d="M5 8.2c1.5 1.2 4 1.9 7 1.9s5.5-.7 7-1.9v3c0 1.5-3.1 2.7-7 2.7s-7-1.2-7-2.7v-3Z"/><path d="M5 13.7c1.5 1.2 4 1.9 7 1.9s5.5-.7 7-1.9v3c0 1.5-3.1 2.7-7 2.7s-7-1.2-7-2.7v-3Z" opacity=".8"/></g>',
+  edge: '<g fill="currentColor"><path fill-rule="evenodd" d="M12 2.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19Zm-1 2.2A7.6 7.6 0 0 0 4.6 11h3.2c.2-2.4 1-4.6 2.2-6.3h1Zm2 0c1.2 1.7 2 3.9 2.2 6.3h3.2A7.6 7.6 0 0 0 13 4.7Zm2.2 8.3c-.2 2.4-1 4.6-2.2 6.3a7.6 7.6 0 0 0 5.4-6.3h-3.2Zm-4.4 6.3c-1.2-1.7-2-3.9-2.2-6.3H4.6A7.6 7.6 0 0 0 10 19.3h.8Z"/></g>',
+  org: '<g fill="currentColor"><path d="M5 3h14l-2 4 2 4H7v10H5V3Z"/><path d="M9 6.5h6v1.8H9z" opacity=".45"/></g>',
+  company: '<g fill="currentColor"><path fill-rule="evenodd" d="M3 21v-8l3-2V6h3v3l3-2 3 2V6h3v5l3 2v8h-7v-4h-4v4H3Z"/><path d="M6 3h2v2H6zM16 3h2v2h-2z" opacity=".7"/></g>'
+};
+const ICON_DEFAULT = '<g fill="currentColor"><path d="M12 3 20 12 12 21 4 12Z"/><path d="M12 8 16 12 12 16 8 12Z" opacity=".4" fill="#000"/></g>';
+Object.assign(ICON, {
+  dsa: '<g fill="currentColor"><path d="M11 7.5 6.5 13.5h2v-1h7v1h2L13 7.5Z" opacity="0"/><path d="m11.2 8.4-4 4.6 1.5 1.3 4-4.6zM12.8 8.4l4 4.6-1.5 1.3-4-4.6z"/><circle cx="12" cy="6.5" r="3"/><circle cx="6" cy="16.5" r="2.7"/><circle cx="18" cy="16.5" r="2.7"/></g>',
+  'math-la': '<g fill="currentColor"><path d="M4 3h3v2H6v14h1v2H4V3ZM20 3h-3v2h1v14h-1v2h3V3Z"/><path d="M8.5 7h3v3h-3zM12.7 7h3v3h-3zM8.5 12h3v3h-3zM12.7 12h3v3h-3z"/></g>',
+  'sql-core': '<g fill="currentColor"><path fill-rule="evenodd" d="M3 5h18v14H3V5Zm2 2v2.5h6.5V7H5Zm8.5 0v2.5H19V7h-5.5ZM5 11.5V14h6.5v-2.5H5Zm8.5 0V14H19v-2.5h-5.5ZM5 16v1h6.5v-1H5Zm8.5 0v1H19v-1h-5.5Z"/></g>',
+  concurrency: '<g fill="currentColor"><path d="M3 7h12l-2.2-2.2L14.2 3 19 8l-4.8 5-1.4-1.8L15 9H3V7Z"/><path d="M21 17H9l2.2 2.2L9.8 21 5 16l4.8-5 1.4 1.8L9 15h12v2Z"/></g>',
+  'data-pipelines': '<g fill="currentColor"><path d="M3 4h18l-7 7v6l-4 3v-9L3 4Z"/><path d="M14 17h7v2h-7z" opacity=".7"/></g>',
+  'prob-stats': '<g fill="currentColor"><path d="M2 19c4 0 4.5-11 10-11s6 11 10 11v1H2v-1Z"/><path d="M11 4h2v3h-2z" opacity=".55"/></g>',
+  distributed: '<g fill="currentColor"><path d="m11 6.6-4.5 8 1.7 1 4.5-8zM13 6.6l4.5 8-1.7 1-4.5-8zM7.5 17h9v2h-9z"/><circle cx="12" cy="5.5" r="2.6"/><circle cx="5.5" cy="17.5" r="2.6"/><circle cx="18.5" cy="17.5" r="2.6"/></g>',
+  'db-prod': '<g fill="currentColor"><ellipse cx="10" cy="5.5" rx="6.5" ry="2.4"/><path d="M3.5 8c1.4 1 3.8 1.6 6.5 1.6S15.1 9 16.5 8v3.4c-.5-.2-1-.3-1.5-.3-1 0-2 .3-2.8.9-1 .1-1.5.4-2.2.4-2.7 0-5.1-.7-6.5-1.6V8Z"/><path d="M3.5 13.6c1.4 1 3.8 1.6 6.5 1.6h.6a5 5 0 0 0 .4 2l-.9.1c-2.7 0-5.2-.7-6.6-1.7v-2ZM15 12.5l4 1.6v2.4c0 2.5-1.6 4.4-4 5.5-2.4-1.1-4-3-4-5.5v-2.4l4-1.6Z"/></g>',
+  optimization: '<g fill="currentColor"><path d="M3 4c1 8 5 13 10 14.4l-.8 1.9C6.3 18.5 2 12.7 1 4.2L3 4Z"/><circle cx="17" cy="17.5" r="3.4"/><path d="M18 4h4v2h-4z" opacity="0"/></g>',
+  sysdesign: '<g fill="currentColor"><path fill-rule="evenodd" d="M12 2.5 21 8v2H3V8l9-5.5ZM4 12h4v6H4v-6Zm6 0h4v6h-4v-6Zm6 0h4v6h-4v-6ZM3 20h18v1.8H3V20Z"/></g>',
+  'clean-code': '<g fill="currentColor"><path d="M8.5 4 3 12l5.5 8 1.8-1.2L5.5 12l4.8-6.8L8.5 4ZM15.5 4 21 12l-5.5 8-1.8-1.2L18.5 12l-4.8-6.8L15.5 4Z"/><path d="m12 8 1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z"/></g>',
+  'py-prod': '<g fill="currentColor"><path fill-rule="evenodd" d="M12 2.8 14 6l3.7.6-1.1 3.5 2.6 2.7-3.2 1.9.2 3.7-3.7-.8-2.9 2.3-1.5-3.4-3.6-.9 1.7-3.3-2-3.1 3.6-1.1L8.6 4 12 5.5l.1-2.7Zm0 5.7A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5Z"/></g>',
+  'llm-core': '<g fill="currentColor"><path fill-rule="evenodd" d="M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Zm1.5 11.5h2L12 9l1.5 6.5h2L13.3 7h-2.6l-2.2 8.5Z"/><path d="M9 1.5h1.5V4H9zM13.5 1.5H15V4h-1.5zM9 20h1.5v2.5H9zM13.5 20H15v2.5h-1.5zM1.5 9H4v1.5H1.5zM1.5 13.5H4V15H1.5zM20 9h2.5v1.5H20zM20 13.5h2.5V15H20z" opacity=".6"/></g>',
+  'ts-web': '<g fill="currentColor"><path fill-rule="evenodd" d="M3 3h18v18H3V3Zm5 7.5H10v6h2v-6h2V8.5H8v2Zm10.2-1.4c-.7-.5-1.6-.7-2.5-.7-1.8 0-3.2 1-3.2 2.6 0 1.4 1 2.1 2.4 2.6 1.1.4 1.5.7 1.5 1.2 0 .5-.5.8-1.2.8-.8 0-1.6-.3-2.2-.8v2.2c.6.4 1.5.6 2.3.6 1.9 0 3.3-1 3.3-2.7 0-1.5-1-2.1-2.4-2.6-1-.4-1.5-.6-1.5-1.1 0-.4.4-.7 1-.7.7 0 1.7.3 2.5.9V9.1Z"/></g>',
+  'rag-search': '<g fill="currentColor"><path fill-rule="evenodd" d="M5 2h9l4 4v7.3a6 6 0 0 0-8.5 7.7H5V2Zm2 6h8v1.6H7V8Zm0 3.5h5v1.6H7v-1.6Z"/><path fill-rule="evenodd" d="M16.5 14a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Zm2.8 5.9 2.5 2.5-1.4 1.4-2.5-2.5 1.4-1.4Z"/></g>',
+  'agents-loop': '<g fill="currentColor"><path d="M12 3a9 9 0 0 1 8.5 6h-2.6A6.6 6.6 0 0 0 5.4 11H8l-4 4.6L0 11h3A9 9 0 0 1 12 3ZM12 21a9 9 0 0 1-8.5-6h2.6a6.6 6.6 0 0 0 12.5 0H16l4-4.6 4 4.6h-3a9 9 0 0 1-9 6Z"/></g>',
+  'evals-obs': '<g fill="currentColor"><path fill-rule="evenodd" d="M12 4a9 9 0 0 1 9 9h-3.2A5.8 5.8 0 0 0 12 7.2 5.8 5.8 0 0 0 6.2 13H3a9 9 0 0 1 9-9Z"/><path d="m11 13 5-4.5 1.3 1.4L13 14.5a1.6 1.6 0 1 1-2-1.5Z"/><path d="M3 17h18v2H3z" opacity=".6"/></g>',
+  'ml-applied': '<g fill="currentColor"><path d="M3 3h2v16h16v2H3V3Z"/><circle cx="8.5" cy="14" r="1.7"/><circle cx="12.5" cy="9.5" r="1.7"/><circle cx="17" cy="12.5" r="1.7"/><path d="m7.9 13-1.4-1.5 5-4.7 4 2.9 3.6-3 1.3 1.6-4.8 4-4-2.9z" opacity=".55"/></g>',
+  fde: '<g fill="currentColor"><path fill-rule="evenodd" d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6h5v14H4V6h5Zm2-1v1h2V5h-2Z"/><path d="m13.5 9-3.5 5h2.4l-1 4 3.6-5.4h-2.4z" fill="#000" opacity=".5"/></g>',
+  'craft-master': '<g fill="currentColor"><path d="m4 8 4 3 4-6 4 6 4-3-1.5 8h-13L4 8Z"/><path d="M5.5 18h13v2.5h-13z"/></g>',
+  'git-flow': '<g fill="currentColor"><circle cx="6" cy="5.5" r="2.8"/><circle cx="6" cy="18.5" r="2.8"/><circle cx="18" cy="9" r="2.8"/><path d="M7 8h2v8H7z" transform="rotate(0)"/><path d="M7 8.2h2V16H7z"/><path d="M18 11.8c0 3.4-2.6 4.6-5.2 5l-.3-2c2.3-.3 3.5-1 3.5-3h2Z"/></g>',
+  containers: '<g fill="currentColor"><path fill-rule="evenodd" d="m12 2 5 2.9v5.7l-5 2.9-5-2.9V4.9L12 2ZM5.5 12.4l5 2.9v5.7l-5-2.9v-5.7ZM18.5 12.4v5.7l-5 2.9v-5.7l5-2.9Z"/></g>',
+  'cicd-pipe': '<g fill="currentColor"><path fill-rule="evenodd" d="M7 7.5A4.5 4.5 0 0 0 7 16.5c1.8 0 3-1 4.2-2.5-.8-1-1.5-2-2.3-2.9C8.2 10.2 7.8 10 7 10a2 2 0 1 0 0 4c.5 0 .9-.2 1.4-.6l1.6 2C9.1 16.2 8.2 16.5 7 16.5ZM17 7.5c-1.8 0-3 1-4.2 2.5.8 1 1.5 2 2.3 2.9.7.9 1.1 1.1 1.9 1.1a2 2 0 1 0 0-4c-.5 0-.9.2-1.4.6l-1.6-2c.9-.8 1.8-1.1 3-1.1a4.5 4.5 0 0 1 0 9c-1.8 0-3-1-4.2-2.5C11.7 12.5 13.2 7.5 17 7.5Z"/></g>',
+  'config-lang': '<g fill="currentColor"><path fill-rule="evenodd" d="M5 2h9l5 5v15H5V2Zm3 9.5h2.2l1.3 2.2 1.3-2.2H15l-2.3 3.4 2.5 3.6h-2.3L11.5 16l-1.4 2.5H7.8l2.5-3.6L8 11.5Z"/></g>',
+  'azure-core': '<g fill="currentColor"><path d="M17.5 18.5h-11A4.5 4.5 0 0 1 6 9.6 6 6 0 0 1 17.7 8.5a5 5 0 0 1-.2 10Z"/><path d="m12.8 9.5-3.3 5h2.2l-.9 4 3.5-5.3h-2.3z" fill="#000" opacity=".5"/></g>',
+  'secrets-auth': '<g fill="currentColor"><path fill-rule="evenodd" d="M8 6.5a4.5 4.5 0 0 1 8.7 1.6c0 .9-.2 1.7-.7 2.4l5 5-1.4 1.4-1.4-1.4-1.4 1.4-1.4-1.5-1.5 1.5-1.4-1.5-1.3 1.2a4.5 4.5 0 0 1-6.2-6A4.5 4.5 0 0 1 8 6.5Zm1.5 2.6a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z" transform="rotate(-40 12 12)"/></g>',
+  'iac-infra': '<g fill="currentColor"><path d="M3 4h8v4H3zM13 4h8v4h-8zM3 10h4v4H3zM9 10h8v4H9zM19 10h2v4h-2z"/><path d="m9 17 2 1.5L9 20l.7 1.6L14 19v-1l-4.3-2.6L9 17ZM20 17l-2 1.5 2 1.5-.7 1.6L15 19v-1l4.3-2.6L20 17Z" opacity=".85"/></g>',
+  mlops: '<g fill="currentColor"><path d="M12 2.5A7.5 7.5 0 0 1 19.5 10h-2.2A5.3 5.3 0 0 0 12 4.7V7L8 3.8 12 .5v2ZM12 21.5A7.5 7.5 0 0 1 4.5 14h2.2a5.3 5.3 0 0 0 5.3 5.3V17l4 3.2-4 3.3v-2Z"/><path d="M10 9h4l1.8 5.5h-7.6L10 9Z" opacity=".85"/></g>',
+  'sec-gov': '<g fill="currentColor"><path fill-rule="evenodd" d="M12 2 20 5.5V11c0 5.3-3.4 9.2-8 11-4.6-1.8-8-5.7-8-11V5.5L12 2Zm0 5a2.6 2.6 0 0 0-2.6 2.6v1.2H8.5v5h7v-5h-.9V9.6A2.6 2.6 0 0 0 12 7Zm1.1 3.8v-1.2a1.1 1.1 0 1 0-2.2 0v1.2h2.2Z"/></g>',
+  'prod-own': '<g fill="currentColor"><path d="M5 3h14v10.5L12 18 5 13.5V3Z"/><path d="m12 5.5 1.2 2.4 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z" fill="#000" opacity=".5"/><path d="M5 19h14v2.2H5z"/></g>'
+});
+function nodeState(tree, ti, n) {
+  // D2 rule: tiers gate on points spent AND on the learner's level
+  const lvlNeed = (talents.tier_levels || [])[ti] || 1;
+  const open = spentIn(tree.id) >= talents.tier_gate * ti && level() >= lvlNeed;
+  const reqOk = !n.req || nodeRank(n.req) >= 1;
+  const r = nodeRank(n.id);
+  return { open, reqOk, r, lvlNeed,
+    cls: r >= talents.max_rank ? 'maxed' : r > 0 ? 'ranked' : (open && reqOk) ? 'avail' : 'locked' };
+}
+function renderPanel() {
+  const host = $('#flat2d'); if (!host) return;
+  const tint = t => `--tt:var(${TREE_TINT[t.id] || '--gold'})`;
+  let html = `<div class="tree-tabs">` + talents.trees.map(t =>
+    `<button class="tree-tab ${t.id === activeTree ? 'active' : ''}" style="${tint(t)}" data-t="${t.id}"
+      aria-pressed="${t.id === activeTree ? 'true' : 'false'}">
+      ${t.name}<small>${spentIn(t.id)} הושקעו · ${pool(t.id)} פנויות</small></button>`).join('') + `</div>`;
+  const tree = talents.trees.find(t => t.id === activeTree);
+  const EMBLEM = { systems: 'os', craft: 'api', ops: 'sre' };
+  const ranksInTree = tree.tiers.flatMap(t => t.nodes).reduce((a, n) => a + nodeRank(n.id), 0);
+  const treeAch = tree.tiers.flatMap(t => t.nodes).some(n => n.kind === 'capstone' && nodeRank(n.id) >= 1) ? 3
+    : ranksInTree >= 12 ? 2 : ranksInTree >= 5 ? 1 : 0;
+  html += `<div class="talent-panel" data-ach="${treeAch}" style="${tint(tree)}">
+    <div class="tp-emblem"><svg viewBox="0 0 24 24">${ICON[EMBLEM[tree.id]] || ''}</svg></div>
+    <svg class="tp-edges"></svg>
+    <div class="tp-head"><span class="tp-name">עץ ${tree.name}</span>
+    <span class="tp-pts">${spentIn(tree.id)} הושקעו · ${pool(tree.id)} להשקעה</span></div>`;
+  tree.tiers.forEach((tier, ti) => {
+    const need = talents.tier_gate * ti;
+    const lvlNeed = (talents.tier_levels || [])[ti] || 1;
+    const open = spentIn(tree.id) >= need && level() >= lvlNeed;
+    html += `<div class="tp-gatebar ${open ? 'open' : ''}">
+      <span class="gb-line"></span>
+      <span class="gb-seal">${open ? (tier.name || 'שכבה ' + (ti + 1))
+        : `${tier.name || ''} · ${need} נק׳${lvlNeed > 1 ? ' + רמה ' + lvlNeed : ''}`}</span>
+      <span class="gb-line"></span></div>`;
+    html += `<div class="tp-tier ${open ? '' : 'locked'}" data-tier="${['I', 'II', 'III', 'IV', 'V'][ti] || ti + 1}">` +
+      tier.nodes.map(n => {
+        const d = domainOf(n.id), st = nodeState(tree, ti, n);
+        const pips = Array.from({ length: talents.max_rank }, (_, i) =>
+          `<i class="${i < st.r ? 'on' : ''}"></i>`).join('');
+        const focus = S.armFocus && (n.skills || []).some(sid => {
+          const sk = skillOf(sid); return sk && (sk.arms || []).includes(S.armFocus);
+        });
+        return `<button class="tnode ${st.cls} ${n.kind === 'capstone' ? 'capstone' : ''} ${focus ? 'focus' : ''} ${selNode === n.id ? 'sel' : ''}"
+          data-id="${n.id}" data-kind="${n.kind || 'passive'}" data-r="${st.r}">
+          <span class="frame"><svg viewBox="0 0 24 24">${ICON[n.id] || ICON_DEFAULT}</svg></span>
+          <span class="pips" role="img" aria-label="דרגה ${st.r} מתוך ${talents.max_rank}">${pips}</span>
+          <span class="nm">${(d && d.name) || n.id}</span></button>`;
+      }).join('') + `</div>`;
+  });
+  html += `</div>`;
+  host.innerHTML = html;
+  host.querySelectorAll('.tree-tab').forEach(b => b.onclick = () => { activeTree = b.dataset.t; selNode = null; renderTalents(); });
+  host.querySelectorAll('.tnode').forEach(b => b.onclick = () => {
+    const id = b.dataset.id; selNode = id;
+    let found = null, fti = 0;
+    tree.tiers.forEach((tier, ti) => tier.nodes.forEach(n => { if (n.id === id) { found = n; fti = ti; } }));
+    const st = nodeState(tree, fti, found);
+    renderPanel();
+    renderNodeSheet(tree, found, { open: st.open, reqOk: st.reqOk });
+  });
+  // Draw NOW, synchronously: layout is already computed at this point, and a
+  // throttled tab (occluded window, background load, some WebViews) never
+  // delivers an animation frame, which left the board lineless since 07-29.
+  // The rAF pass stays as a next-frame refinement for late layout shifts.
+  drawPanelEdges();
+  requestAnimationFrame(drawPanelEdges);
+}
+function drawPanelEdges() {
+  const panel = $('.talent-panel'), svg = $('.tp-edges');
+  if (!panel || !svg) return;
+  const pr = panel.getBoundingClientRect();
+  svg.setAttribute('viewBox', `0 0 ${pr.width} ${pr.height}`);
+  const cs = getComputedStyle(panel);
+  const tint = cs.getPropertyValue('--tt') ? cs.getPropertyValue(cs.getPropertyValue('--tt').replace('var(', '').replace(')', '').trim()) || '#c9a86a' : '#c9a86a';
+  const gold = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim();
+  const dim = getComputedStyle(document.documentElement).getPropertyValue('--line').trim();
+  const tree = talents.trees.find(t => t.id === activeTree);
+  let defs = `<defs><marker id="arrw" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="${gold}"/></marker>
+  <marker id="arrd" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="${dim}"/></marker></defs>`;
+  let paths = '';
+  tree.tiers.flatMap(t => t.nodes).forEach(n => {
+    if (!n.req) return;
+    const a = $(`.tnode[data-id="${n.req}"] .frame`), b = $(`.tnode[data-id="${n.id}"] .frame`);
+    if (!a || !b) return;
+    const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+    const x1 = ar.left + ar.width / 2 - pr.left, y1 = ar.bottom - pr.top + 2;
+    const x2 = br.left + br.width / 2 - pr.left, y2 = br.top - pr.top - 4;
+    const on = nodeRank(n.req) >= 1;
+    const midx = Math.abs(x2 - x1) < 4 ? x1 : null;
+    const d = midx !== null
+      ? `M${x1},${y1} L${x1},${y2}`
+      : `M${x1},${y1} L${x1},${(y1 + y2) / 2} L${x2},${(y1 + y2) / 2} L${x2},${y2}`;
+    // engraved groove + the ink that flows through it once the path is earned
+    paths += `<path d="${d}" fill="none" class="edge-groove" stroke-linejoin="round"/>`;
+    paths += on
+      ? `<path d="${d}" fill="none" class="edge-flow" stroke="${gold}" stroke-linejoin="round"
+           style="filter:drop-shadow(0 0 5px ${gold})" marker-end="url(#arrw)"/>`
+      : `<path d="${d}" fill="none" class="edge-dark" stroke="${dim}" stroke-linejoin="round"
+           marker-end="url(#arrd)"/>`;
+  });
+  // D2 synergies: dashed side-channels between empowering nodes (same tree)
+  const goldHi = getComputedStyle(document.documentElement).getPropertyValue('--gold-hi').trim();
+  (talents.synergies || []).forEach(s => {
+    const a = $(`.tnode[data-id="${s.from}"] .frame`), b = $(`.tnode[data-id="${s.to}"] .frame`);
+    if (!a || !b) return;
+    const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+    const x1 = ar.left + ar.width / 2 - pr.left, y1 = ar.top + ar.height / 2 - pr.top;
+    const x2 = br.left + br.width / 2 - pr.left, y2 = br.top + br.height / 2 - pr.top;
+    const bend = (x1 + x2) / 2 + (x1 < pr.width / 2 ? -46 : 46);
+    const lit = nodeRank(s.from) >= 1;
+    paths += `<path d="M${x1},${y1} Q${bend},${(y1 + y2) / 2} ${x2},${y2}" fill="none"
+      class="edge-syn ${lit ? 'lit' : ''}" stroke="${lit ? goldHi : dim}"/>`;
+  });
+  svg.innerHTML = defs + paths;
+}
+const RANK_MEANING = ['',
+  'יעד הדרגה, מכיר: מזהה את המושג ואת מקומו במפה',
+  'יעד הדרגה, מסביר: מסוגל ללמד את זה במילים שלך',
+  'יעד הדרגה, מיישם: כתבת או הפעלת את זה בפועל',
+  'יעד הדרגה, מחבר: קושר אותו לתחומים ולפרויקטים אחרים',
+  'יעד הדרגה, מאתגר: יודע מתי זה נשבר ומה בא במקומו'];
+function renderNodeSheet(tree, n, gate) {
+  const d = domainOf(n.id); const r = nodeRank(n.id);
+  const cost = r + 1, p = pool(tree.id);
+  // evidence gate (LEARNING-MODEL seam): ranks 4-5 need the LEDGER, not points
+  let ledgerCap = 99;
+  if (n.skills && n.skills.length && skills && skills.skills) {
+    ledgerCap = Math.max(0, ...n.skills.map(sid => {
+      const sk = skills.skills.find(s => s.id === sid);
+      return sk ? (S.skillLevels[sk.id] ?? sk.current) : 0;
+    }));
+  }
+  const evOk = (r + 1) <= 3 || ledgerCap >= (r + 1);
+  const can = gate.open && gate.reqOk && r < talents.max_rank && p >= cost && evOk;
+  let why = '';
+  if (r >= talents.max_rank) why = 'הצומת במלואו: מאתגר.';
+  else if (!gate.open) why = 'השכבה עוד נעולה.';
+  else if (!gate.reqOk) why = 'דרושה דרגה 1 בצומת הקודם.';
+  else if (!evOk) why = `דרגה ${r + 1} דורשת ראיה: רמה ${r + 1} בלוח הבעלות (כרגע ${ledgerCap}). נקודות לא קונות שליטה.`;
+  else if (p < cost) why = 'אין מספיק נקודות (עלות ' + cost + ').';
+  const nodeConcepts = ((kodex && kodex.concepts) || []).filter(c => c.node === n.id);
+  const dayList = [...new Set(nodeConcepts.map(c => c.day).filter(Boolean))].sort((a, b) => a - b);
+  const skillNames = (n.skills || []).map(sid => {
+    const sk = skills && skills.skills && skills.skills.find(s => s.id === sid);
+    return sk ? `${sk.name.split(' (')[0]} (${S.skillLevels[sk.id] ?? sk.current}/${sk.target})` : sid;
+  });
+  const syn = (talents.synergies || []).filter(s => s.from === n.id || s.to === n.id);
+  $('#sheet').innerHTML = `<div class="domain-sheet">
+    <div class="dhead"><h2>${d.name}</h2><span class="en">${d.en}</span></div>
+    <p class="line">${d.line}</p>
+    ${d.rule ? `<p class="rule-q"><b>הכלל:</b> ${d.rule}</p>` : ''}
+    <div class="ns-conn">
+      ${skillNames.length ? `<div class="ns-row">לדג'ר: ${skillNames.map(s => `<span class="chip2" dir="ltr">${s}</span>`).join(' ')}</div>` : ''}
+      ${dayList.length ? `<div class="ns-row">נלמד בימים: ${dayList.map(x => `<span class="chip2">יום ${x}</span>`).join(' ')}</div>` : ''}
+      ${syn.length ? `<div class="ns-row">סינרגיות: ${syn.map(s => `<span class="chip2">${s.from === n.id ? '→ ' + ((domainOf(s.to) || {}).name || s.to) : '← ' + ((domainOf(s.from) || {}).name || s.from)}</span>`).join(' ')}</div>` : ''}
+      ${nodeConcepts.length ? `<button class="ns-quiz">בחן אותי על הצומת (${nodeConcepts.length})</button>` : ''}
+      ${n.quests && r > 0 ? (() => {
+        const qk = n.id + ':' + r, qdone = (S.questsDone || {})[qk];
+        return `<div class="ns-quest ${qdone ? 'qdone' : ''}"><b>המשימה שקנית (דרגה ${r}):</b> ${esc(n.quests[r - 1])}
+          ${qdone ? `<span class="q-ok">הושלמה · ${qdone.d}</span>` : `<button class="q-done" data-qk="${qk}">סיימתי, יש ראיה</button>`}</div>`;
+      })() : ''}
+      ${n.quests && r < talents.max_rank ? `<div class="ns-quest locked">דרגה ${r + 1} פותחת משימה: ${r === 0 ? esc(n.quests[0]) : '<span class="q-veil">נחשפת בהשקעה</span>'}</div>` : ''}
+    </div>
+    <p class="rank-flavor">${r > 0 ? `<b>דרגת השקעה ${r}</b> · ${RANK_MEANING[r]}` : 'טרם הושקעה נקודה.'}
+      ${r < talents.max_rank ? `<br><span class="next">${RANK_MEANING[r + 1]}</span>` : ''}
+      <br><span class="next">דרגה = השקעת נקודות; הוכחת שליטה נמדדת בנפרד, בתשובות ובאוצר.</span></p>
+    <div class="invest-row">
+      <button class="invest" ${can ? '' : 'disabled'}>השקע ${cost} ${cost === 1 ? 'נקודה' : 'נקודות'} → ${RANK_MEANING[Math.min(r + 1, 5)].split(':')[0]}</button>
+      <span class="invest-why">${can ? 'דרגה ' + r + ' מתוך ' + talents.max_rank : why}</span>
+    </div></div>`;
+  const nq = $('#sheet .ns-quiz');
+  if (nq) nq.onclick = () => openConceptQuiz(nodeConcepts.map(c => c.id));
+  const qd = $('#sheet .q-done');
+  if (qd) qd.onclick = () => {
+    const ev = prompt('הראיה (קישור PR / פלט / משפט אחד):');
+    if (!ev || !ev.trim()) return;
+    S.questsDone[qd.dataset.qk] = { d: iso(new Date()), ev: ev.trim().slice(0, 300) };
+    (n.skills || []).forEach(sid => {
+      (S.skillEvidence[sid] = S.skillEvidence[sid] || []).push(
+        { t: '[משימה ' + qd.dataset.qk + '] ' + ev.trim().slice(0, 250), d: iso(new Date()) });
+    });
+    store.save(); sfx.coin(); burst(qd, 30); sparkState('glad');
+    toast('הראיה נשמרה ללדג\'ר. אם הגיע הזמן, העלה רמה בלוח הבעלות.');
+    renderNodeSheet(tree, n, gate);
+  };
+  const btn = $('#sheet .invest');
+  if (btn && can) btn.onclick = () => {
+    S.points[tree.id] = S.points[tree.id] || { earned: 0, spent: 0 };
+    S.points[tree.id].spent += cost;
+    S.ranks[n.id] = r + 1; store.save();
+    toast(d.name + ' דרגה ' + (r + 1));
+    if (n.kind === 'capstone' && r + 1 === 1) {
+      const caps = ['sysdesign', 'craft-master', 'prod-own'].filter(id => nodeRank(id) >= 1).length;
+      const T = ['שוליה', 'נאמן', 'אומן', 'רב-אומן'];
+      setTimeout(() => ritual({ kicker: 'קידום מעמד', title: T[caps], xp: totalSpent(),
+        sub: 'הקאפסטון של עץ ' + tree.name + ' נקנה. מעמדך החדש: ' + T[caps], tier: 4 }), 600);
+    }
+    renderPanel();
+    renderNodeSheet(tree, n, gate); paintFolio();
+    const fr = $(`.tnode[data-id="${n.id}"] .frame`);
+    if (fr) {
+      fr.classList.add('pulse'); setTimeout(() => fr.classList.remove('pulse'), 500);
+      burst(fr, 26 + (r + 1) * 8);
+      sparkState('glad'); sfx.coin();
+    }
+    checkAchievements();
+  };
+}
+
+/* ---------- ladder ---------- */
+function renderLadder() {
+  setTab('tab-ladder');
+  paintFolio();
+  const view = $('#view');
+  if (!ladder) { view.innerHTML = '<p class="finish-hint">המסלול לא זמין כרגע.</p>'; $('#status').textContent = ''; return; }
+  const allItems = [...ladder.phases.flatMap(ph => ph.items.map(it => ({ ...it, phase: ph.name }))),
+                    ...ladder.cert.weeks.map(it => ({ ...it, phase: ladder.cert.name }))];
+  const next = allItems.find(it => !S.ladder.includes(it.id));
+
+  const chips = it => `<span class="chip2">~${it.min} דק׳</span><span class="chip2">רמה ${it.level}</span>`;
+  const row = it => `<div class="ladder-item ${S.ladder.includes(it.id) ? 'done' : ''}" data-id="${it.id}">
+    <input type="checkbox" ${S.ladder.includes(it.id) ? 'checked' : ''} aria-label="בוצע">
+    <div class="li-body"><div class="li-t"><span>${it.t}</span>${chips(it)}</div>
+      <div class="li-why">${it.why}</div>
+      <div class="li-action">${it.action} · <a href="${it.url}"${it.url.startsWith('#') ? '' : ' target="_blank" rel="noopener"'}>מקור</a></div>
+    </div></div>`;
+
+  let html = `<div class="view-head"><h1>המסלול</h1></div>`;
+  if (ladder.hire_goal) {
+    const dl = new Date(ladder.hire_goal.deadline), now = new Date();
+    const days = Math.max(0, Math.ceil((dl - now) / 86400000)), weeks = Math.floor(days / 7);
+    html += `<div class="hire-banner plate">
+      <div class="hb-count">${days}</div>
+      <div class="hb-body"><b>ימים עד היעד: חוזה חתום, 30/09</b>
+      <span>${weeks} שבועות · ${ladder.hire_goal.line}</span></div></div>`;
+  }
+  html += `<div class="ledger-art" aria-hidden="true"></div>`;
+  // arm focus: choosing a resume variation is choosing your build
+  html += `<div class="arm-strip">` + Object.entries(ARMS).map(([k, v]) =>
+    `<button class="arm-chip ${S.armFocus === +k ? 'on' : ''}" aria-pressed="${S.armFocus === +k ? 'true' : 'false'}" data-arm="${k}" dir="ltr">${v}</button>`).join('') +
+    `<button class="arm-chip ${!S.armFocus ? 'on' : ''}" aria-pressed="${!S.armFocus ? 'true' : 'false'}" data-arm="0">בלי מוקד</button></div>`;
+  if (skills && skills.skills) {
+    const cur = s => S.skillLevels[s.id] ?? s.current;
+    const F = S.armFocus;
+    const rows = skills.skills.slice().sort((a, b) =>
+      (F ? ((b.arms || []).includes(F) - (a.arms || []).includes(F)) : 0) ||
+      (b.resume_risk - a.resume_risk) || ((b.target - cur(b)) - (a.target - cur(a))));
+    const cells = s => { const c = cur(s); return [0,1,2,3,4,5].map(l =>
+      `<span class="ob-cell ${l <= c ? 'on' : ''} ${l === s.target ? 'tgt' : ''}"></span>`).join(''); };
+    html += `<details class="syllabus ownership" open><summary>לוח בעלות: מיומנות ברזומה = רמה 4 ומעלה</summary>
+      <p class="sy-note">0 מזהה · 1 שולף · 2 מסביר · 3 יישמת · 4 בעלות הנדסית · 5 בגרות תכנונית. אדום = claim ברזומה מתחת ל-4. הקש שורה לעדכון כן.</p>` +
+      rows.map(s => {
+        const c = cur(s), risk = s.resume_risk && c < 4;
+        const ret = Object.entries(S.reviews || {}).some(([id, rec]) =>
+          rec.iv >= 3 && S.answers[id] && S.answers[id].skill === s.id);
+        return `<div class="ob-row ${risk ? 'risk' : ''} ${c >= s.target ? 'own' : ''}" data-sid="${esc(s.id)}" data-lv="${c}">
+          <div class="ob-name" dir="ltr">${esc(s.name)}${ret ? ' <i class="ob-ret" title="Retained: שרד שליפה של 7+ ימים"></i>' : ''}</div>
+          <div class="ob-bar">${cells(s)}</div>
+          <div class="ob-meta">${c}/${s.target}${s.arms && s.arms.length ? ` · ${s.arms.length} זרועות` : ''}${risk ? ' · בסיכון' : ''}</div>
+          <div class="ob-edit" hidden>${[0,1,2,3,4,5].map(l => `<button class="ob-set" data-l="${l}">${l}</button>`).join('')}
+            <button class="ob-ev">+הוכחה</button></div>
+        </div>`;
+      }).join('') + `</details>`;
+  }
+  if (syl && syl.seasons) {
+    const season = syl.seasons[0];
+    const today = iso(new Date());
+    html += `<details class="syllabus" open><summary>הסילבוס: ${esc(season.name)}</summary>` +
+      season.weeks.map(w => `<details class="syl-week" ${w.days.some(x => x.status !== 'done') ? 'open' : ''}>
+        <summary>שבוע ${w.w}: ${esc(w.theme)}</summary>` +
+        w.days.map(dd => {
+          const st = dd.date === today ? 'today' : dd.status;
+          const title = dd.status === 'done' ? `<a href="#/${esc(dd.date)}">${esc(dd.title)}</a>` : esc(dd.title);
+          const nodeChips = (dd.nodes || []).map(nid => { const nn = talentNode(nid); return nn ? `<a class="chip2" href="#/map">${esc(nn.name)}</a>` : ''; }).join('');
+          return `<div class="syl-day ${st}"><span class="syl-d">יום ${dd.day}</span>
+            <div class="syl-body"><div class="syl-t">${title}</div>
+            ${dd.why ? `<div class="syl-why">${esc(dd.why)}</div>` : ''}
+            <div class="syl-chips">${(dd.topics || []).slice(0, 4).map(t => `<span class="chip2" dir="auto">${esc(t)}</span>`).join('')}${nodeChips}</div>
+            </div></div>`;
+        }).join('') + `</details>`).join('') + `</details>`;
+  }
+  if (plan && plan.week_plan) {
+    const start = new Date(plan.start_date);
+    html += `<details class="syllabus"><summary>הסילבוס המלא: 10 שבועות, 70 ימים</summary>` +
+      plan.week_plan.map(wp => {
+        let dots = '';
+        for (let d = 1; d <= 7; d++) {
+          const dt = new Date(start); dt.setDate(start.getDate() + (wp.week - 1) * 7 + (d - 1));
+          const ds = iso(dt);
+          const cls = S.daysDone.includes(ds) ? 'sy-dot done' : index.some(p => p.date === ds) ? 'sy-dot has' : 'sy-dot';
+          dots += `<span class="${cls}"></span>`;
+        }
+        return `<div class="sy-week"><div class="sy-dots">${dots}</div>
+          <div class="sy-t"><b>שבוע ${wp.week}</b> · <span dir="ltr">${wp.primary}</span>${wp.secondary ? `<br><small dir="ltr">${wp.secondary}</small>` : ''}</div></div>`;
+      }).join('') +
+      `<p class="sy-note">כל יום: עיון, תרגול, AI-103, מעקב, שיקול דעת. שבת חזרה, ראשון תיקון. מדור מעקב מזרים מאמרים חדשים מהסריקה היומית אל הדפים.</p></details>`;
+  }
+  html += `<p class="view-head" style="margin-top:1rem"><span style="color:var(--faded);font-size:.88rem">סדר הלימוד מהמסמכים שלך. פריט אחד פתוח בכל רגע: זה שלמטה.</span></p>`;
+  if (next) {
+    html += `<div class="next-card">
+      <div class="nc-kicker">הבא בתור · ${next.phase}</div>
+      <h2>${next.t}</h2>
+      <p class="nc-why">${next.why}</p>
+      <p class="nc-action">${next.action}</p>
+      <div class="nc-foot">${chips(next)}
+        <a class="nc-open" href="${next.url}"${next.url.startsWith('#') ? '' : ' target="_blank" rel="noopener"'}>פתח מקור</a>
+        <button class="nc-done" data-id="${next.id}">סיימתי</button>
+      </div></div>`;
+  } else {
+    html += `<div class="next-card"><h2>המסלול הושלם.</h2></div>`;
+  }
+  ladder.phases.forEach((ph, i) => {
+    html += `<div class="phase"><div class="phase-head"><span class="mark">${MARKS[i]}</span><h2>${ph.name}</h2></div>
+      ${ph.note ? `<p class="note">${ph.note}</p>` : ''}${ph.items.map(row).join('')}</div>`;
+  });
+  html += `<div class="phase"><div class="phase-head"><span class="mark">${MARKS[ladder.phases.length]}</span><h2>${ladder.cert.name}</h2></div>
+    <p class="cert-facts">${ladder.cert.facts}</p>${ladder.cert.weeks.map(row).join('')}</div>`;
+  html += `<p class="sync-line">סנכרון בין מכשירים והתאמה אישית של הדף היומי: <b>${syncKey() ? 'פעיל' : 'כבוי'}</b>
+    ${syncKey() ? '' : '· <button id="syncBtn">הפעל</button>'}</p>`;
+  view.innerHTML = html;
+  $('#status').textContent = '';
+  view.querySelectorAll('.ladder-item input').forEach(inp => inp.onchange = e => {
+    const id = inp.closest('.ladder-item').dataset.id;
+    toggle(S.ladder, id, e.target.checked);
+    renderLadder();
+  });
+  const nd = view.querySelector('.nc-done');
+  if (nd) nd.onclick = () => { toggle(S.ladder, nd.dataset.id, true); toast('הבא בתור התקדם'); renderLadder(); };
+  view.querySelectorAll('.arm-chip').forEach(b => b.onclick = () => {
+    S.armFocus = +b.dataset.arm || null; store.save();
+    toast(S.armFocus ? 'מוקד: ' + ARMS[S.armFocus] + ' · העץ והדרילים מכוונים אליו' : 'המוקד הוסר');
+    paintFolio(); renderLadder();
+  });
+  view.querySelectorAll('.ob-row').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.ob-edit')) return;
+      const ed = row.querySelector('.ob-edit'); ed.hidden = !ed.hidden;
+    });
+    row.querySelectorAll('.ob-set').forEach(b => b.onclick = () => {
+      S.skillLevels[row.dataset.sid] = +b.dataset.l; store.save(); renderLadder();
+    });
+    const ev = row.querySelector('.ob-ev');
+    if (ev) ev.onclick = () => {
+      const link = prompt('הוכחה (קישור ל-PR/פרויקט/סרטון או משפט):');
+      if (link && link.trim()) {
+        (S.skillEvidence[row.dataset.sid] = S.skillEvidence[row.dataset.sid] || []).push({ t: link.trim().slice(0, 300), d: iso(new Date()) });
+        store.save(); toast('הוכחה נרשמה');
+      }
+    };
+  });
+  const sb = view.querySelector('#syncBtn');
+  if (sb) sb.onclick = enableSync;
+  window.scrollTo(0, 0);
+}
+
+/* ---------- chat with the teacher (daemon) ---------- */
+const chat = {
+  hist: JSON.parse(localStorage.getItem('sadna-chat') || '[]'),
+  save() { localStorage.setItem('sadna-chat', JSON.stringify(this.hist.slice(-40))); }
+};
+function paintChat() {
+  const log = $('#cpLog');
+  log.innerHTML = chat.hist.map(m => `<div class="msg ${m.role}">${m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>`).join('');
+  const last = chat.hist[chat.hist.length - 1];
+  if (last && last.role === 'bot' && last.text.length > 40) {
+    const row = document.createElement('div'); row.className = 'cp-actions';
+    row.innerHTML = chatPersona === 'mentor'
+      ? `<button data-a="save">שמור לאוצר</button><button data-a="wrong">קראת אותי לא נכון</button>
+         <button data-a="why">למה חשבתי ככה</button><button data-a="test">תבחן אותי על זה עכשיו</button>`
+      : `<button data-a="save">שמור לאוצר</button><button data-a="deep">העמק</button>
+      <button data-a="ex">דוגמה מחושבת</button><button data-a="mock">ראיין אותי על זה</button>`;
+    row.onclick = e => {
+      const a = e.target.dataset.a; if (!a) return;
+      if (a === 'save') {
+        S.notes.push({ t: last.text.slice(0, 800), d: iso(new Date()), ctx: location.hash });
+        store.save(); toast('נשמר לאוצר');
+      } else {
+        const map = { deep: 'העמק בתשובה האחרונה: שכבה אחת יותר פורמלית, כולל מקרה קצה.', ex: 'תן דוגמה מחושבת ביד, מספר-מספר, לתשובה האחרונה.', mock: 'ראיין אותי על הנושא של התשובה האחרונה: שאלה אחת, חכה לתשובתי, ואז דרג 1-10 עם מה שחסר.',
+          wrong: 'קראת אותי לא נכון. אל תתקן עדיין: תשאל אותי שאלה אחת שתברר מה באמת חשבתי.',
+          why: 'תעזור לי להבין למה חשבתי ככה מלכתחילה, לא רק מה נכון.',
+          test: 'תבחן אותי על זה עכשיו, קר, שאלה אחת בלי רמזים, ואז תגיד אם זה נשאר.' };
+        sendChat(map[a], a === 'mock');
+      }
+    };
+    log.appendChild(row);
+  }
+  log.scrollTop = log.scrollHeight;
+}
+function chatAvailable() { return !!(syncKey() && S.daemon_url); }
+// One pane, two personas. המורה explains and grades; המנטור works on the pattern
+// across answers and only ever handles one item at a time. They share history on
+// purpose: the mentor is allowed to have read what you asked the teacher.
+let chatPersona = 'teacher';
+function setPersona(p) {
+  chatPersona = p;
+  const pane = $('#chatPane'), name = p === 'mentor' ? 'המנטור' : 'המורה';
+  pane.setAttribute('aria-label', name);
+  $('#cpName').textContent = name;
+  $('#cpInput').placeholder = p === 'mentor'
+    ? 'תענה לו, או תגיד לו שהוא קרא את זה לא נכון...'
+    : 'שאל, או הדבק תשובה לדירוג...';
+}
+function openChat(prefill, persona) {
+  $('#chatPane').hidden = false; $('#chatFab').hidden = true;
+  setPersona(persona || 'teacher');
+  const form = $('#cpForm');
+  let keyRow = $('#cpKeyRow');
+  if (!syncKey() && !keyRow) {
+    keyRow = document.createElement('div'); keyRow.id = 'cpKeyRow';
+    keyRow.innerHTML = `<input id="cpKey" type="text" placeholder="מפתח סנכרון חד-פעמי" autocomplete="off">
+      <button id="cpKeySave">שמור</button>`;
+    form.parentNode.insertBefore(keyRow, form);
+    keyRow.querySelector('#cpKeySave').onclick = async () => {
+      const k = keyRow.querySelector('#cpKey').value.trim();
+      if (!k) return;
+      localStorage.setItem('sadna-sync-key', k);
+      keyRow.remove(); toast('סנכרון פעיל'); schedulePush(); await pullState();
+    };
+  }
+  paintChat();
+  if (prefill) { $('#cpInput').value = prefill; }
+  $('#cpInput').focus();
+}
+async function sendChat(text, verify, persona, mentorItem) {
+  const who = persona || chatPersona;
+  chat.hist.push({ role: 'user', text }); chat.save(); paintChat();
+  if (!syncKey()) { chat.hist.push({ role: 'bot', text: 'כדי לדבר איתי צריך להזין פעם אחת את מפתח הסנכרון (השדה למעלה).' }); chat.save(); paintChat(); return; }
+  if (!S.daemon_url) { await pullState(); }
+  if (!S.daemon_url) { chat.hist.push({ role: 'bot', text: 'הדמון עוד לא נרשם. ודא שהמחשב בבית דולק, ונסה שוב בעוד דקה.' }); chat.save(); paintChat(); return; }
+  $('#cpStatus').textContent = 'חושב...';
+  try {
+    const r = await fetch(S.daemon_url + '/chat', {
+      method: 'POST',
+      headers: { 'authorization': 'Bearer ' + syncKey(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        message: text, verify: !!verify, persona: who,
+        history: chat.hist.slice(-9, -1),
+        context: { view: location.hash, latest: index[0] && index[0].date, level: level(),
+                   item: mentorItem || undefined }
+      })
+    });
+    const j = await r.json();
+    chat.hist.push({ role: 'bot', text: j.reply || 'אין תשובה.' });
+  } catch (e) {
+    chat.hist.push({ role: 'bot', text: (who === 'mentor' ? 'המנטור' : 'המורה') + ' לא זמין כרגע (המחשב בבית כבוי או המנהרה נפלה). נסה שוב מאוחר יותר.' });
+  }
+  chat.save(); paintChat(); $('#cpStatus').textContent = '';
+  // המנטור writes the belief ledger through its own tools, server side. Pull it
+  // back so the record the learner just agreed to is visible without a reload.
+  if (who === 'mentor') {
+    await pullState();
+    if (location.hash === '#/mentor' && $('#chatPane').hidden) renderMentor();
+  }
+}
+$('#chatFab').onclick = () => openChat();
+$('#cpClose').onclick = () => { $('#chatPane').hidden = true; $('#chatFab').hidden = false; };
+$('#cpForm').onsubmit = e => {
+  e.preventDefault();
+  const v = $('#cpInput').value.trim();
+  if (!v) return;
+  $('#cpInput').value = '';
+  sendChat(v);
+};
+
+/* ---------- המנטור: what the data says is worth talking about ---------- */
+// Four signals, all computed from state the app already writes. The split that
+// carries the whole feature is wrong-and-certain versus wrong-and-unsure: the
+// same wrong answer, but one is a belief to correct and the other is a blank to
+// fill, and they do not deserve the same conversation. Right-and-unsure is the
+// third and nothing used it before: knowing something and not trusting it is a
+// state of its own, and the answer to it is evidence, not another lesson.
+const MENTOR = { sure: 70, unsure: 40, lapseFloor: 2 };
+const MENTOR_KINDS = {
+  retest:        { he: 'זמן לבדוק אם זה נשאר', w: 0 },
+  misconception: { he: 'טעות מול ביטחון גבוה', w: 1 },
+  decay:         { he: 'דלף שוב', w: 2 },
+  imposter:      { he: 'ידעת ולא האמנת', w: 3 },
+  gap:           { he: 'פשוט לא ידעת', w: 4 }
+};
+
+function mentorLabel(id) {
+  const a = S.answers[id];
+  if (a && a.q) return a.q;
+  if (id.startsWith('c-')) {
+    const c = ((kodex && kodex.concepts) || []).find(x => x.id === id.slice(2));
+    if (c) return c.he ? c.t + ' · ' + c.he : c.t;
+  }
+  return id;
+}
+
+function mentorQueue() {
+  const today = iso(new Date()), out = [];
+  for (const [id, b] of Object.entries(S.beliefs || {})) {
+    if (b.status === 'corrected' && b.retest && b.retest <= today)
+      out.push({ kind: 'retest', id, label: b.believed || mentorLabel(id), belief: b });
+  }
+  for (const [id, a] of Object.entries(S.answers || {})) {
+    if (!a) continue;
+    if (a.ok === false && a.conf != null && a.conf >= MENTOR.sure)
+      out.push({ kind: 'misconception', id, label: mentorLabel(id), conf: a.conf, skill: a.skill, date: a.date });
+    else if (a.ok === false)
+      out.push({ kind: 'gap', id, label: mentorLabel(id), conf: a.conf, skill: a.skill, date: a.date });
+    else if (a.ok && a.attempts === 1 && a.conf != null && a.conf <= MENTOR.unsure)
+      out.push({ kind: 'imposter', id, label: mentorLabel(id), conf: a.conf, skill: a.skill, date: a.date });
+  }
+  for (const [id, r] of Object.entries(S.reviews || {})) {
+    if ((r && r.lapses || 0) >= MENTOR.lapseFloor)
+      out.push({ kind: 'decay', id, label: mentorLabel(id), lapses: r.lapses });
+  }
+  // A belief carries its own semantic id (isolation-serial), not the id of the
+  // answer that exposed it, so suppression matches on `from`. Without that the
+  // same wrong answer keeps surfacing after it has been worked through.
+  const settled = new Set();
+  for (const [k, b] of Object.entries(S.beliefs || {})) {
+    if (!b || (b.status !== 'corrected' && b.status !== 'retested')) continue;
+    for (const src of [].concat(b.from || [], k)) settled.add(src);
+  }
+  return out
+    .filter(x => x.kind === 'retest' || !settled.has(x.id))
+    .sort((a, b) => MENTOR_KINDS[a.kind].w - MENTOR_KINDS[b.kind].w ||
+                    String(b.date || '').localeCompare(String(a.date || '')));
+}
+
+function renderMentor() {
+  setTab('tab-today');
+  const view = $('#view');
+  $('#status').textContent = '';
+  const q = mentorQueue();
+  const open = Object.entries(S.beliefs || {}).filter(([, b]) => b.status === 'open' || b.status === 'relapsed');
+
+  const groups = {};
+  for (const it of q) (groups[it.kind] = groups[it.kind] || []).push(it);
+
+  const sections = Object.keys(MENTOR_KINDS).filter(k => groups[k]).map(k => `
+    <div class="m-group">
+      <div class="m-kind">${MENTOR_KINDS[k].he}</div>
+      ${groups[k].slice(0, 8).map(it => `
+        <div class="m-item">
+          <div class="m-label" dir="auto">${esc(it.label)}</div>
+          <div class="m-meta">${
+            it.kind === 'misconception' || it.kind === 'imposter' ? `ביטחון ${it.conf}%` :
+            it.kind === 'decay' ? `${it.lapses} דליפות` :
+            it.kind === 'retest' ? `נפתח ${it.belief.opened}` : 'ללא סימון ביטחון'
+          }</div>
+          <button class="u-ghost m-talk" data-id="${esc(it.id)}" data-kind="${k}">לדבר על זה</button>
+        </div>`).join('')}
+    </div>`).join('');
+
+  view.innerHTML = `
+    <section class="part">
+      <div class="part-head"><span class="mark">א</span><h2>מה שווה לדבר עליו</h2></div>
+      <div class="plate">
+        ${q.length ? sections : '<p class="finish-hint">אין כרגע סימן מדוד. זה לא אומר שהכל סגור, זה אומר שעוד לא ענית מספיק כדי שיהיה על מה לדבר.</p>'}
+      </div>
+    </section>
+    <section class="part">
+      <div class="part-head"><span class="mark">ב</span><h2>מה כבר תוקן</h2></div>
+      <div class="plate">
+        ${open.length ? open.map(([id, b]) => `
+          <div class="m-item">
+            <div class="m-label" dir="auto">${esc(b.believed || id)}</div>
+            <div class="m-meta">${b.status === 'relapsed' ? 'חזר' : 'פתוח'} · ${b.opened}</div>
+          </div>`).join('')
+        : '<p class="finish-hint">הרשומה ריקה. היא מתמלאת מהשיחות, לא מהבחנים.</p>'}
+      </div>
+    </section>`;
+
+  view.querySelectorAll('.m-talk').forEach(b => {
+    b.onclick = () => {
+      const it = q.find(x => x.id === b.dataset.id && x.kind === b.dataset.kind);
+      if (it) openMentor(it);
+    };
+  });
+}
+
+function openMentor(item) {
+  openChat(null, 'mentor');
+  sendChat(`בוא נדבר על זה: ${item.label}`, false, 'mentor', item);
+}
+
+/* ---------- הקודקס: concepts, graph, saved notes ---------- */
+/* in-app corpus reader: docs stay in the app, never a Drive redirect */
+async function renderDoc(slug) {
+  setTab('tab-kodex');
+  paintFolio();
+  const view = $('#view');
+  view.innerHTML = '<p class="finish-hint">טוען מסמך...</p>';
+  $('#status').textContent = '';
+  let md;
+  try {
+    const r = await fetch('corpus/' + slug + '.md');
+    if (!r.ok) throw 0;
+    md = await r.text();
+  } catch (e) {
+    view.innerHTML = '<div class="doc-read"><a class="doc-back" href="#/ladder">&rsaquo; חזרה למסלול</a><p class="finish-hint">המסמך לא נמצא.</p></div>';
+    return;
+  }
+  const art = document.createElement('article');
+  art.className = 'doc-read';
+  art.innerHTML = '<a class="doc-back" href="#/ladder">&rsaquo; חזרה למסלול</a>' +
+    '<div class="doc-body" dir="ltr">' + renderMarkdown(md) + '</div>' +
+    '<a class="doc-back" href="#/ladder">&rsaquo; חזרה למסלול</a>';
+  view.innerHTML = ''; view.appendChild(art);
+  typeset(view);
+  window.scrollTo(0, 0);
+}
+
+/* relic sets: named collections; recalling members earns 2pc/4pc bonuses */
+let kOpen = null;
+const conceptRecalled = cid =>
+  Object.entries(S.answers).some(([k, a]) => a && a.ok && k.startsWith('c-' + cid + '@'));
+function kodexSets(cs) {
+  const sets = [];
+  const vocab = cs.filter(c => c.bonus).map(c => c.id);
+  if (vocab.length >= 4) sets.push({ id: 'set-vocab', name: 'לשון הסדנה', ids: vocab });
+  const byWeek = {};
+  cs.filter(c => !c.bonus && c.day).forEach(c => { const w = Math.ceil(c.day / 7); (byWeek[w] = byWeek[w] || []).push(c.id); });
+  Object.keys(byWeek).sort().forEach(w => { if (byWeek[w].length >= 4) sets.push({ id: 'set-w' + w, name: 'אוסף שבוע ' + w, ids: byWeek[w] }); });
+  return sets;
+}
+function paintSets(cs) {
+  const host = $('#setStrip'); if (!host) return;
+  S.setBonus = S.setBonus || {};
+  const sets = kodexSets(cs);
+  if (!sets.length) { host.hidden = true; return; }
+  host.innerHTML = sets.map(s => {
+    const done = s.ids.filter(conceptRecalled).length;
+    const tier = done >= 4 ? 2 : done >= 2 ? 1 : 0;
+    const had = S.setBonus[s.id] || 0;
+    if (tier > had) { // claim once, performed
+      const gained = (tier >= 1 && had < 1 ? 1 : 0) + (tier >= 2 && had < 2 ? 2 : 0);
+      S.points.craft = S.points.craft || { earned: 0, spent: 0 };
+      S.points.craft.earned += gained;
+      S.setBonus[s.id] = tier; store.save();
+      toast(`סט "${s.name}": בונוס +${gained} XP`);
+    }
+    const pips = s.ids.slice(0, 8).map(id => `<i class="${conceptRecalled(id) ? 'on' : ''}"></i>`).join('');
+    return `<div class="set-card ${tier ? 't' + tier : ''}">
+      <div class="st-name">${s.name}</div>
+      <div class="st-pips">${pips}</div>
+      <div class="st-bonus">${done}/${s.ids.length} נשלפו · בונוס 2: +1 · בונוס 4: +2</div>
+    </div>`;
+  }).join('');
+}
+
+/* Recall-lens: any concept is quizzable ON DEMAND (it + its neighbors) */
+function openConceptQuiz(cid) {
+  const cs = (kodex && kodex.concepts) || [];
+  const base = Array.isArray(cid) ? cid
+    : [cid, ...(((cs.find(c => c.id === cid) || {}).rel) || [])];
+  const ids = base.filter(id => cs.some(c => c.id === id && c.d)).slice(0, 6);
+  const items = ids.map(id => conceptCard(id)).filter(Boolean);
+  if (!items.length) { toast('אין מספיק מושגים לבוחן'); return; }
+  const qp = $('#qplayer'), body = $('#qpBody');
+  qp.hidden = false; document.body.style.overflow = 'hidden';
+  const close = () => { qp.hidden = true; document.body.style.overflow = ''; };
+  $('#qpClose').onclick = close;
+  let i = 0; const results = []; const stamp = iso(new Date()).replace(/-/g, '');
+  function step() {
+    $('#qpProgress').textContent = 'בוחן מושג ' + (i + 1) + ' / ' + items.length;
+    body.innerHTML = '';
+    const d = { ...items[i].d, id: items[i].d.id + '@q' + stamp };
+    body.appendChild(buildQuiz(d, r => { results.push(r); setTimeout(() => { i++; i < items.length ? step() : summary(); }, 1500); }));
+    typeset(body);
+  }
+  function summary() {
+    const ok = results.filter(r => r.ok).length;
+    $('#qpProgress').textContent = 'סיכום';
+    body.innerHTML = `<div class="qp-summary plate"><h2>${ok}/${results.length} נכונות</h2>
+      <p>המושג ושכניו מהגרף. שליפה חוזרת תגיע דרך התור הרגיל.</p>
+      <button class="qp-done">חזרה לאוצר</button></div>`;
+    body.querySelector('.qp-done').onclick = close;
+  }
+  step();
+}
+
+function renderKodex() {
+  setTab('tab-kodex');
+  paintFolio();
+  const view = $('#view');
+  const cs = (kodex && kodex.concepts) || [];
+  const dCounts = deckCounts();
+  const deckRows = Object.keys(dCounts).map(id => {
+    const c = dCounts[id], on = deckOn(id);
+    const days = Math.ceil(c.total / DECK_PER_DAY);
+    return `<div class="m-item">
+      <div class="m-label">${esc(DECK_NAMES[id] || id)}</div>
+      <div class="m-meta">${on ? `${c.seeded} מתוך ${c.total} בתור` : `${c.total} מושגים, ${days} ימים`}</div>
+      ${on ? '' : `<button class="u-ghost m-talk" data-deck="${esc(id)}">פתח</button>`}
+    </div>`;
+  }).join('');
+
+  let html = `<div class="view-head"><h1>האוצר</h1>
+    <p>המושגים שנלמדו, הקשרים ביניהם, והערות ששמרת מהמורה. גדל עם כל יום.</p></div>
+    ${deckRows ? `<div class="qhead"><h2>חפיסות</h2></div>
+      <div class="plate">${deckRows}
+      <p class="finish-hint">חפיסה נפתחת אל תוך השליפה בקצב ${DECK_PER_DAY} מושגים ביום, לא בבת אחת.</p>
+      </div>` : ''}
+    <div class="set-strip" id="setStrip" tabindex="0" role="region" aria-label="ערכות"></div>
+    <div class="qhead"><h2>חדר החותמות</h2><span class="d">${Object.keys(S.ach || {}).length}/${ACHS.length}</span></div>
+    <div class="ach-grid">` + ACHS.map(a => {
+      const got = (S.ach || {})[a.id];
+      return `<div class="ach-seal ${got ? 'got t' + a.t : ''}" ${got ? `title="${esc(a.name)} · ${got}"` : ''}>
+        <svg viewBox="0 0 24 24"><use href="#${a.icon}"/></svg>
+        <span class="as-name">${esc(a.name)}</span>
+        <span class="as-desc">${esc(a.desc)}</span>
+      </div>`;
+    }).join('') + `</div>
+    <input id="kSearch" type="search" placeholder="חיפוש מושג..." aria-label="חיפוש מושג" autocomplete="off">
+    <canvas id="kGraph" height="300"></canvas>
+    <div id="kList" class="k-list"></div>`;
+  const notes = S.notes || [];
+  if (notes.length) {
+    html += `<div class="qhead" style="direction:rtl"><h2>הערות מהמורה</h2><span class="d">${notes.length}</span></div>` +
+      notes.slice().reverse().map((n, i) => `<div class="k-note plate"><p>${n.t.replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p>
+        <small>${n.d}${n.ctx ? ' · ' + n.ctx.replace('#/', '') : ''}</small></div>`).join('');
+  }
+  view.innerHTML = html;
+  $('#status').textContent = '';
+  view.querySelectorAll('[data-deck]').forEach(b => b.onclick = () => {
+    const n = (deckCounts()[b.dataset.deck] || {}).total || 0;
+    openDeck(b.dataset.deck);
+    toast(`${DECK_NAMES[b.dataset.deck] || b.dataset.deck}: ${DECK_PER_DAY} ליום`);
+    renderKodex();
+  });
+  const list = $('#kList');
+  // ledger rows: compact list, ONE expanded card at a time (no clone wall)
+  const expanded = c => `<div class="k-card" data-x="${esc(c.id)}">
+      <p>${esc(c.d)}</p>
+      ${(c.rel || []).length ? `<div class="k-rel">${c.rel.map(r => { const t = cs.find(x => x.id === r); return t ? `<a class="chip2" href="#k-${r}" data-rel="${esc(r)}">${t.t}</a>` : ''; }).join(' ')}</div>` : ''}
+      <div class="k-act"><button class="k-quiz" data-c="${esc(c.id)}">בחן אותי</button><button class="k-ask" data-c="${esc(c.id)}">שאל את המורה</button></div>
+    </div>`;
+  function paintList(q) {
+    const f = q ? cs.filter(c => (c.t + ' ' + c.he + ' ' + c.d).toLowerCase().includes(q.toLowerCase())) : cs;
+    list.innerHTML = f.map(c =>
+      `<div class="k-row ${kOpen === c.id ? 'open' : ''}" data-c="${esc(c.id)}" id="k-${esc(c.id)}">
+        <b>${esc(c.t)}</b><span class="k-he">${esc(c.he)}</span><span class="chip2">יום ${esc(c.day)}</span></div>` +
+      (kOpen === c.id ? expanded(c) : '')).join('') || '<p class="finish-hint">אין תוצאות.</p>';
+    list.querySelectorAll('.k-row').forEach(r => r.onclick = () => {
+      kOpen = kOpen === r.dataset.c ? null : r.dataset.c;
+      paintList($('#kSearch').value);
+    });
+    list.querySelectorAll('[data-rel]').forEach(a => a.onclick = e => {
+      e.preventDefault(); kOpen = a.dataset.rel; paintList($('#kSearch').value);
+      const el = document.getElementById('k-' + a.dataset.rel);
+      el && el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    list.querySelectorAll('.k-quiz').forEach(b => b.onclick = e => { e.stopPropagation(); openConceptQuiz(b.dataset.c); });
+    list.querySelectorAll('.k-ask').forEach(b => b.onclick = e => {
+      e.stopPropagation();
+      const c = cs.find(x => x.id === b.dataset.c); if (!c) return;
+      openChat(`בהקשר המושג "${c.t}" (${c.he}): ${c.d}. `);
+    });
+  }
+  paintList('');
+  $('#kSearch').oninput = e => paintList(e.target.value);
+  paintSets(cs);
+  drawKodexGraph(cs);
+  window.scrollTo(0, 0);
+}
+function drawKodexGraph(csAll) {
+  const cs = csAll.slice(0, 60); // main-thread O(n^2) layout: cap; worker + clustering when the treasury grows
+  const cv = $('#kGraph'); if (!cv || !cs.length) { if (cv) cv.style.display = 'none'; return; }
+  const W = cv.clientWidth || 380, H = Math.max(300, Math.round(cs.length * 9)), dpr = Math.min(devicePixelRatio, 2);
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const idmap = {}; cs.forEach((c, i) => idmap[c.id] = i);
+  const N = cs.length;
+  const nodes = cs.map((c, i) => ({
+    x: W / 2 + Math.cos(i / N * Math.PI * 2) * (W / 2 - 46),
+    y: H / 2 + Math.sin(i / N * Math.PI * 2) * (H / 2 - 34),
+    vx: 0, vy: 0, c
+  }));
+  const edges = [];
+  cs.forEach(c => (c.rel || []).forEach(r => { if (idmap[r] !== undefined) edges.push([idmap[c.id], idmap[r]]); }));
+  for (let it = 0; it < 90; it++) {
+    edges.forEach(([a, b]) => {
+      const dx = nodes[b].x - nodes[a].x, dy = nodes[b].y - nodes[a].y;
+      const d = Math.hypot(dx, dy) || 1, f = (d - 70) * 0.004;
+      nodes[a].vx += f * dx / d; nodes[a].vy += f * dy / d;
+      nodes[b].vx -= f * dx / d; nodes[b].vy -= f * dy / d;
+    });
+    for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+      const dx = nodes[j].x - nodes[i].x, dy = nodes[j].y - nodes[i].y;
+      const d2 = dx * dx + dy * dy || 1, f = 380 / d2;
+      nodes[i].vx -= f * dx; nodes[i].vy -= f * dy;
+      nodes[j].vx += f * dx; nodes[j].vy += f * dy;
+    }
+    nodes.forEach(n => {
+      // center gravity keeps the constellation off the walls
+      n.vx += (W / 2 - n.x) * 0.0035; n.vy += (H / 2 - n.y) * 0.0035;
+      n.x = Math.max(42, Math.min(W - 42, n.x + n.vx));
+      n.y = Math.max(30, Math.min(H - 30, n.y + n.vy));
+      n.vx *= 0.6; n.vy *= 0.6;
+    });
+  }
+  const gold = themeC('--gold'), goldHi = themeC('--gold-hi'), line = themeC('--line'), ink = themeC('--ink');
+  x.strokeStyle = line; x.globalAlpha = 0.55;
+  edges.forEach(([a, b]) => { x.beginPath(); x.moveTo(nodes[a].x, nodes[a].y); x.lineTo(nodes[b].x, nodes[b].y); x.stroke(); });
+  x.globalAlpha = 1;
+  // star chart: node weight = connectivity; labels only where they earn space
+  const deg = nodes.map((_, i) => edges.reduce((a, [s, t]) => a + (s === i || t === i ? 1 : 0), 0));
+  nodes.forEach((n, i) => {
+    const hot = n.c.day === (currentDay || 99), hub = deg[i] >= 3;
+    const r = 3 + Math.min(deg[i], 6) * 1.15;
+    if (hot || hub) { x.shadowColor = gold; x.shadowBlur = hub ? 14 : 9; }
+    x.beginPath(); x.arc(n.x, n.y, r, 0, Math.PI * 2);
+    x.fillStyle = hot ? goldHi : hub ? gold : ink; x.fill();
+    x.shadowBlur = 0;
+    if (hub || hot || deg[i] >= 2) {
+      x.fillStyle = hub ? goldHi : themeC('--faded');
+      x.font = (hub ? '700 ' : '') + '9.5px "Rubik", "Noto Sans Hebrew", sans-serif'; x.textAlign = 'center';
+      x.fillText(n.c.t.length > 16 ? n.c.t.slice(0, 15) + '…' : n.c.t, n.x, n.y + r + 10);
+    }
+  });
+  cv.onclick = e => {
+    const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    let best = null, bd = 1e9;
+    nodes.forEach(n => { const d2 = (n.x - px) ** 2 + (n.y - py) ** 2; if (d2 < bd) { bd = d2; best = n; } });
+    if (best && bd < 900) {
+      kOpen = best.c.id;
+      const ks = $('#kSearch'); if (ks && ks.oninput) ks.oninput({ target: ks });
+      const el = document.getElementById('k-' + best.c.id);
+      el && el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+}
+
+/* ---------- תגליות: subject shelves of optional side quests ---------- */
+function renderDiscover() {
+  setTab('tab-discover');
+  paintFolio();
+  const view = $('#view');
+  const items = (disco && disco.items) || [];
+  const subjects = (disco && disco.subjects) || [];
+  S.sidequests = S.sidequests || {};
+  const ageDays = t => Math.floor((Date.now() - new Date(t)) / 86400000);
+  const ago = t => { const d = ageDays(t); return d === 0 ? 'היום' : d === 1 ? 'אתמול' : 'לפני ' + d + ' ימים'; };
+
+  const taken = items.filter(i => S.sidequests[i.id] && S.sidequests[i.id].s !== 'done');
+  const done = items.filter(i => S.sidequests[i.id] && S.sidequests[i.id].s === 'done');
+
+  const card = (i, inMy) => {
+    const st = S.sidequests[i.id];
+    return `<div class="dq-card plate ${st && st.s === 'done' ? 'dq-done' : ''}" style="--age:${Math.min(ageDays(i.time), 10)}" data-id="${i.id}">
+      <div class="dq-top"><span class="chip2">${i.kind}</span><span class="dq-src" dir="ltr">${i.source}</span><span class="dq-time">${ago(i.time)}${i.time_label === 'update' ? ' (עדכון)' : ''}</span></div>
+      <a class="dq-title" dir="ltr" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>
+      <p class="dq-line">${esc(i.line)}</p>
+      <div class="dq-quest"><span>${esc(i.quest)}</span></div>
+      <div class="dq-foot">
+        ${st && st.s === 'done' ? '<span class="dq-donechip">הושלם</span>'
+        : st ? `<button class="dq-btn dq-finish" data-id="${i.id}" data-tree="${i.tree}">סיימתי את המסע (+1)</button>`
+        : `<button class="dq-btn" data-id="${i.id}">צא למסע · ~${i.min} דק׳</button>`}
+      </div></div>`;
+  };
+
+  let html = `<div class="view-head"><h1>תגליות</h1>
+    <p>סריקה יומית של הארגונים, המאגרים והערוצים שלך. הכל אופציונלי: מסעות צדדיים, בלי חובות ובלי פג-תוקף.</p></div>`;
+  if (taken.length) html += `<div class="qhead"><h2>המסעות שלי</h2><span class="d">${taken.length}</span></div>` + taken.map(i => card(i, true)).join('');
+  subjects.forEach(s => {
+    const si = items.filter(i => i.subject === s.id && !(S.sidequests[i.id]));
+    if (!si.length) return;
+    html += `<div class="qhead"><h2>${s.name}</h2><span class="d">${si.length}</span></div>` +
+      si.sort((a, b) => b.time.localeCompare(a.time)).map(i => card(i, false)).join('');
+  });
+  if (done.length) html += `<div class="qhead"><h2>הושלמו</h2><span class="d">${done.length}</span></div>` + done.map(i => card(i, true)).join('');
+  if (!items.length) html += `<p class="finish-hint">הסורק טרם רץ היום. הרצה ראשונה: מחר 07:15, או ידנית מהמחשב.</p>`;
+  view.innerHTML = html;
+  $('#status').textContent = '';
+  view.querySelectorAll('.dq-btn').forEach(b => b.onclick = e => {
+    const id = b.dataset.id;
+    if (b.classList.contains('dq-finish')) {
+      S.sidequests[id] = { s: 'done', d: iso(new Date()) };
+      award(b.dataset.tree || 'craft', 1, b, false);
+      store.save(); renderDiscover();
+    } else {
+      S.sidequests[id] = { s: 'taken', d: iso(new Date()) };
+      store.save(); toast('מסע נלקח. בלי לחץ.'); renderDiscover();
+    }
+  });
+  window.scrollTo(0, 0);
+}
+
+/* ---------- routing ---------- */
+/* ---------- the spine: ordering, workout, home (SYSTEM-SPEC 2.1, 2.2, 3.1) ----------
+   No date decides anything here. A unit is proposed by its pull toward an active
+   goal, the measured gap it closes, and whether its prerequisites are met. */
+const MOSCOW_W = { must: 1, should: 0.45, could: 0.15, wont: 0 };
+const allUnits = () => (curriculum && curriculum.units) || [];
+const unitById = id => allUnits().find(u => u.id === id);
+const uState = id => (S.unitState[id] = S.unitState[id] || { closed: null, skips: 0 });
+const daysTo = ds => Math.round((new Date(ds + 'T12:00:00') - new Date()) / 864e5);
+
+// Urgency rises as a deadline nears. A cadence goal (three interviews a week)
+// has no horizon to compress, so it sits at a constant middling pull.
+const urgency = g => g.deadline ? 1 / Math.max(1, daysTo(g.deadline) / 7) : 0.6;
+
+function goalPull(u) {
+  const gs = ((goalDefs && goalDefs.goals) || []).filter(g => g.active && (u.goals || []).includes(g.id));
+  return gs.reduce((m, g) => Math.max(m, g.weight * urgency(g)), 0);
+}
+
+const ledgerRow = id => (skills && skills.skills.find(x => x.id === id)) || null;
+function skillGap(id) {
+  const row = ledgerRow(id);
+  const cur = S.skillLevels[id] != null ? S.skillLevels[id] : (row ? row.current : 0);
+  return Math.max(0, (row ? row.target : 5) - cur) / 5;
+}
+function gapFactor(u) {
+  if (!u.skills || !u.skills.length) return 0.5;   // no ledger row: neutral, neither boosted nor sunk
+  return Math.min(1, u.skills.reduce((a, id) => a + skillGap(id), 0) / u.skills.length);
+}
+
+// A prerequisite names a CONCEPT, so any closed unit teaching it satisfies it.
+// That is what lets placement mark a concept known and unlock everything below.
+function knownConcepts() {
+  const set = new Set(S.known || []);
+  allUnits().forEach(u => { if (uState(u.id).closed) (u.teaches || []).forEach(c => set.add(c)); });
+  return set;
+}
+const available = (u, known) => (u.requires || []).every(c => known.has(c));
+
+// Units carry no blocks until body generation (build order step 7), so this is
+// zero BY CONSTRUCTION rather than by accident. Due items still reach the
+// learner through the workout's recall row; they just cannot be attributed to a
+// unit yet. When bodies land, count this unit's due items here.
+const reviewDebt = () => 0;
+
+function priority(u, known) {
+  if (uState(u.id).closed) return -1;
+  const base = goalPull(u) * gapFactor(u) * MOSCOW_W[u.moscow] * (available(u, known) ? 1 : 0);
+  return base * Math.pow(0.6, uState(u.id).skips || 0) + reviewDebt();
+}
+
+function rankedUnits() {
+  const known = knownConcepts();
+  return allUnits().map(u => ({ u, p: priority(u, known) })).filter(x => x.p > 0)
+    .sort((a, b) => b.p - a.p || a.u.estMin - b.u.estMin);   // ties: the cheapest real move
+}
+
+// talents.json still ships systems/craft/ops; the pvp/between/pve rename is a
+// later step. Deriving the tree from the unit's NODE keeps XP landing where the
+// work was done either way, which is the actual requirement (R11).
+function treeOfNode(nodeId) {
+  const t = talents && talents.trees.find(t => t.tiers.some(ti => ti.nodes.some(n => n.id === nodeId)));
+  return t ? t.id : 'craft';
+}
+
+function closeUnit(u) {
+  const st = uState(u.id);
+  if (st.closed) return;
+  st.closed = iso(new Date());
+  (u.objectives || []).forEach((o, i) => {          // objectives enter the recall pool
+    const rid = 'u-' + u.id + '-' + i;
+    if (!S.reviews[rid]) S.reviews[rid] = { iv: 0, due: plusDays(st.closed, 1), lapses: 0 };
+  });
+  store.save();
+  award(treeOfNode(u.node), Math.max(2, Math.round(u.estMin / 4)), null, true, (u.skills || [])[0]);
+}
+
+function whyThisUnit(u) {
+  const gs = ((goalDefs && goalDefs.goals) || []).filter(g => g.active && (u.goals || []).includes(g.id));
+  const g = gs.sort((a, b) => b.weight * urgency(b) - a.weight * urgency(a))[0];
+  const bits = [];
+  if (g) bits.push(g.he + (g.deadline ? ' · ' + daysTo(g.deadline) + ' ימים' : ''));
+  const weakest = (u.skills || []).slice().sort((a, b) => skillGap(b) - skillGap(a))[0];
+  if (weakest) {
+    const row = ledgerRow(weakest);
+    if (row) bits.push('פער ב-' + weakest + ': ' + (S.skillLevels[weakest] != null ? S.skillLevels[weakest] : row.current) + ' מתוך ' + row.target);
+  }
+  return bits.join(' · ');
+}
+
+function renderHome() {
+  setTab('tab-today');
+  currentDay = null;                                 // no calendar in the chrome either
+  paintFolio();
+  const view = $('#view');
+  $('#status').textContent = '';
+  if (!curriculum) {
+    view.innerHTML = '<p class="finish-hint">תוכנית הלימוד לא זמינה כרגע. נסה שוב כשיש רשת.</p>';
+    return;
+  }
+  const ranked = rankedUnits();
+  const u = ranked.length ? ranked[0].u : null;
+  const due = dueReviews().length;
+  const mq = mentorQueue();
+  const must = allUnits().filter(x => x.moscow === 'must');
+  const closed = must.filter(x => uState(x.id).closed).length;
+  const left = must.length - closed;
+
+  const propose = u ? `
+    <section class="part">
+      <div class="part-head"><span class="mark">א</span><h2>המשך מכאן</h2></div>
+      <div class="plate">
+        <div class="folio-line">${u.block} · ${whyThisUnit(u)}</div>
+        <h3>${u.he}</h3>
+        <div class="u-chips"><span class="chip2">~${u.estMin} דק׳</span>
+          <span class="chip2">${u.kind === 'practice' ? 'תרגול' : 'לימוד'}</span>
+          <span class="chip2">עומק ~${u.depthEstMin} דק׳</span></div>
+        <div class="u-actions">
+          <button class="finish-day" id="startUnit">התחל</button>
+          <button class="u-ghost" id="swapUnit">משהו אחר</button>
+        </div>
+      </div>
+    </section>` : `
+    <section class="part"><div class="plate">
+      <h3>הכל סגור בשלב הזה</h3>
+      <p class="finish-hint">אין יחידה זמינה שתלויה בידע שכבר הוכח. פתח יחידה מהעץ, או המתן להרחבת התוכנית.</p>
+    </div></section>`;
+
+  view.innerHTML = `
+    ${propose}
+    <section class="part">
+      <div class="part-head"><span class="mark">ב</span><h2>שליפה</h2></div>
+      <div class="plate">
+        ${due ? `<p>${due} פריטים בשלים לשליפה.</p><button class="finish-day" id="startRecall">שלוף</button>`
+              : '<p class="finish-hint">אין פריטים בשלים כרגע. השליפה נפתחת מעצמה כשמגיע הזמן.</p>'}
+      </div>
+    </section>
+    <section class="part">
+      <div class="part-head"><span class="mark">ג</span><h2>המנטור</h2></div>
+      <div class="plate">
+        ${mq.length ? `<p>${mq.length} ${mq.length === 1 ? 'דבר' : 'דברים'} שהנתונים אומרים ששווה לדבר עליהם.</p>
+             <p class="finish-hint" dir="auto">${esc(mq[0].label)}</p>
+             <button class="finish-day" id="openMentor">פתח</button>`
+           : '<p class="finish-hint">אין כרגע סימן מדוד. תענה על עוד כמה בחנים ויהיה על מה לדבר.</p>'}
+      </div>
+    </section>
+    <section class="part">
+      <div class="part-head"><span class="mark">ד</span><h2>המצב</h2></div>
+      <div class="plate">
+        <div class="u-stat"><span>יחידות חובה שנסגרו</span><b>${closed} מתוך ${must.length}</b></div>
+        <div class="u-stat"><span>נשארו</span><b>${left}</b></div>
+        <div class="u-stat"><span>רצף</span><b>${runLength()}</b></div>
+        <div class="u-stat"><span>לדף היומי הישן</span><b><a href="#/history">היסטוריה</a></b></div>
+        ${lastSyncError ? `<div class="u-stat"><span>סנכרון</span><b>${esc(lastSyncError)}</b></div>` : ''}
+      </div>
+    </section>`;
+
+  const om = $('#openMentor');
+  if (om) om.onclick = () => { location.hash = '#/mentor'; };
+  const start = $('#startUnit');
+  if (start && u) start.onclick = () => { location.hash = '#/u/' + u.id; };
+  const swap = $('#swapUnit');
+  if (swap && u) swap.onclick = () => {              // proposed, never forced; repeated skips lower its pull
+    uState(u.id).skips = (uState(u.id).skips || 0) + 1; store.save(); renderHome();
+  };
+  const rec = $('#startRecall');
+  if (rec) rec.onclick = () => openReview();
+}
+
+async function renderUnit(id) {
+  const u = unitById(id);
+  if (!u) { location.hash = '#/'; return; }
+  setTab('tab-today'); currentDay = null; paintFolio();
+  const st = uState(u.id);
+  const view = $('#view');
+
+  // The FILE is the truth about whether a lesson exists. curriculum.json's
+  // body.status is the generator's bookkeeping and can lag a run; asking the
+  // network avoids showing "not written" over a lesson that is sitting there.
+  let md = null;
+  try { const r = await fetch('units/' + u.id + '.md', { cache: 'no-cache' }); if (r.ok) md = await r.text(); }
+  catch (e) { /* offline: fall through to the metadata view */ }
+
+  const art = document.createElement('article');
+  const head = document.createElement('header'); head.className = 'head';
+  head.innerHTML = `<div class="folio-line">${u.block} · ${u.title}</div><h1>${u.he}</h1>`;
+  art.appendChild(head);
+
+  if (md) {
+    const body = document.createElement('div');
+    body.innerHTML = renderMarkdown(md);
+    const h1 = body.querySelector('h1'); if (h1) h1.remove();   // the header above already carries it
+    art.appendChild(body);
+  }
+
+  const objectives = (u.objectives || []).map(o => `<li>${o}</li>`).join('');
+  const foot = document.createElement('section'); foot.className = 'part';
+  foot.innerHTML = `<div class="plate">
+      ${!md && objectives ? `<h3>מה נדרש כאן</h3><ul>${objectives}</ul>` : ''}
+      ${!md ? '<p class="finish-hint">השיעור המלא ליחידה הזאת עוד לא נכתב. השלד קיים והתוכן נוצר בהמשך. אפשר לסמן שהיחידה נסגרה אם החומר כבר ידוע.</p>' : ''}
+      <div class="u-chips"><span class="chip2">~${u.estMin} דק׳</span><span class="chip2">עומק ~${u.depthEstMin} דק׳</span>
+        <span class="chip2">צומת: ${u.node}</span>${(u.skills || []).map(s => `<span class="chip2">${s}</span>`).join('')}</div>
+      <div class="u-actions">
+        ${st.closed ? `<p class="finish-hint">נסגר ב-${st.closed}.</p>`
+                    : '<button class="finish-day" id="closeUnit">סמן שנסגר</button>'}
+        <a class="u-ghost" href="#/">חזרה</a>
+      </div></div>`;
+  art.appendChild(foot);
+
+  view.innerHTML = ''; view.appendChild(art);
+  $('#status').textContent = '';
+  upgradeBlocks(view);      // quiz, fillin, widget and concepts fences become live components
+  typeset(view);
+  window.scrollTo(0, 0);
+
+  const btn = $('#closeUnit');
+  if (btn) btn.onclick = () => { closeUnit(u); location.hash = '#/'; renderHome(); };
+}
+
+function renderHistory() {
+  setTab('tab-today'); currentDay = null; paintFolio();
+  $('#status').textContent = '';
+  const rows = index.map(p => `<div class="ladder-item"><div class="li-body"><div class="li-t">
+      <a href="#/${p.date}">${p.title}</a></div><div class="li-why">${p.date}</div></div></div>`).join('');
+  $('#view').innerHTML = `<section class="part">
+    <div class="part-head"><span class="mark">א</span><h2>הדפים היומיים</h2></div>
+    <div class="plate"><p class="finish-hint">הדפים שנכתבו לפני שהתוכנית עברה ליחידות. נשארים קריאים.</p>
+    ${rows}</div></section>`;
+}
+
+function route() {
+  if (!index.length && !curriculum) return;
+  const h = location.hash;
+  const vw = $('#view');
+  if (vw && !REDUCED()) { vw.classList.remove('stage'); void vw.offsetWidth; vw.classList.add('stage'); }
+  if (h === '#/map') return renderTalents();
+  if (h === '#/ladder') return renderLadder();
+  if (h === '#/kodex') return renderKodex();
+  if (h === '#/discover') return renderDiscover();
+  if (h === '#/mentor') return renderMentor();
+  const dm = h.match(/^#\/doc\/([a-z0-9-]+)$/);
+  if (dm) return renderDoc(dm[1]);
+  if (h === '#/history') return renderHistory();
+  const um = h.match(/^#\/u\/([a-z0-9-]+)$/);
+  if (um) return renderUnit(um[1]);
+  const m = h.match(/^#\/(\d{4}-\d{2}-\d{2})$/);
+  if (m) { const i = index.findIndex(p => p.date === m[1]); return renderPost(i >= 0 ? i : 0); }
+  // Default: the proposed unit, never a date. R1, the oldest standing complaint:
+  // "It auto moved to day 2 without me completing." Dated pages stay reachable at
+  // #/YYYY-MM-DD and through #/history; nothing is waiting unread.
+  if (curriculum) return renderHome();
+  renderPost(0);
+}
+addEventListener('hashchange', route);
+// Re-pick today's page when the PWA is resumed from memory (fixes the phone showing a stale day).
+addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  if (!$('#qplayer').hidden || !$('#overlay').hidden || !$('#chatPane').hidden) return; // don't disrupt active practice
+  const h = location.hash;
+  if (h === '' || h === '#/') route();
+});
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('#qplayer').hidden) { $('#qpClose').click(); }
+  else if (!$('#overlay').hidden) { $('#ovClose').click(); }
+  else if (!$('#chatPane').hidden) { $('#cpClose').click(); }
+});
+addEventListener('resize', () => { if (location.hash === '#/map') requestAnimationFrame(drawPanelEdges); }, { passive: true });
+
+let ticking = false;
+addEventListener('scroll', () => {
+  if (ticking) return; ticking = true;
+  requestAnimationFrame(() => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    $('#progress').style.width = (max > 0 ? (scrollY / max) * 100 : 0) + '%';
+    ticking = false;
+  });
+}, { passive: true });
+
+(async function boot() {
+  // Each resource degrades independently; only the post index is required.
+  const j = u => fetch(u, { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; return r.json(); });
+  const rs = await Promise.allSettled([
+    j('posts/index.json'), j('judgment_map.json'), j('research_ladder.json'),
+    j('talents.json'), j('course_plan.json'), j('concepts.json'), j('discoveries.json'),
+    j('skills.json'), j('syllabus.json'), j('curriculum.json'), j('goals.json')
+  ]);
+  const val = i => rs[i].status === 'fulfilled' ? rs[i].value : null;
+  index = val(0) || []; jmap = val(1); ladder = val(2); talents = val(3);
+  plan = val(4); kodex = val(5); disco = val(6); skills = val(7); syl = val(8);
+  curriculum = val(9); goalDefs = val(10);
+  // The home screen runs off curriculum.json, so posts are no longer required to boot.
+  if (!index.length && !curriculum) { $('#status').textContent = 'אין רשת ואין עותק שמור עדיין.'; return; }
+  await pullState();
+  seedReviews();                 // nav badge needs the queue on every tab
+  shieldWatch();                 // a shield may shatter to save the streak
+  checkAchievements(true);       // record, never celebrate, on boot
+  paintFolio(); route();
+  mountMotes();
+  mountExplainLens();
+  const st = $('#sndToggle');
+  if (st) {
+    // Same action-oriented aria-label pattern as #themeToggle: describes
+    // what the next press does, so it changes on every click alongside
+    // aria-pressed and the toast. Muted state also gets a real slash mark
+    // drawn across the speaker icon (a genuine visual confirmation, the same
+    // idea as the sun/moon swap on #themeToggle) rather than only the
+    // existing .off colour dim; it is inserted/removed as a real SVG node
+    // rather than shown/hidden in place, so the mute state is an actual DOM
+    // change, not just an attribute flip.
+    const NS = 'http://www.w3.org/2000/svg';
+    const applySndState = on => {
+      st.classList.toggle('off', !on);
+      st.setAttribute('aria-pressed', on ? 'true' : 'false');
+      st.setAttribute('aria-label', on ? 'השתק צליל' : 'הפעל צליל');
+      const svg = $('#sndIcon');
+      let slash = svg.querySelector('.snd-mute-slash');
+      if (!on && !slash) {
+        slash = document.createElementNS(NS, 'line');
+        slash.setAttribute('class', 'snd-mute-slash');
+        slash.setAttribute('x1', '4'); slash.setAttribute('y1', '20');
+        slash.setAttribute('x2', '20'); slash.setAttribute('y2', '4');
+        svg.appendChild(slash);
+      } else if (on && slash) {
+        slash.remove();
+      }
+    };
+    applySndState(sfx.isOn());
+    st.onclick = () => { const on = sfx.toggle(); applySndState(on); toast(on ? 'צליל פועל' : 'צליל כבוי'); if (on) sfx.coin(); };
+  }
+})();
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw && nw.addEventListener('statechange', () => {
+        if (nw.state === 'activated' && hadController) {
+          const el = $('#toastMsg');
+          el.textContent = 'גרסה חדשה מוכנה · הקש לרענון';
+          el.classList.add('show', 'click');
+          el.onclick = () => location.reload();
+        }
+      });
+    });
+  });
+}

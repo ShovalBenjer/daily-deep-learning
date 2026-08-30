@@ -12,7 +12,7 @@ import { test, expect } from 'bun:test';
 import { readFileSync } from 'fs';
 
 const SRC = readFileSync(new URL('../daemon/server.ts', import.meta.url), 'utf8');
-const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const APP = readFileSync(new URL('../src/app.js', import.meta.url), 'utf8');
 
 function prompt(name: 'MENTOR' | 'SYSTEM'): string {
   const open = SRC.indexOf('const ' + name + ' = `');
@@ -60,7 +60,7 @@ test('the daemon thresholds cannot drift from the client MENTOR constants', () =
   // MENTOR.sure/unsure/lapseFloor; get_mistakes recomputes it server-side so a
   // fabricated diagnosis cannot be handed to the model. Same split, two
   // codebases, so the numbers are asserted equal here.
-  const m = /const MENTOR = \{ sure: (\d+), unsure: (\d+), lapseFloor: (\d+) \};/.exec(HTML);
+  const m = /const MENTOR = \{ sure: (\d+), unsure: (\d+), lapseFloor: (\d+) \};/.exec(APP);
   expect(m).not.toBeNull();
   const [sure, unsure, lapseFloor] = [Number(m![1]), Number(m![2]), Number(m![3])];
   const tool = SRC.slice(SRC.indexOf("tool('get_mistakes'"), SRC.indexOf("tool('open_belief'"));

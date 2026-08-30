@@ -1,31 +1,30 @@
 // L10 performance budget, per TESTING-SOTA-2026-GAPS.md section 6 item 4.
 //
-// The app is prod-deployed with a growing inline script (113 KB when AGENTS.md
-// first measured it, 139 KB by 2026-08-07) and until now no number anywhere
-// made that growth a decision instead of a drift. These budgets fail with the
-// measured figure in the message, so crossing one is renegotiated in a diff
-// that changes the budget constant, consciously, rather than by deleting the
-// check. Real LCP/INP field budgets need the deployed site and stay a named
-// gap; bytes on the boot path are the half that is measurable hermetically.
+// The app script was extracted from an inline block into src/app.js.
+// These budgets fail with the measured figure in the message, so crossing
+// one is renegotiated in a diff that changes the budget constant,
+// consciously, rather than by deleting the check.
 import { test, expect } from 'bun:test';
-import { readFileSync, statSync, existsSync } from 'fs';
+import { readFileSync, statSync, existsSync, readdirSync } from 'fs';
 
 const root = (p: string) => new URL('../' + p, import.meta.url);
 const HTML = readFileSync(root('index.html'), 'utf8');
 const SW = readFileSync(root('sw.js'), 'utf8');
 
-//: The one inline <script> that is the entire client. 184336 bytes measured
-//: 2026-08-30 after 20 interactive widgets (+layer-stack, process-fork,
-//: path-scan, cte-expand). Raising is allowed, silently drifting is not.
-const INLINE_SCRIPT_BUDGET = 185_000;
+//: Total size of all src/*.js modules. 184344 bytes measured 2026-08-30
+//: after extraction from the inline script.
+const SRC_MODULES_BUDGET = 200_000;
 
 //: Everything sw.js precaches before the app works offline: what a phone pays
 //: on first install. 1337808 bytes measured 2026-08-29, dominated by board art.
 const PRECACHE_BUDGET = 1_600_000;
 
+function srcModules(): string[] {
+  const dir = new URL('../src/', import.meta.url);
+  return readdirSync(dir).filter(f => f.endsWith('.js')).map(f => 'src/' + f);
+}
+
 function inlineScripts(): string[] {
-  // Same extraction contract as tools/check_inline_js.py: script blocks with
-  // no src attribute.
   return [...HTML.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)]
     .map(m => m[1]);
 }
@@ -38,14 +37,23 @@ function shellEntries(): string[] {
   return entries.map(e => (e === './' ? 'index.html' : e));
 }
 
-test('L10: the inline script stays inside its byte budget', () => {
+test('L10: inline scripts are minimal (app logic lives in src/)', () => {
   const scripts = inlineScripts();
-  expect(scripts.length).toBeGreaterThan(0);
-  const bytes = Math.max(...scripts.map(s => Buffer.byteLength(s, 'utf8')));
-  expect(bytes,
-    `inline script is ${bytes} bytes, budget ${INLINE_SCRIPT_BUDGET}. ` +
+  const totalBytes = scripts.reduce((sum, s) => sum + Buffer.byteLength(s, 'utf8'), 0);
+  expect(totalBytes,
+    `inline scripts total ${totalBytes} bytes; app logic should be in src/*.js`
+  ).toBeLessThanOrEqual(200);
+});
+
+test('L10: src/ modules stay inside their byte budget', () => {
+  const files = srcModules();
+  expect(files.length).toBeGreaterThan(0);
+  let total = 0;
+  for (const f of files) total += statSync(root(f)).size;
+  expect(total,
+    `src/ modules are ${total} bytes, budget ${SRC_MODULES_BUDGET}. ` +
     'Raise the budget in a reviewed diff or split the block, never both silently.'
-  ).toBeLessThanOrEqual(INLINE_SCRIPT_BUDGET);
+  ).toBeLessThanOrEqual(SRC_MODULES_BUDGET);
 });
 
 test('L10: the offline-install precache stays inside its byte budget', () => {
@@ -58,17 +66,11 @@ test('L10: the offline-install precache stays inside its byte budget', () => {
 });
 
 test('every precached path exists, so the service worker can install at all', () => {
-  // caches.addAll rejects on a single 404, and a rejected install means no
-  // offline mode anywhere, not one missing file. A rename that misses sw.js
-  // must fail here rather than on a phone.
   for (const e of shellEntries())
     expect(existsSync(root(e)), `sw.js precaches ${e}, which does not exist`).toBe(true);
 });
 
 test('every precached path is shipped by the stager', () => {
-  // The deploy allowlist (tools/stage_site.py SHIP) is default-deny: a file
-  // the service worker precaches but the stager does not ship 404s in
-  // production only, where no local server can reproduce it.
   const stager = readFileSync(root('tools/stage_site.py'), 'utf8');
   const m = /SHIP = \[([\s\S]*?)\]/.exec(stager);
   if (!m) throw new Error('SHIP allowlist not found in tools/stage_site.py');

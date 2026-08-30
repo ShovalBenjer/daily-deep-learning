@@ -54,11 +54,13 @@ times; use PowerShell for anything that passes routes as arguments.
 
 ## Architecture
 
-**One file is the app.** `index.html` (2567 lines) holds a ~139 KB inline
-`<script>` that is the entire client: state store, hash router, all view
-renderers, the quiz/fillin/widget builders, the SRS engine, the talent board and
-the chat pane. `boot()` runs `Promise.allSettled` over eleven root JSON files
-(index.html:2525), so each data source degrades independently and boot survives
+**One file is the app.** `src/app.js` (~184 KB) is the entire client: state
+store, hash router, all view renderers, the quiz/fillin/widget builders, the SRS
+engine, the talent board and the chat pane. `index.html` (~92 lines) is the HTML
+shell that loads vendor libraries and then `<script src="src/app.js">`. A tiny
+inline `<script>` sets `data-theme` from localStorage to prevent FOUC.
+`boot()` runs `Promise.allSettled` over eleven root JSON files
+(src/app.js), so each data source degrades independently and boot survives
 as long as EITHER `posts/index.json` or `curriculum.json` arrives. `route()`
 dispatches `#/map`, `#/ladder`, `#/kodex`, `#/discover`, `#/mentor`,
 `#/doc/{slug}`, `#/history`, `#/u/{unit-id}` and `#/YYYY-MM-DD`, and otherwise
@@ -78,7 +80,7 @@ with exact Hebrew prefixes the UI keys on (עיון, תרגול, AI-103, מעק�
 `upgradeBlocks()` replaces ` ```quiz `, ` ```fillin `, ` ```widget ` and
 ` ```concepts ` fences with live components in both. Correct answers call
 `award(tree, pts, ...)`, which is what feeds the board; for a unit the tree is
-resolved from the unit's own node by `treeOfNode()` (index.html:2303) rather than
+resolved from the unit's own node by `treeOfNode()` (src/app.js) rather than
 from a `tree` field, so points land where the work was done.
 
 **The data graph is the product model.** `talents.json` (nodes, tiers, ranks,
@@ -135,8 +137,7 @@ bumped when shell assets change or phones keep the old build.
 
 ## Non-goals (stated so they stop being re-proposed)
 
-No bundler, no framework, no npm at the root: a build step regresses the
-offline-first posture. No native app, no multi-user, no auth beyond the existing
+No framework, no npm at the root. No native app, no multi-user, no auth beyond the existing
 bearer keys, no server-side rendering. Libraries are vendored into `vendor/`
 (KaTeX, marked, DOMPurify plus fonts) rather than loaded from a CDN.
 
@@ -168,10 +169,9 @@ bearer keys, no server-side rendering. Libraries are vendored into `vendor/`
   (`https://cdn.jsdelivr.net` in `_headers`' `script-src`) was removed with it,
   so `script-src` is now `'self' 'unsafe-inline'` only. A future dependency on
   jsdelivr needs its CSP entry re-added, not assumed present.
-- **Known, dated debt:** the inline script exceeds every module budget and is
-  still growing. 113 KB when this line was written, 139 KB measured 2026-08-07.
-  Splitting it needs either the rejected bundler or ES modules, which changes
-  the CSP and service-worker story.
+- ~~**Known, dated debt:** the inline script exceeds every module budget.~~
+  Closed 2026-08-30. The inline script was extracted to `src/app.js` (184 KB).
+  Further modularization into ES modules is the next step.
 - **Content style:** Hebrew body with English technical nouns, inline Hebrew
   gloss on first use, no em-dash or en-dash, no emoji, KaTeX delimiters `\(...\)`
   and `\[...\]` and never bare `$`. No stock photos anywhere in the product.

@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 #: Every path the deployed app serves. Derived from what index.html fetches and
 #: references, the sw.js precache list, and style.css url() references.
 SHIP = [
-    "index.html", "style.css", "sw.js", "manifest.webmanifest", "_headers",
+    "index.html", "src", "style.css", "sw.js", "manifest.webmanifest", "_headers",
     "_redirects",
     "concepts.json", "course_plan.json", "discoveries.json", "judgment_map.json",
     "research_ladder.json", "skills.json", "syllabus.json", "talents.json",

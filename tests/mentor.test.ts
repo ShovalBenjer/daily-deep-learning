@@ -1,19 +1,19 @@
 // המנטור queue: the four-signal split, tested against the real source.
 //
-// index.html is one inline script with no module boundary, so the honest choice
-// is to lift the block out of the file and evaluate it. A hand-copied version
-// here would pass forever after the app drifted away from it. If the block is
-// renamed or moved, loadMentor throws rather than silently testing nothing.
+// src/app.js has no module boundary, so the honest choice is to lift the block
+// out of the file and evaluate it. A hand-copied version here would pass forever
+// after the app drifted away from it. If the block is renamed or moved,
+// loadMentor throws rather than silently testing nothing.
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'fs';
 
 function loadMentor(S: any, kodex: any) {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const start = html.indexOf('const MENTOR = {');
-  const end = html.indexOf('function renderMentor');
+  const app = readFileSync(new URL('../src/app.js', import.meta.url), 'utf8');
+  const start = app.indexOf('const MENTOR = {');
+  const end = app.indexOf('function renderMentor');
   if (start < 0 || end < 0 || end < start)
-    throw new Error('mentor block not found in index.html');
-  const src = html.slice(start, end);
+    throw new Error('mentor block not found in src/app.js');
+  const src = app.slice(start, end);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
   return new Function('S', 'kodex', 'iso',
     src + '\nreturn { mentorQueue, mentorLabel, MENTOR_KINDS };')(S, kodex, iso);

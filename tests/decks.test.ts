@@ -9,12 +9,12 @@ import { test, expect } from 'bun:test';
 import { readFileSync } from 'fs';
 
 function loadDecks(S: any, kodex: any) {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const start = html.indexOf('const DECK_PER_DAY');
-  const end = html.indexOf('const dueReviews');
+  const app = readFileSync(new URL('../src/app.js', import.meta.url), 'utf8');
+  const start = app.indexOf('const DECK_PER_DAY');
+  const end = app.indexOf('const dueReviews');
   if (start < 0 || end < 0 || end < start)
-    throw new Error('deck block not found in index.html');
-  const src = html.slice(start, end);
+    throw new Error('deck block not found in src/app.js');
+  const src = app.slice(start, end);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
   const plusDays = (d: string, n: number) =>
     new Date(new Date(d + 'T00:00:00Z').getTime() + n * 864e5).toISOString().slice(0, 10);

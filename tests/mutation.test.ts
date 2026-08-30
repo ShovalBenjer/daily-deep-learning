@@ -12,14 +12,14 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'fs';
 
-const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const APP = readFileSync(new URL('../src/app.js', import.meta.url), 'utf8');
 const SRC = readFileSync(new URL('../daemon/server.ts', import.meta.url), 'utf8');
 
 function deckSource(): string {
-  const start = HTML.indexOf('const DECK_PER_DAY');
-  const end = HTML.indexOf('const dueReviews');
-  if (start < 0 || end < 0) throw new Error('deck block not found in index.html');
-  return HTML.slice(start, end);
+  const start = APP.indexOf('const DECK_PER_DAY');
+  const end = APP.indexOf('const dueReviews');
+  if (start < 0 || end < 0) throw new Error('deck block not found in src/app.js');
+  return APP.slice(start, end);
 }
 
 function build(src: string, S: any, kodex: any) {
@@ -207,10 +207,10 @@ test('L4 mutation: the harness can actually fail (control)', () => {
 // all die against it, and a harmless control that must survive.
 
 function mentorSource(): string {
-  const start = HTML.indexOf('const MENTOR = {');
-  const end = HTML.indexOf('function renderMentor');
-  if (start < 0 || end < 0) throw new Error('mentor block not found in index.html');
-  return HTML.slice(start, end);
+  const start = APP.indexOf('const MENTOR = {');
+  const end = APP.indexOf('function renderMentor');
+  if (start < 0 || end < 0) throw new Error('mentor block not found in src/app.js');
+  return APP.slice(start, end);
 }
 
 const mDay = (offset: number) =>
@@ -593,10 +593,10 @@ test('L4 mutation: the open_belief harness can actually fail (control)', () => {
 // defects that must all die, and a harmless control that must survive.
 
 function rankingSource(): string {
-  const start = HTML.indexOf('const MOSCOW_W = {');
-  const end = HTML.indexOf('function treeOfNode');
-  if (start < 0 || end < 0) throw new Error('ranking block not found in index.html');
-  return HTML.slice(start, end);
+  const start = APP.indexOf('const MOSCOW_W = {');
+  const end = APP.indexOf('function treeOfNode');
+  if (start < 0 || end < 0) throw new Error('ranking block not found in src/app.js');
+  return APP.slice(start, end);
 }
 
 function buildRanking(src: string, curriculum: any, goalDefs: any, skillsData: any, S: any) {
@@ -759,10 +759,10 @@ test('L4 mutation: the ranking harness can actually fail (control)', () => {
 // Shaky correct (multi-attempt or low conf) repeats the same interval.
 
 function gradeReviewSource(): string {
-  const start = HTML.indexOf('function gradeReview(id, r)');
-  const end = HTML.indexOf('async function openReview');
-  if (start < 0 || end < 0) throw new Error('gradeReview not found in index.html');
-  return HTML.slice(start, end);
+  const start = APP.indexOf('function gradeReview(id, r)');
+  const end = APP.indexOf('async function openReview');
+  if (start < 0 || end < 0) throw new Error('gradeReview not found in src/app.js');
+  return APP.slice(start, end);
 }
 
 function runGrade(src: string, reviews: any, id: string, result: any): any {

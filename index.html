@@ -1121,6 +1121,76 @@ const ALGS = {
       x.fillText('k=' + s.k + '  צעדים: ' + s.ops, W / 2, 116);
     }
   },
+  'stack-parens': {
+    name: 'Stack (Parentheses)',
+    code: ['for ch in s:','  if opener: push','  if closer matches: pop','  else: invalid'],
+    init(p) { const s=p.s||'([{}])({})'; return {s,i:0,stack:[],ok:true}; },
+    step(st) {
+      if (!st.ok||st.i>=st.s.length) return {done:true,line:0,note:st.ok&&!st.stack.length?'תקין!':'לא תקין'};
+      const ch=st.s[st.i],M={')':'(',']':'[','}':'{'};st.i++;
+      if ('([{'.includes(ch)){st.stack.push(ch);return {line:1,note:'push '+ch};}
+      if (!st.stack.length||st.stack.at(-1)!==M[ch]){st.ok=false;return {line:3,note:ch+' חוסר התאמה'};}
+      st.stack.pop();return {line:2,note:'pop '+M[ch]+' ← '+ch};
+    },
+    draw(s,cv) {
+      const W=cv.clientWidth||320,H=110,dpr=Math.min(devicePixelRatio,2);
+      cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
+      const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+      const n=s.s.length,bw=Math.min(30,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      [...s.s].forEach((ch,i)=>{
+        const px=x0+i*bw,cur=i===s.i-1;
+        x.fillStyle=cur?themeC('--gold'):i<s.i?themeC('--panel'):'transparent';
+        x.globalAlpha=i<s.i?1:.25;
+        x.fillRect(px+1,4,bw-2,26);x.strokeStyle=themeC('--line');x.strokeRect(px+1,4,bw-2,26);
+        x.fillStyle=cur?'#14101a':themeC('--ink');x.font='13px "IBM Plex Mono"';x.fillText(ch,px+bw/2,17);x.globalAlpha=1;
+      });
+      const sW=22,sX=W/2-sW*s.stack.length/2;
+      s.stack.forEach((ch,i)=>{
+        const sy=90-i*20;
+        x.fillStyle=i===s.stack.length-1?themeC('--oracle'):themeC('--panel');
+        x.fillRect(sX+i*sW,sy,sW-2,18);x.strokeStyle=themeC('--line');x.strokeRect(sX+i*sW,sy,sW-2,18);
+        x.fillStyle=themeC('--ink');x.font='12px "IBM Plex Mono"';x.fillText(ch,sX+i*sW+sW/2-1,sy+9);
+      });
+      x.fillStyle=themeC('--faded');x.font='10px "Rubik","Noto Sans Hebrew",sans-serif';x.fillText('stack',sX-22,100);
+    }
+  },
+  'heap-topk': {
+    name: 'Heap Top-k',
+    code: ['heap = []','for x in nums:','  push(x)','  if len>k: pop min','result = heap'],
+    init(p) { const nums=p.nums||[5,1,8,3,9,2,7]; return {nums,k:p.k||3,heap:[],i:0,popped:null}; },
+    step(s) {
+      if (s.i>=s.nums.length) return {done:true,line:4,note:'top-'+s.k+': ['+s.heap.slice().sort((a,b)=>b-a).join(',')+']'};
+      const v=s.nums[s.i];s.i++;s.popped=null;
+      s.heap.push(v);s.heap.sort((a,b)=>a-b);
+      if (s.heap.length>s.k){s.popped=s.heap.shift();return {line:3,note:'push '+v+', pop '+s.popped};}
+      return {line:2,note:'push '+v};
+    },
+    draw(s,cv) {
+      const W=cv.clientWidth||320,H=100,dpr=Math.min(devicePixelRatio,2);
+      cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
+      const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+      const n=s.nums.length,bw=Math.min(36,(W-8)/n),x0=(W-bw*n)/2;
+      x.textAlign='center';x.textBaseline='middle';
+      s.nums.forEach((v,i)=>{
+        const px=x0+i*bw,cur=i===s.i-1;
+        x.fillStyle=cur?themeC('--gold'):i<s.i?themeC('--panel'):'transparent';
+        x.globalAlpha=i<s.i?1:.25;
+        x.fillRect(px+1,4,bw-2,26);x.strokeStyle=themeC('--line');x.strokeRect(px+1,4,bw-2,26);
+        x.fillStyle=cur?'#14101a':themeC('--ink');x.font='12px "IBM Plex Mono"';x.fillText(v,px+bw/2,17);x.globalAlpha=1;
+      });
+      const hW=28,hX=(W-hW*s.heap.length)/2;
+      s.heap.forEach((v,i)=>{
+        x.fillStyle=i===0?themeC('--oracle'):themeC('--green');x.globalAlpha=.7;
+        x.fillRect(hX+i*hW,50,hW-2,24);x.globalAlpha=1;
+        x.strokeStyle=themeC('--line');x.strokeRect(hX+i*hW,50,hW-2,24);
+        x.fillStyle='#14101a';x.font='12px "IBM Plex Mono"';x.fillText(v,hX+i*hW+hW/2-1,62);
+      });
+      x.fillStyle=themeC('--faded');x.font='10px "Rubik","Noto Sans Hebrew",sans-serif';
+      x.fillText('min-heap (k='+s.k+')',W/2,90);
+      if (s.popped!==null){x.fillStyle=themeC('--red');x.font='11px "IBM Plex Mono"';x.fillText('popped: '+s.popped,W/2,42);}
+    }
+  },
   'two-pointers': {
     name: 'Two Pointers (Converging)',
     code: ['i = 0, j = n-1', 'while i < j:', '  s = arr[i] + arr[j]', '  if s == target: return', '  if s > target: j--', '  else: i++'],

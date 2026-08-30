@@ -202,6 +202,10 @@ arr = [5], target = 5
 {"id":"u-m1-binary-search-q2","tree":"systems","skill":"python","q":"leftmost binary search על arr=[2,4,4,4,6,8], target=4. מה מחזיר הפונקציה?","options":["0","1","2","3"],"answer":1,"explain":"הפוזיציה הראשונה של 4 היא אינדקס 1. leftmost ממשיך שמאלה גם לאחר שמצא match (right = mid-1 כשarr[mid] >= target), עד שleft=1 בסיום."}
 ```
 
+```widget
+{"type":"algviz","algo":"binary-search","title":"Binary Search: צפה כיצד lo, mid, hi מתכנסים על היעד"}
+```
+
 ```concepts
 {"items":[{"id":"binary-search","t":"Binary Search","he":"חיפוש בינארי","d":"חיפוש O(log n) בסדרה ממוינת. בכל שלב נחצה מרחב החיפוש לחצי לפי Loop Invariant.","rel":["loop-invariant","bisect","search-space"],"node":"dsa"},{"id":"loop-invariant","t":"Loop Invariant","he":"אינווריאנט הלולאה","d":"טענה שנכונה לפני ואחרי כל איטרציה. בחיפוש בינארי: target נמצא ב-arr[left..right] אם קיים.","rel":["binary-search"],"node":"dsa"},{"id":"search-space","t":"Search Space","he":"מרחב החיפוש","d":"קבוצת הפתרונות האפשריים שטרם נשללו. חיפוש בינארי חוצה אותה לחצי בכל שלב.","rel":["binary-search"],"node":"dsa"},{"id":"bisect","t":"bisect","he":"מודול bisect","d":"מודול Python לחיפוש בינארי: bisect_left מחזיר insertion point שמאלי, bisect_right ימני. O(log n).","rel":["binary-search"],"node":"dsa"}]}
 ```

@@ -13,6 +13,7 @@ import { test, expect } from 'bun:test';
 import { readFileSync } from 'fs';
 
 const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const SRC = readFileSync(new URL('../daemon/server.ts', import.meta.url), 'utf8');
 
 function deckSource(): string {
   const start = HTML.indexOf('const DECK_PER_DAY');
@@ -340,4 +341,245 @@ test('L4 mutation: the mentor harness can actually fail (control)', () => {
     'const MENTOR_UNUSED_ALIAS = 0;\nfunction mentorQueue()');
   expect(harmless).not.toBe(src);
   expect(mentorViolated(harmless)).toBeNull();
+});
+
+// ------------------------------------------------- L4 mutation: daemon tools
+//
+// TESTING-SOTA-2026-GAPS.md section 6 item 2: get_mistakes and open_belief are
+// the daemon's write surface for the mentor contract. get_mistakes recomputes
+// the four-signal split server-side; open_belief records a confirmed misconception.
+// Both had zero mutation coverage. Same shape as the deck and mentor layers:
+// an oracle of behavioural invariants, planted defects that must all die, and
+// a harmless control that must survive.
+
+function getMistakesSource(): string {
+  const toolStart = SRC.indexOf("tool('get_mistakes'");
+  const toolEnd = SRC.indexOf("tool('open_belief'");
+  if (toolStart < 0 || toolEnd < 0) throw new Error('get_mistakes tool not found in daemon/server.ts');
+  const body = SRC.slice(toolStart, toolEnd);
+  const start = body.indexOf('const today');
+  const end = body.indexOf('const beliefs');
+  if (start < 0 || end < 0) throw new Error('get_mistakes classify block not found');
+  return body.slice(start, end)
+    .replace(/: string\[\]/g, '')
+    .replace(/<any>/g, '');
+}
+
+function classifyMistakes(src: string, st: any): string[] {
+  return new Function('st', src + '\nreturn rows;')(st);
+}
+
+function getMistakesViolated(src: string): string | null {
+  const now = new Date(Date.now() + 3 * 3600e3);
+  const yesterday = new Date(now.getTime() - 864e5).toISOString().slice(0, 10);
+  const tomorrow = new Date(now.getTime() + 864e5).toISOString().slice(0, 10);
+  try {
+    let rows = classifyMistakes(src, {
+      answers: { q1: { ok: false, conf: 70, attempts: 2, q: 'a', date: '2026-01-01', skill: 's' } },
+      beliefs: {}, reviews: {}
+    });
+    if (!rows.some((r: string) => r.includes('WRONG+CERTAIN'))) return 'conf=70 not WRONG+CERTAIN';
+
+    rows = classifyMistakes(src, {
+      answers: { q1: { ok: false, conf: 69, attempts: 2, q: 'a', date: '2026-01-01', skill: 's' } },
+      beliefs: {}, reviews: {}
+    });
+    if (!rows.some((r: string) => r.includes('WRONG+UNSURE'))) return 'conf=69 not WRONG+UNSURE';
+
+    rows = classifyMistakes(src, {
+      answers: { q1: { ok: true, conf: 40, attempts: 1, q: 'a', date: '2026-01-01', skill: 's' } },
+      beliefs: {}, reviews: {}
+    });
+    if (!rows.some((r: string) => r.includes('RIGHT+UNSURE'))) return 'conf=40 first-try not RIGHT+UNSURE';
+
+    rows = classifyMistakes(src, {
+      answers: { q1: { ok: true, conf: 30, attempts: 2, q: 'a', date: '2026-01-01', skill: 's' } },
+      beliefs: {}, reviews: {}
+    });
+    if (rows.some((r: string) => r.includes('RIGHT+UNSURE'))) return 'second attempt RIGHT+UNSURE';
+
+    rows = classifyMistakes(src, {
+      answers: {}, beliefs: {},
+      reviews: { r1: { iv: 1, due: '2026-01-01', lapses: 2 } }
+    });
+    if (!rows.some((r: string) => r.includes('LEAKED'))) return 'lapses=2 not LEAKED';
+
+    rows = classifyMistakes(src, {
+      answers: {}, beliefs: {},
+      reviews: { r1: { iv: 1, due: '2026-01-01', lapses: 1 } }
+    });
+    if (rows.some((r: string) => r.includes('LEAKED'))) return 'lapses=1 falsely LEAKED';
+
+    rows = classifyMistakes(src, {
+      answers: {}, reviews: {},
+      beliefs: { b1: { status: 'corrected', retest: yesterday, believed: 'x', opened: '2026-01-01' } }
+    });
+    if (!rows.some((r: string) => r.includes('RETEST DUE'))) return 'past retest not due';
+
+    rows = classifyMistakes(src, {
+      answers: {}, reviews: {},
+      beliefs: { b1: { status: 'corrected', retest: tomorrow, believed: 'x', opened: '2026-01-01' } }
+    });
+    if (rows.some((r: string) => r.includes('RETEST DUE'))) return 'future retest fired';
+
+    rows = classifyMistakes(src, {
+      answers: {}, reviews: {},
+      beliefs: { b1: { status: 'open', retest: yesterday, believed: 'x', opened: '2026-01-01' } }
+    });
+    if (rows.some((r: string) => r.includes('RETEST DUE'))) return 'open belief fired retest';
+
+    rows = classifyMistakes(src, { answers: { q1: null }, beliefs: {}, reviews: {} });
+
+    rows = classifyMistakes(src, {
+      answers: { q1: { ok: true, conf: 90, attempts: 1, q: 'a', date: '2026-01-01', skill: 's' } },
+      beliefs: {}, reviews: {}
+    });
+    if (rows.length) return 'correct+confident produced a signal';
+
+    rows = classifyMistakes(src, { answers: {}, beliefs: {}, reviews: {} });
+    if (rows.length) return 'empty state produced rows';
+  } catch (e) { return 'threw: ' + String(e).slice(0, 80); }
+  return null;
+}
+
+const GET_MISTAKES_MUTANTS: Array<{ name: string; from: string; to: string }> = [
+  { name: 'WRONG+CERTAIN boundary made exclusive',
+    from: 'a.conf >= 70', to: 'a.conf > 70' },
+  { name: 'RIGHT+UNSURE boundary made exclusive',
+    from: 'a.conf <= 40', to: 'a.conf < 40' },
+  { name: 'RIGHT+UNSURE first-try guard dropped',
+    from: 'a.ok && a.attempts === 1 && a.conf != null && a.conf <= 40',
+    to: 'a.ok && a.conf != null && a.conf <= 40' },
+  { name: 'lapse floor raised to 3',
+    from: '(r?.lapses || 0) >= 2', to: '(r?.lapses || 0) >= 3' },
+  { name: 'retest date check inverted',
+    from: 'b.retest <= today', to: 'b.retest >= today' },
+  { name: 'retest status check dropped',
+    from: "b.status === 'corrected' && b.retest && b.retest <= today",
+    to: 'b.retest && b.retest <= today' },
+  { name: 'null answer guard dropped',
+    from: 'if (!a) continue;', to: '' },
+  { name: 'WRONG+UNSURE swallows correct answers',
+    from: 'else if (a.ok === false)', to: 'else if (true)' },
+];
+
+test('L4 mutation: the real get_mistakes source passes its own oracle', () => {
+  expect(getMistakesViolated(getMistakesSource())).toBeNull();
+});
+
+test('L4 mutation: every planted get_mistakes defect is caught', () => {
+  const src = getMistakesSource();
+  const survivors: string[] = [];
+  for (const m of GET_MISTAKES_MUTANTS) {
+    expect(src.includes(m.from)).toBe(true);
+    const mutated = src.replace(m.from, m.to);
+    expect(mutated).not.toBe(src);
+    if (!getMistakesViolated(mutated)) survivors.push(m.name);
+  }
+  expect(survivors).toEqual([]);
+});
+
+test('L4 mutation: the get_mistakes harness can actually fail (control)', () => {
+  const src = getMistakesSource();
+  const harmless = src.replace('const rows', 'const GET_MISTAKES_UNUSED = 0;\nconst rows');
+  expect(harmless).not.toBe(src);
+  expect(getMistakesViolated(harmless)).toBeNull();
+});
+
+// --- open_belief ---
+
+function openBeliefSource(): string {
+  const toolStart = SRC.indexOf("tool('open_belief'");
+  const toolEnd = SRC.indexOf("tool('close_belief'");
+  if (toolStart < 0 || toolEnd < 0) throw new Error('open_belief tool not found in daemon/server.ts');
+  const body = SRC.slice(toolStart, toolEnd);
+  const start = body.indexOf('st.beliefs = st.beliefs');
+  const end = body.indexOf('st.ts =');
+  if (start < 0 || end < 0) throw new Error('open_belief body not found');
+  return body.slice(start, end);
+}
+
+function runOpenBelief(src: string, st: any, args: any): any {
+  new Function('st', 'args', src)(st, args);
+  return st.beliefs[args.id];
+}
+
+function openBeliefViolated(src: string): string | null {
+  try {
+    const st1: any = {};
+    const b1 = runOpenBelief(src, st1, {
+      id: 'test-1', believed: 'wrong thing', actual: 'right thing',
+      from: ['q-1', 'q-2'], retestDays: 7
+    });
+    if (b1.status !== 'open') return 'new belief not open';
+    if (b1.src !== 'mentor') return 'missing src:mentor';
+    if (b1.believed !== 'wrong thing') return 'believed text wrong';
+    if (!b1.from || b1.from.length !== 2) return 'from not stored';
+
+    const long = 'x'.repeat(500);
+    const st2: any = {};
+    const b2 = runOpenBelief(src, st2, { id: 'test-2', believed: long, actual: long, from: [] });
+    if (b2.believed.length > 400) return 'believed not truncated';
+    if (b2.actual.length > 400) return 'actual not truncated';
+
+    const st3: any = {};
+    const b3 = runOpenBelief(src, st3, {
+      id: 'test-3', believed: 'x', actual: 'y',
+      from: ['a','b','c','d','e','f','g','h','i','j']
+    });
+    if (b3.from.length > 8) return 'from not capped at 8';
+
+    const st4: any = {};
+    const now = new Date(Date.now() + 3 * 3600e3);
+    const expected7 = new Date(now.getTime() + 7 * 864e5).toISOString().slice(0, 10);
+    runOpenBelief(src, st4, { id: 'test-4', believed: 'x', actual: 'y' });
+    if (st4.beliefs['test-4'].retest !== expected7) return 'default retest not 7 days';
+
+    const st5: any = {};
+    runOpenBelief(src, st5, { id: 'test-5', believed: 'x', actual: 'y' });
+    if (!Array.isArray(st5.beliefs['test-5'].from)) return 'from not defaulted to array';
+    if (st5.beliefs['test-5'].from.length !== 0) return 'from default not empty';
+  } catch (e) { return 'threw: ' + String(e).slice(0, 80); }
+  return null;
+}
+
+const OPEN_BELIEF_MUTANTS: Array<{ name: string; from: string; to: string }> = [
+  { name: 'believed not truncated',
+    from: 'believed: String(args.believed).slice(0, 400)',
+    to: 'believed: String(args.believed)' },
+  { name: 'from always empty',
+    from: 'from: Array.isArray(args.from) ? args.from.slice(0, 8) : []',
+    to: 'from: []' },
+  { name: 'default retest changed to 14 days',
+    from: '(args.retestDays ?? 7)', to: '(args.retestDays ?? 14)' },
+  { name: 'new belief stamped as corrected',
+    from: "status: 'open'", to: "status: 'corrected'" },
+  { name: 'src marker replaced',
+    from: "src: 'mentor'", to: "src: 'system'" },
+  { name: 'from array uncapped',
+    from: 'args.from.slice(0, 8)', to: 'args.from' },
+];
+
+test('L4 mutation: the real open_belief source passes its own oracle', () => {
+  expect(openBeliefViolated(openBeliefSource())).toBeNull();
+});
+
+test('L4 mutation: every planted open_belief defect is caught', () => {
+  const src = openBeliefSource();
+  const survivors: string[] = [];
+  for (const m of OPEN_BELIEF_MUTANTS) {
+    expect(src.includes(m.from)).toBe(true);
+    const mutated = src.replace(m.from, m.to);
+    expect(mutated).not.toBe(src);
+    if (!openBeliefViolated(mutated)) survivors.push(m.name);
+  }
+  expect(survivors).toEqual([]);
+});
+
+test('L4 mutation: the open_belief harness can actually fail (control)', () => {
+  const src = openBeliefSource();
+  const harmless = src.replace('st.beliefs = st.beliefs',
+    'const OPEN_BELIEF_UNUSED = 0;\nst.beliefs = st.beliefs');
+  expect(harmless).not.toBe(src);
+  expect(openBeliefViolated(harmless)).toBeNull();
 });

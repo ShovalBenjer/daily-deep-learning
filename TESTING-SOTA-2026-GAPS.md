@@ -30,7 +30,7 @@
 | L1 unit | have 1.0 | `tests/mentor.test.ts` 12, `tests/decks.test.ts` 8 | Hermetic, ~60ms. Lift source out of `index.html` rather than copying it, since the app has no module boundary |
 | L2 property | have 1.0 | `tests/mutation.test.ts:violated` over 300 seeded generations | Hand-rolled seeded generator, no `fast-check`: "no npm at the root" is a stated non-goal. No shrinking, so a failure reports its seed rather than a minimal case |
 | L3 fuzz | have 1.0 | `tests/fuzz.test.ts`, 2000 hostile bodies + every nasty value in every field | Required the boundary to be extracted to `daemon/server_parse.ts` so it runs with no network, key or rate limiter |
-| L4 mutation | partial 0.75 | `tests/mutation.test.ts:MUTANTS` (deck, 8 defects) and `MENTOR_MUTANTS` (mentorQueue, 9 defects, added 2026-08-29), all killed, each with a control mutant that must survive | The daemon tools and the client renderers still have no mutation coverage |
+| L4 mutation | partial 0.85 | `tests/mutation.test.ts:MUTANTS` (deck, 8 defects), `MENTOR_MUTANTS` (mentorQueue, 9), `GET_MISTAKES_MUTANTS` (daemon get_mistakes, 8, added 2026-08-30), `OPEN_BELIEF_MUTANTS` (daemon open_belief, 6, added 2026-08-30), all killed, each with a control mutant that must survive | Client renderers still have no mutation coverage |
 | L5 component | gap 0 | none | No Testing Library, no Storybook. Renderers are only exercised through e2e |
 | L6 contract | have 1.0 | `tests/contract.test.ts` | Consumer-driven: the payload is built by the REAL client code lifted from `index.html` and fed to the REAL parser. Found a live defect, see below |
 | L7 integration | partial 0.75 | `tests/boundaries.test.ts`, 10 tests, plus `tests/worker.test.ts` (added 2026-08-29): the real Worker handler in-process over a stub KV, same boundary contract, no network, no key | The Worker side is now replayable without cassettes (the handler is a single import-free module, so running it beats replaying it). The daemon /chat roundtrip remains live-only |
@@ -38,7 +38,7 @@
 | L9 golden/regression | partial 0.5 | one proven regression oracle (`tests/mentor.test.ts`, belief suppression, shown to fail against the pre-fix logic) | No snapshot or visual baseline. Not every past bug became a test |
 | L10 non-functional | partial 0.5 | `tests/budget.test.ts` (added 2026-08-29): enforced byte budgets for the inline script and the offline-install precache, plus precache existence and SHIP coverage | Field budgets (LCP/INP/CLS) still absent; they need the deployed site. No load, no chaos |
 
-**Layer score: 8.0 / 11 applicable = 0.73** (was 7.0 before the 2026-08-29 additions).
+**Layer score: 8.1 / 11 applicable = 0.74** (was 8.0 before the 2026-08-30 daemon-tool mutations).
 
 ## 3. Frontend pack (rubric 3.D)
 
@@ -74,13 +74,21 @@ tests, a gated a11y pass, and a regression suite that is more than one oracle.
 1. **Behavioural mentor evals (3.B).** The prompt clauses are pinned; whether
    the model obeys them is still only enforced by the runtime verifier pass,
    never measured against a fixture conversation set.
-2. **Mutation for the daemon tools and client renderers (L4).** The deck and
-   mentor blocks are covered; `get_mistakes`/`open_belief` and the renderers
-   are not.
+2. **Mutation for the client renderers (L4).** The deck, mentor, and daemon
+   tool blocks are covered; the client renderers are not.
 3. **Field performance budgets (L10).** Byte budgets exist; LCP/INP/CLS
    against the deployed site do not.
 4. **Replayable daemon roundtrip (L7).** The Worker side runs hermetically;
    `/chat` against the SDK is still live-only.
+
+### Closed 2026-08-30
+
+5. **Daemon tool mutation (L4):** `tests/mutation.test.ts` daemon section:
+   `GET_MISTAKES_MUTANTS` (8 planted defects in the four-signal classification,
+   all killed) and `OPEN_BELIEF_MUTANTS` (6 planted defects in belief recording,
+   all killed), each with a surviving control. Extracted the pure logic from
+   `daemon/server.ts`, stripped TypeScript annotations, and ran through `new
+   Function` against behavioural oracles.
 
 ### Closed 2026-08-29 (all four prior items, evidence in the hermetic slice)
 

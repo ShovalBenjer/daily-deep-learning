@@ -133,6 +133,10 @@ if __name__ == '__main__':
 {"id":"u-m0-binary-f1","tree":"systems","skill":"sdlc","prompt":"בכמה בתים, כמחרוזת, מתחיל כל קובץ הרצה של Windows בפורמט PE?","answer":"MZ","alt":["mz","4d5a","0x4d5a"],"explain":"MZ הן ראשי התיבות של Mark Zbikowski ונשארו מימי DOS. בהיסט 0x3c יושב מצביע אל החתימה PE\\0\\0, ושם מתחילה הכותרת האמיתית. ב-Linux החתימה המקבילה היא \\x7fELF."}
 ```
 
+```widget
+{"type":"algviz","algo":"layer-stack","title":"Binary Structure: צפה בשכבות קובץ הרצה — Magic, Header, Code, Imports","layers":["Magic Number (MZ/ELF)","PE/ELF Header","Code Section","Import Table"]}
+```
+
 ```concepts
 {"items":[{"id":"binary-file","t":"Binary file","he":"קובץ בינארי","d":"קובץ שנקרא כרצף בתים לפי מבנה קבוע ולא כטקסט; תמונה ומסד נתונים הם בינאריים ואינם רצים","rel":["executable","magic-number"]},{"id":"executable","t":"Executable","he":"קובץ הרצה","d":"קובץ בינארי שמערכת ההפעלה יודעת לטעון לזיכרון ולהתחיל לבצע, קבוצה קטנה בתוך הקבצים הבינאריים","rel":["binary-file","pe-format","entry-point"]},{"id":"magic-number","t":"Magic number","he":"חתימת זיהוי","d":"הבתים הראשונים שמצהירים על סוג הקובץ; הסיומת היא שם בלבד והחתימה היא מה שמערכת ההפעלה קוראת","rel":["binary-file","pe-format","elf-format"]},{"id":"pe-format","t":"PE, Portable Executable","he":"פורמט ההרצה של Windows","d":"מתחיל ב-MZ, ובהיסט 0x3c שמור מצביע אל החתימה PE ואחריה הכותרת עם שדה הארכיטקטורה","rel":["executable","elf-format","magic-number"]},{"id":"elf-format","t":"ELF","he":"פורמט ההרצה של Linux","d":"החתימה \\x7fELF; אותו תפקיד כמו PE במבנה אחר, ולכן בינארי PE לא ייטען שם","rel":["pe-format","executable"]},{"id":"entry-point","t":"Entry point","he":"נקודת כניסה","d":"ההיסט שממנו מתחיל הביצוע; בלעדיה הקובץ הוא רצף בתים בלי התחלה","rel":["executable"]},{"id":"dynamic-linking","t":"Dynamic linking","he":"קישור דינמי","d":"הבינארי מכיל שמות של ספריות ולא את הקוד שלהן, ולכן python.exe בן 103 KB נכשל בלי python311.dll בן 5.8 MB","rel":["static-linking","executable"]},{"id":"static-linking","t":"Static linking","he":"קישור סטטי","d":"כל הקוד נארז לתוך הקובץ; גדול ועצמאי, מול קטן ותלוי סביבה בקישור דינמי","rel":["dynamic-linking"]}]}
 ```

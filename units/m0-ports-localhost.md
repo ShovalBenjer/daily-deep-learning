@@ -95,6 +95,10 @@ curl -s -o /dev/null -w "%{http_code}" http://[::1]:8080
 {"id":"u-m0-ports-localhost-f1","tree":"systems","skill":"sdlc","prompt":"על איזה כתובת צריך להאזין שרת כדי שיהיה נגיש גם מהמחשב עצמו וגם ממכונות אחרות ברשת?","answer":"0.0.0.0","alt":["כל הממשקים","all interfaces","0.0.0.0:PORT"],"explain":"0.0.0.0 משמעותה כל הממשקים: לולאה פנימית, רשת מקומית, ואינטרנט. שרת ב-127.0.0.1 נגיש רק מקומית."}
 ```
 
+```widget
+{"type":"algviz","algo":"layer-stack","title":"Network Stack: צפה כיצד אפליקציה מתחברת דרך port, bind address ו-network interface","layers":["Application","Port (0-65535)","Bind Address","Network Interface"]}
+```
+
 ```concepts
 {"items":[{"id":"port","t":"Port","he":"פורט","d":"מספר 0 עד 65535 שמזהה שירות ספציפי על מכונה; חלק מה-TCP/UDP header","rel":["localhost","loopback"],"node":"os"},{"id":"localhost","t":"localhost","he":"מארח מקומי","d":"שם מארח שנפתר לכתובת הלולאה הפנימית (127.0.0.1 ב-IPv4, ::1 ב-IPv6); תעבורה אליו לא יוצאת מהמחשב","rel":["port","loopback"],"node":"os"},{"id":"loopback","t":"Loopback interface","he":"ממשק לולאה","d":"ממשק רשת וירטואלי שמחזיר תעבורה חזרה למחשב עצמו; טווח 127.0.0.0/8 ב-IPv4 ו-::1 ב-IPv6","rel":["localhost","port"],"node":"os"}]}
 ```

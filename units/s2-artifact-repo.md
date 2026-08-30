@@ -112,6 +112,10 @@ size-pack: 14.31 MiB
 {"id":"u-s2-artifact-repo-f1","tree":"ops","skill":"cicd","prompt":"ב-registry של Docker, איזה מזהה מבטיח שקיבלת בדיוק את אותם בתים: tag או digest?","answer":"digest","alt":["Digest","דייג'סט","sha256"],"explain":"tag הוא מצביע שניתן לכוון מחדש לתוכן אחר. digest הוא ה-hash של התוכן עצמו, ולכן הוא היחיד שמזהה בתים."}
 ```
 
+```widget
+{"type":"algviz","algo":"hash-lookup","title":"Checksum Storage: צפה כיצד ארטיפקט נשמר ומאותר לפי ה-hash שלו"}
+```
+
 ```concepts
 {"items":[{"id":"artifact-repository","t":"Artifact repository","he":"מאגר ארטיפקטים","d":"שרת לתוצרי בילד שמדבר את פרוטוקול כל אקוסיסטם, עם repository מסוג local, remote ו-virtual","rel":["build-info","checksum-storage","remote-repository"]},{"id":"build-info","t":"Build-info","he":"מידע בילד","d":"JSON שה-CI מפרסם: אילו ארטיפקטים יצאו, אילו dependencies נצרכו, ומקטע VCS עם ה-commit; זה החיבור בין git לבינארי","rel":["artifact-repository","content-digest"]},{"id":"checksum-storage","t":"Checksum-based storage","he":"אחסון לפי checksum","d":"הבתים נשמרים ב-filestore תחת ה-SHA-1 שלהם וה-database ממפה נתיב ל-checksum, ולכן תוכן זהה נשמר פעם אחת","rel":["artifact-repository","content-digest"]},{"id":"content-digest","t":"Content digest","he":"טביעת תוכן","d":"hash שנגזר מהבתים עצמם ולכן אינו ניתן לכיוון מחדש, בניגוד ל-tag שהוא שם","rel":["checksum-storage","delta-compression"]},{"id":"delta-compression","t":"Delta compression","he":"דחיסת הפרשים","d":"שמירת אובייקט כהפרש מאובייקט דומה; חסרת תועלת על פורמטים שכבר דחוסים ולכן git יקר לבינאריים","rel":["content-digest"]},{"id":"remote-repository","t":"Remote repository","he":"מאגר מרוחק","d":"proxy ו-cache מול מקור חיצוני כמו PyPI או Docker Hub; הוא cache ולא גיבוי של מה שייצרת","rel":["artifact-repository"]},{"id":"git-lfs","t":"Git LFS","he":"Git LFS","d":"מוציא בתים גדולים לאחסון נפרד ומשאיר ב-git מצביע; מוזיל clone אבל אינו נותן פרוטוקול registry, retention או build-info","rel":["delta-compression","artifact-repository"]}]}
 ```

@@ -128,6 +128,10 @@ ls /nosuchdir 2>&1 > b.txt
 {"id":"u-m0-streams-drill-f1","tree":"systems","skill":"sdlc","prompt":"הרץ בטרמינל: ls /nosuchdir | wc -l . איזה מספר מדפיסה wc?","answer":"0","alt":["אפס","zero"],"explain":"wc קיבלה קלט ריק כי ls לא כתבה כלום ל-stdout, והשגיאה עקפה את ה-pipe דרך stderr."}
 ```
 
+```widget
+{"type":"algviz","algo":"stream-wiring","title":"Redirection Drill: צפה כיצד >, 2> ו-2>&1 מחווטים מחדש את הזרמים"}
+```
+
 ```concepts
 {"items":[{"id":"redirect-order","t":"Redirection order","he":"סדר הפניות","d":"ה-shell מבצע הפניות משמאל לימין לפני הרצת התוכנית, ו-2>&1 מעתיק את היעד הנוכחי של stdout ולא את שמו","rel":["stdout","stderr","file-descriptor"]},{"id":"null-device","t":"Null device","he":"התקן האפס","d":"/dev/null בולע כל מה שנכתב אליו; > /dev/null מוותר על הפלט ואינו משתיק את stderr","rel":["stdout","redirect-order"]},{"id":"short-circuit","t":"Short-circuit operators","he":"אופרטורי קיצור מסלול","d":"&& מריץ את הפקודה הבאה רק אחרי קוד יציאה 0, || רק אחרי קוד שאינו 0; שניהם קוראים את הקוד ולא את הפלט","rel":["exit-code"]}]}
 ```

@@ -115,6 +115,10 @@ az ml online-deployment show \
 {"id":"u-m5-deployment-cicd-f1","tree":"ops","skill":"azure-foundry","prompt":"כדי שה-pipeline יכיר את ה-endpoint של project-prod ויבדל אותו מ-project-dev, כל Foundry Project חייב לקבל _____ ייחודי שהקוד משתמש בו.","answer":"connection string","alt":["connection-string","endpoint URL","endpoint url","connection_string"],"explain":"כל Foundry Project מקבל connection string ייחודי שמכיל את ה-endpoint URL של הפרויקט. זו הסיבה שהפרדת Projects מבטיחה שקוד dev ו-prod מדברים עם endpoints נפרדים."}
 ```
 
+```widget
+{"type":"algviz","algo":"stream-wiring","title":"CI/CD Pipeline: צפה כיצד push עובר דרך test, deploy-dev ו-deploy-prod"}
+```
+
 ```concepts
 {"items":[{"id":"ai-cd-pipeline","t":"AI CI/CD Pipeline","he":"צינור שילוב ופריסה ל-AI","d":"רצף אוטומטי של בדיקות ופריסה שמוציא מודל AI מ-dev ל-prod, בדרך כלל דרך GitHub Actions עם azure/login ו-az ml CLI.","rel":["environment-stage","foundry-project"],"node":"azure-core"},{"id":"model-endpoint-swap","t":"Traffic Split and Blue-Green","he":"פיצול תעבורה ו-blue-green","d":"שתי deployments על endpoint אחד עם חלוקת אחוזים; swap מיידי ל-100% הוא blue-green עם rollback בלחיצה אחת.","rel":["ai-cd-pipeline","deployment-types"],"node":"azure-core"},{"id":"environment-stage","t":"Environment Stage Isolation","he":"בידוד שלבי סביבה","d":"Foundry Project נפרד לכל שלב (dev/staging/prod) כך שקוטה, תעבורה ו-connection strings של סביבות לא מתנגשות.","rel":["foundry-project","ai-cd-pipeline"],"node":"azure-core"}]}
 ```

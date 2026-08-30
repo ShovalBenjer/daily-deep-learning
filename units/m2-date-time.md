@@ -152,6 +152,10 @@ DATE_TRUNC היא הגרסה הכרונולוגית של GROUP BY: במקום ל
 {"id":"u-m2-date-time-q2","tree":"systems","skill":"sql","q":"איזו מהקריאות הבאות מחזירה את מספר החודש (8) מהתאריך '2026-08-09'::date?","options":["DATE_TRUNC('month', '2026-08-09')","EXTRACT(month FROM '2026-08-09'::date)","'2026-08-09'::date - INTERVAL '1 month'","NOW()"],"answer":1,"explain":"EXTRACT(month FROM date) מחזיר את שדה החודש כמספר שלם: 8. DATE_TRUNC מחזיר תאריך שלם (2026-08-01), לא מספר. החיסור מ-INTERVAL מחזיר תאריך חדש, לא מספר."}
 ```
 
+```widget
+{"type":"algviz","algo":"partition-row","title":"DATE_TRUNC: צפה כיצד תאריכים מתקבצים לקבוצות כשמקצצים ליחידת זמן"}
+```
+
 ```concepts
 {"items":[{"id":"c-date-trunc","t":"DATE_TRUNC","he":"קיצוץ תאריך","d":"מחזירה TIMESTAMP שבה כל יחידות הזמן שמתחת ל-unit אופסו; תמיד עוגלת כלפי מטה","rel":["c-timestamp","c-extract"],"node":"sql-core"},{"id":"c-timestamp","t":"TIMESTAMP","he":"חותמת זמן","d":"סוג נתונים המאחסן תאריך וזמן עד רמת מיקרושניות; TIMESTAMPTZ מוסיף אזור זמן","rel":["c-date-trunc","c-interval"],"node":"sql-core"},{"id":"c-extract","t":"EXTRACT","he":"חילוץ שדה","d":"מחלצת שדה אחד (year, month, dow, doy) מתאריך או TIMESTAMP ומחזירה מספר שלם","rel":["c-date-trunc"],"node":"sql-core"},{"id":"c-interval","t":"INTERVAL","he":"מרווח זמן","d":"סוג נתונים המייצג פרק זמן ('7 days', '1 month'); מאפשר חיבור וחיסור מתאריכים","rel":["c-timestamp","c-date-trunc"],"node":"sql-core"}]}
 ```

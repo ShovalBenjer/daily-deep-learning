@@ -123,6 +123,10 @@ ss -tlnp | grep LISTEN
 {"id":"u-m0-ports-localhost-drill-f1","tree":"systems","skill":"sdlc","prompt":"הרץ: python3 -m http.server 9002 --bind 127.0.0.1 ואז ss -tlnp | grep 9002. מה מופיע בעמודת Local Address?","answer":"127.0.0.1:9002","alt":["127.0.0.1 9002","127.0.0.1:9002 0.0.0.0:*"],"explain":"--bind 127.0.0.1 קובע את כתובת ה-binding. ss מציג אותה בעמודת Local Address. 0.0.0.0:9002 היה מופיע אם לא הגדרת --bind."}
 ```
 
+```widget
+{"type":"algviz","algo":"layer-stack","title":"Binding Drill: צפה כיצד bind address קובע מאילו ממשקים השרת נגיש","layers":["Server Process","Bind Address","Loopback 127.0.0.1","LAN 0.0.0.0"]}
+```
+
 ```concepts
 {"items":[{"id":"binding-address","t":"Binding address","he":"כתובת האזנה","d":"הכתובת שעליה שרת בוחר לקבל חיבורים; 127.0.0.1 רק מקומי, 0.0.0.0 כל הממשקים","rel":["loopback","port"],"node":"os"},{"id":"ss-command","t":"ss","he":"ss","d":"כלי שורת פקודה לינוקסי שמציג חיבורי רשת ומאזינים; ss -tlnp מציג מאזיני TCP עם פרטי תהליך","rel":["binding-address","port"],"node":"os"}]}
 ```

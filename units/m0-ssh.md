@@ -133,6 +133,10 @@ SSH הוא הדוגמה הראשונה ביחידות האלה למנגנון ש
 {"id":"u-m0-ssh-f1","tree":"systems","skill":"sdlc","prompt":"איזה מבין שני קבצי זוג המפתחות נשמר בשרת בתוך authorized_keys: הציבורי או הפרטי?","answer":"הציבורי","alt":["public","ציבורי",".pub","המפתח הציבורי"],"explain":"רק המפתח הציבורי מגיע לשרת. הפרטי לא עוזב את המכונה שלך אף פעם, ומחרוזת BEGIN OPENSSH PRIVATE KEY במקום שאינו המחשב שלך היא סימן לדליפה."}
 ```
 
+```widget
+{"type":"algviz","algo":"layer-stack","title":"SSH Layers: צפה כיצד SSH מחבר local shell דרך tunnel ל-remote shell","layers":["Local Terminal","SSH Client","Encrypted Tunnel","Remote Shell"]}
+```
+
 ```concepts
 {"items":[{"id":"ssh","t":"SSH","he":"מעטפת מאובטחת","d":"Secure Shell: התחברות מוצפנת ומאומתת למכונה מרוחקת, שהחליף את telnet ו-rlogin ו-rsh ו-FTP שהעבירו סיסמאות בטקסט גלוי","rel":["key-pair","known-hosts"]},{"id":"key-pair","t":"Key pair","he":"זוג מפתחות","d":"ציבורי מיועד להפצה ונשמר בשרת ב-authorized_keys, פרטי לעולם אינו עוזב את המכונה שלך","rel":["ssh","fingerprint"]},{"id":"fingerprint","t":"Key fingerprint","he":"טביעת אצבע של מפתח","d":"תקציר קצר של מפתח שמאפשר לאדם להשוות מפתחות בלי לקרוא אותם במלואם","rel":["key-pair","known-hosts"]},{"id":"known-hosts","t":"known_hosts and TOFU","he":"אמון בשימוש ראשון","d":"מפתח השרת נשמר מקומית בפעם הראשונה ומושווה בכל התחברות; אזהרת שינוי מפתח היא בדיוק מה שהמנגנון נועד לתפוס","rel":["ssh","fingerprint"]}]}
 ```

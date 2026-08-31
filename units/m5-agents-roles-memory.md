@@ -174,3 +174,5 @@ print(last.content[0].text.value)
 ## חיבור
 
 יחידה זו היא הבסיס לשני שלבים קדימה: `m5-agent-approval` עוסק בתרחישים שבהם אדם חייב לאשר את פעולת הסוכן לפני ביצוע (human-in-the-loop), ו-`m8-loops-workflows` מרחיב לתזמורת של מספר סוכנים. אם הגעת מ-`m5-foundry-sdk-apps`, ההבדל המרכזי הוא שה-SDK של agents שומר state בשרת, בעוד שה-SDK ההסקה ב-`AIProjectClient` הוא stateless.
+
+<!-- audited -->

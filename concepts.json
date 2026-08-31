@@ -4057,6 +4057,60 @@
         "c-min-heap"
       ],
       "node": "dsa"
+    },
+    {
+      "id": "c-azure-agent",
+      "t": "Azure AI Agent",
+      "he": "סוכן Azure AI",
+      "d": "LLM מוגדר עם הוראות וכלים ב-Azure AI Agent Service, עם thread מנוהל בצד השרת",
+      "rel": [
+        "c-azure-thread",
+        "c-azure-run"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "c-azure-thread",
+      "t": "Thread",
+      "he": "שרשור שיחה",
+      "d": "אובייקט שמחזיק את היסטוריית השיחה ומנוהל בצד השרת; הזיכרון האמיתי של הסוכן",
+      "rel": [
+        "c-azure-agent",
+        "c-azure-run"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "c-azure-run",
+      "t": "Run",
+      "he": "ריצת סוכן",
+      "d": "הפעלה אחת של סוכן על thread; אסינכרונית, חייבת polling עד status=completed",
+      "rel": [
+        "c-azure-thread",
+        "c-azure-agent-tool"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "c-azure-agent-tool",
+      "t": "Agent Tool",
+      "he": "כלי סוכן",
+      "d": "הצהרת יכולת: function, code_interpreter או file_search; הסוכן פולט קריאה, הקוד מריץ",
+      "rel": [
+        "c-azure-agent",
+        "c-azure-file-search"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "c-azure-file-search",
+      "t": "File Search",
+      "he": "חיפוש בקבצים",
+      "d": "כלי מובנה שמחפש ב-Vector Store מנוהל; מנגנון ה-RAG של Azure AI Agent Service",
+      "rel": [
+        "c-azure-agent-tool"
+      ],
+      "node": "azure-core"
     }
   ]
 }

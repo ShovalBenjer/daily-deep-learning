@@ -4111,6 +4111,60 @@
         "c-azure-agent-tool"
       ],
       "node": "azure-core"
+    },
+    {
+      "id": "ai-search-index",
+      "t": "Azure AI Search Index",
+      "he": "אינדקס חיפוש",
+      "d": "טבלה וירטואלית ב-Azure AI Search המאחסנת מסמכים עם שדות מוגדרים; תכונות שדה (searchable, filterable, vectorSearchable) קובעות מה אפשר לעשות עם כל שדה.",
+      "rel": [
+        "c-azure-file-search",
+        "ai-search-hybrid"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "ai-search-hybrid",
+      "t": "Hybrid Search",
+      "he": "חיפוש היברידי",
+      "d": "מצב חיפוש ב-Azure AI Search שמריץ BM25 ו-vector search במקביל ומאחד את הדירוגים עם Reciprocal Rank Fusion.",
+      "rel": [
+        "ai-search-index",
+        "ai-search-semantic-ranker",
+        "ai-search-rrf"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "ai-search-rrf",
+      "t": "Reciprocal Rank Fusion",
+      "he": "מיזוג דירוגים הדדי",
+      "d": "נוסחה המחשבת RRF(d) = sum(1/(k+rank_r(d))) על פני כל הדירוגים; k=60 כברירת מחדל. מסמך שגבוה בכמה דירוגים מקבל boost.",
+      "rel": [
+        "ai-search-hybrid"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "ai-search-semantic-ranker",
+      "t": "Semantic Ranker",
+      "he": "מדרגן סמנטי",
+      "d": "שירות Azure (S1+) שמסדר מחדש עד 50 תוצאות חיפוש ראשוני עם cross-encoder transformer; מחזיר @search.reranker_score בין 0 ל-4.",
+      "rel": [
+        "ai-search-hybrid",
+        "ai-search-index"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "ai-search-hnsw",
+      "t": "HNSW",
+      "he": "גרף היירארכי לחיפוש וקטורי",
+      "d": "Hierarchical Navigable Small World: אלגוריתם approximate nearest-neighbor ב-O(log n) המשמש את Azure AI Search לחיפוש וקטורי.",
+      "rel": [
+        "ai-search-index"
+      ],
+      "node": "azure-core"
     }
   ]
 }

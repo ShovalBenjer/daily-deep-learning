@@ -92,3 +92,5 @@ if run.status == "requires_action":
 ```concepts
 {"items":[{"id":"orchestrator-agent","t":"Orchestrator Agent","he":"סוכן מתאם","d":"סוכן שמפרק מטלה לתתי-מטלות ומקצה אותן ל-Connected Agents; רואה כל subagent כ-AgentTool","rel":["connected-agent","human-approval-gate"],"node":"azure-core"},{"id":"connected-agent","t":"Connected Agent","he":"סוכן מחובר","d":"סוכן שנרשם כ-AgentTool אצל Orchestrator, רץ כ-thread עצמאי עם כלים ו-system prompt משלו","rel":["orchestrator-agent"],"node":"azure-core"},{"id":"human-approval-gate","t":"Human Approval Gate","he":"שער אישור אנושי","d":"נקודת עצירה בקוד לפני פעולה בלתי הפיכה; run.status=requires_action עד שהאדם מאשר","rel":["human-on-the-loop","connected-agent"],"node":"azure-core"}]}
 ```
+
+<!-- audited -->

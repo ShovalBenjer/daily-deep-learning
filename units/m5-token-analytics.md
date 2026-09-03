@@ -109,3 +109,5 @@ token count גבוה לאו דווקא אומר עלות גבוהה. gpt-4o-mini
 
 ## חיבור
 יחידה זו ממשיכה מ-`m5-monitoring-drift` (ניטור איכותי: groundedness ו-safety לאורך זמן) ומאפשרת לראות ברמת בקשה בודדת מה קרה, לא רק ברמת אגרגט. היחידה הבאה הטבעית היא `m5-content-understanding` שמכסה ניתוח תמונה ומסמך, שם token analytics קריטי במיוחד: vision tokens יקרים יותר מ-text tokens ויש לנטרם בנפרד.
+
+<!-- audited -->

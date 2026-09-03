@@ -4197,6 +4197,50 @@
         "ai-search-index"
       ],
       "node": "azure-core"
+    },
+    {
+      "id": "c-opentelemetry-trace",
+      "t": "OpenTelemetry Trace",
+      "he": "עקבה OTel",
+      "d": "אוסף spans עם trace ID משותף שמתאר בקשה אחת מקצה לקצה; תקן פתוח לתצפיתיות ב-LLM apps",
+      "rel": [
+        "c-otel-span",
+        "c-app-insights"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "c-otel-span",
+      "t": "OTel Span",
+      "he": "קטע OTel",
+      "d": "פעולה בודדת בתוך trace: שם, start time, משך ו-attributes כמו gen_ai.usage.prompt_tokens ו-gen_ai.request.model",
+      "rel": [
+        "c-opentelemetry-trace",
+        "c-app-insights"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "c-app-insights",
+      "t": "Application Insights",
+      "he": "Application Insights",
+      "d": "שירות Azure Monitor שמאחסן traces ו-metrics; backend לאוטומטי של Foundry OTel exporter",
+      "rel": [
+        "c-opentelemetry-trace",
+        "c-token-analytics-metric"
+      ],
+      "node": "azure-core"
+    },
+    {
+      "id": "c-token-analytics-metric",
+      "t": "Token Analytics Metric",
+      "he": "מדד ניתוח טוקנים",
+      "d": "Azure Monitor counters: TokensConsumed, PromptTokensConsumed, CompletionTokensConsumed; ניתנים לפילוח לפי model_id ו-deployment",
+      "rel": [
+        "c-app-insights",
+        "c-cost-attribution"
+      ],
+      "node": "azure-core"
     }
   ]
 }

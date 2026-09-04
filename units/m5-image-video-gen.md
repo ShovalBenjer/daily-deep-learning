@@ -92,3 +92,5 @@ Visual Prompt Injection מנצלת את ההנחה "תמונה היא נתוני
 
 ## חיבור
 יחידה זו שייכת לבלוק M5: Azure AI Foundry production stack. היא מבנה על m5-foundry-sdk-apps ו-m5-responsible-ai ומרחיבה אותן לתחום multimodal. יחד עם m5-content-understanding, היא מסיימת את כיסוי שכבת ה-perception ב-Azure AI. ב-AI-103: סעיף "Implement image and video generation" ו-"Implement multimodal AI solutions" עוסקים בדיוק בנושאים שתוארו כאן, כולל DALL-E parameters, Content Credentials ו-Visual Prompt Injection.
+
+<!-- audited -->

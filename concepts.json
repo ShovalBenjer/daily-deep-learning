@@ -3370,6 +3370,100 @@
     "connected-agent"
    ],
    "node": "azure-core"
+  },
+  {
+   "id": "cu-analyzer",
+   "t": "Content Understanding Analyzer",
+   "he": "מנתח הבנת תוכן",
+   "d": "משאב ב-Azure AI Foundry שמגדיר schema לחילוץ שדות מובנים ממסמכים; נוצר פעם, נקרא רבות.",
+   "rel": [
+    "content-understanding-api",
+    "cu-field-schema"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "cu-field-schema",
+   "t": "Analyzer Field Schema",
+   "he": "ערכת שדות מנתח",
+   "d": "הגדרת שמות ו-types של שדות שה-Content Understanding מחלץ; confidence score מוחזר עם כל שדה.",
+   "rel": [
+    "cu-analyzer"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "indirect-prompt-injection",
+   "t": "Indirect Prompt Injection",
+   "he": "הזרקת prompt עקיפה",
+   "d": "הוראות מוסלקות בתוכן שנשלף (מסמכים, תמונות, דפי אינטרנט) שה-LLM מבצע ללא ידיעת המשתמש.",
+   "rel": [
+    "visual-prompt-injection",
+    "content-understanding-api",
+    "cu-analyzer"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "c2pa-manifest",
+   "t": "C2PA Manifest",
+   "he": "מניפסט C2PA",
+   "d": "metadata קריפטוגרפית בתקן C2PA: מי יצר, מה נעשה, חתימת X.509; עדות מקור ולא DRM.",
+   "rel": [
+    "content-credentials"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "dall-e-generation",
+   "t": "DALL-E 3 Generation",
+   "he": "דור תמונות DALL-E 3",
+   "d": "מודל OpenAI ב-Azure AI Foundry: prompt → תמונה. n=1 תמיד; URL תקף 24 שעות.",
+   "rel": [
+    "content-credentials"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "visual-prompt-injection",
+   "t": "Visual Prompt Injection",
+   "he": "הזרקת prompt חזותית",
+   "d": "טקסט מוסלק בתמונה שמודל vision מבצע כהוראה; Prompt Shields לא סורק pixel bytes.",
+   "rel": [
+    "dall-e-generation"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "content-credentials",
+   "t": "Content Credentials",
+   "he": "עדויות תוכן",
+   "d": "metadata C2PA שנסגרת בתמונה ומאמתת שנוצרה ע\"י AI; מוסף אוטומטית ל-DALL-E 3 ב-Azure.",
+   "rel": [
+    "dall-e-generation"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "multimodal-vision",
+   "t": "GPT-4o Vision",
+   "he": "ראייה רב-ערוצית",
+   "d": "תמונה ב-image_url content block ל-GPT-4o; detail=low/high שולט בדיוק ועלות tokens.",
+   "rel": [
+    "dall-e-generation",
+    "content-understanding-api"
+   ],
+   "node": "azure-core"
+  },
+  {
+   "id": "content-understanding-api",
+   "t": "Content Understanding API",
+   "he": "ממשק הבנת תוכן",
+   "d": "שירות ניתוח מסמכים עם LLM backbone; PDF/DOCX/תמונות → שדות מובנים ותשובות שרירותיות.",
+   "rel": [
+    "multimodal-vision"
+   ],
+   "node": "azure-core"
   }
  ],
  "items": [

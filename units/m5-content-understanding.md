@@ -193,3 +193,5 @@ if shield.documents_attack_result:
 ```fillin
 {"id":"u-m5-content-understanding-f1","tree":"ops","skill":"azure-foundry","prompt":"בצינור ההגנה מפני Visual Prompt Injection: תחילה חולץ טקסט מהתמונה עם _____, ואחר כך מריץ Prompt Shields על הטקסט המחולץ.","answer":"Content Understanding","alt":["azure ai content understanding","content understanding api"],"explain":"Prompt Shields לא מנתח pixels; Content Understanding חולץ כל טקסט הגלוי (ולא-גלוי) בתמונה, ואז Prompt Shields יכול לנתח את הטקסט שהוצא."}
 ```
+
+<!-- audited -->

@@ -115,3 +115,5 @@ SELECT DISTINCT month FROM sales ORDER BY month;
 ```concepts
 {"items":[{"id":"sql-pivot","t":"Pivoting","he":"היפוך טבלה","d":"הפיכת ערכים ייחודיים בעמודה לעמודות-פלט נפרדות באמצעות אגרגציה מותנית.","rel":["sql-cond-agg","sql-dynamic-pivot"],"node":"sql-core"},{"id":"sql-cond-agg","t":"Conditional Aggregation","he":"אגרגציה מותנית","d":"שימוש ב-CASE WHEN בתוך SUM/MAX/COUNT להחיל אגרגציה על תת-קבוצה של שורות בלבד.","rel":["sql-pivot"],"node":"sql-core"},{"id":"sql-dynamic-pivot","t":"Dynamic Pivot","he":"היפוך דינמי","d":"pivot שעמודות הפלט שלו אינן ידועות בזמן ה-parse ומחייב בניית SQL בקוד ריצה.","rel":["sql-pivot"],"node":"sql-core"}]}
 ```
+
+<!-- audited -->

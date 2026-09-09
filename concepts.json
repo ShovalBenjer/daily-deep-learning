@@ -3547,6 +3547,28 @@
         "c-azure-ner"
       ],
       "node": "azure-core"
+    },
+    {
+      "id": "seen-set",
+      "t": "Seen Set",
+      "he": "קבוצת ביקורים",
+      "d": "Pattern של שימוש ב-set לזכירת ערכים שנראו; בדיקת כפילויות ב-O(1) ממוצע.",
+      "rel": [
+        "hash-table",
+        "frequency-count"
+      ],
+      "node": "dsa"
+    },
+    {
+      "id": "sorted-key-grouping",
+      "t": "Sorted-Key Grouping",
+      "he": "קיבוץ לפי מפתח ממוין",
+      "d": "Pattern שממפה כל איבר למפתח tuple(sorted(x)) כדי לקבץ anagrams; מחייב tuple כי list לא hashable.",
+      "rel": [
+        "hash-table",
+        "hash-function"
+      ],
+      "node": "dsa"
     }
   ],
   "items": [

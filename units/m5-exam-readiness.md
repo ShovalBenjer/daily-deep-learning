@@ -88,3 +88,5 @@
 ```quiz
 {"id":"u-m5-exam-readiness-q3","tree":"ops","skill":"azure-foundry","q":"מה הכתובת הרשמית של ה-exam sandbox של Microsoft ל-AI-103?","options":["aka.ms/ai103demo","aka.ms/examdemo","learn.microsoft.com/exam-sandbox","portal.azure.com/exam"],"answer":1,"explain":"הכתובת הרשמית היא aka.ms/examdemo. היא חינמית ומדמה את פורמט הבחינה האמיתי."}
 ```
+
+<!-- audited -->

@@ -5606,6 +5606,18 @@
         "doc-intel-prebuilt"
       ],
       "node": "azure-core"
+    },
+    {
+      "id": "exam-readiness",
+      "t": "Exam Readiness",
+      "he": "מוכנות למבחן",
+      "d": "שלב שלפני ישיבה: sandbox, gap list, תאריך. לא תחרות על ידע, בדיקת delta.",
+      "rel": [
+        "c-foundry",
+        "c-content-filter",
+        "c-groundedness"
+      ],
+      "node": "azure-core"
     }
   ]
 }

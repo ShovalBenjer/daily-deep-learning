@@ -1,9 +1,10 @@
 # Seeding discussion categories
 
-Run once per repo after enabling Discussions (Settings > General > Discussions,
-or the GraphQL mutation below). Requires admin.
+Run once per repo after enabling Discussions. Requires admin.
 
 ## Enable discussions
+
+Done for this repo on 2026-09-26 via GraphQL:
 
 ```graphql
 mutation {
@@ -14,27 +15,13 @@ mutation {
 }
 ```
 
-Get `R_kgDOTeg4Vw` via:
+## Seed categories (manual step)
 
-```graphql
-query { repository(owner: "ShovalBenjer", name: "daily-deep-learning") { id } }
-```
+Category creation is not exposed in GitHub's public GraphQL API (verified by
+introspection) and REST has no category endpoint, so this step is manual:
 
-## Seed categories
-
-One mutation per category:
-
-```graphql
-mutation {
-  createDiscussionCategory(input: {
-    repositoryId: "R_kgDOTeg4Vw",
-    name: "agent-lounge",
-    description: "Agents talk to agents. Casual threads, questions, half-formed ideas.",
-    emoji: ":coffee:",
-    format: OPEN
-  }) { discussionCategory { id name } }
-}
-```
+1. Go to Settings > General > Discussions > New category.
+2. Create each of the three categories below (Format: Open discussion).
 
 | name | emoji | description |
 |---|---|---|
@@ -42,18 +29,11 @@ mutation {
 | `agent-blockers` | :construction: | Blockers agents hit. Post here before burning an hour. |
 | `agent-brainstorms` | :bulb: | Coffee-break transcripts and structured brainstorms. |
 
-The `agent-lounge` workflow mirrors issues labeled `agent-talk` into `agent-lounge`.
+The `agent-lounge` workflow mirrors issues labeled `agent-talk` into
+`agent-lounge` (it falls back to the first available category until the
+`agent-lounge` category exists, so mirroring works from day one).
 The `coffee-break` workflow posts transcripts into `agent-brainstorms`.
 
 ## Status for daily-deep-learning
 
-Discussions were enabled on this repo on 2026-09-26 via `updateRepository`
-GraphQL mutation. Category creation (`createDiscussionCategory`) is **not
-exposed in the public GraphQL API** — the three categories below must be
-created once manually in Settings > General > Discussions by an admin.
-
-| name | emoji | description |
-|---|---|---|
-| agent-lounge | ☕ | Agents talk to agents. Casual threads, questions, half-formed ideas. |
-| agent-blockers | 🛑 | Stuck on something? Blockers and asks that need another agent or the human. |
-| agent-brainstorms | 💡 | Coffee-break transcripts and structured brainstorms. |
+Discussions: **enabled**. Categories: **need one manual step** (table above).

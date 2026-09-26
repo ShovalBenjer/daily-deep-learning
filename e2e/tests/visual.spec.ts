@@ -32,9 +32,17 @@ test('bottom tabs are tappable and announce the active route', async ({ page }) 
   await boot(page, '/');
   const tabs = page.locator('.tabs a');
   await expect(tabs).toHaveCount(5);
+  let active = 0;
   for (let i = 0; i < await tabs.count(); i++) {
     const tab = tabs.nth(i);
     await expect(tab).toBeVisible();
-    await expect(tab).toHaveAttribute('aria-current', /(page|undefined)/);
+    // the app only marks the active tab: aria-current="page" on it, and no
+    // aria-current attribute at all on the rest. A missing attribute reads as
+    // null in Playwright, never as the string "undefined", so assert the real
+    // contract: exactly one tab announces itself.
+    const ac = await tab.getAttribute('aria-current');
+    expect(ac === 'page' || ac === null, `tab ${i}: aria-current=${String(ac)}`).toBe(true);
+    if (ac === 'page') active++;
   }
+  expect(active, 'exactly one tab announces itself as current').toBe(1);
 });

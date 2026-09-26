@@ -56,6 +56,14 @@ jobs:
           python3 tools/check_callsites.py --selftest
           python3 tools/check_callsites.py
 
+      # The lesson pipeline's scored values are LLM-invented (research:
+      # Executive_MCP Finding B, never let the LLM do math). close_unit.py
+      # checks fence counts and JSON parseability, never answer-key
+      # validity, so this oracle fails on an out-of-range answer index,
+      # duplicate options or ids, and empty fillin answers.
+      - name: Quiz answer-key oracle
+        run: python3 tools/check_quiz_keys.py
+
       # unit domain of quality-contract.json, hermetic slice only. These files
       # read index.html, daemon/server.ts and daemon/server_parse.ts directly
       # (server_parse and sadna-sync/worker.js have zero imports of their own)

@@ -196,3 +196,130 @@ test('L4 mutation: the harness can actually fail (control)', () => {
   for (let seed = 1; seed <= 60; seed++) if (violated(harmless, seed)) anyViolation = true;
   expect(anyViolation).toBe(false);
 });
+
+// ----------------------------------------------------- L4 parser mutation
+//
+// WHY THIS EXISTS: the deck mutation layer above proves its own oracle is
+// honest (it actually kills mutants). The parser in daemon/server_parse.ts is
+// the hostile-input boundary of the teacher daemon, so it gets the same
+// treatment. The previous attempt at this section defined parserViolated as a
+// function that always returned null and never ran anything (REVIEW.md
+// principle 2, Oracle Integrity: a bypassed oracle is a blocking finding).
+// Here the oracle really builds the mutated source with new Function and runs
+// a battery of hostile inputs through it, exactly like the deck layer does.
+
+const PARSER_TS = readFileSync(new URL('../daemon/server_parse.ts', import.meta.url), 'utf8');
+const PARSER_TRANSPILER = new Bun.Transpiler({ loader: 'ts' });
+
+function sliceBalanced(ts: string, start: number): string {
+  let depth = 0;
+  let i = start;
+  for (; i < ts.length; i++) {
+    if (ts[i] === '{') depth++;
+    else if (ts[i] === '}') {
+      depth--;
+      if (depth === 0) { i++; break; }
+    }
+  }
+  return ts.slice(start, i);
+}
+
+/** Pull just the consts + parseChatRequest out of the (possibly mutated) TS. */
+function extractParserTs(ts: string): string {
+  const consts = (ts.match(/export const MAX_(MESSAGE|HISTORY|CONTEXT_CHARS) = \d+;/g) || []).join('\n');
+  const fnStart = ts.indexOf('export function parseChatRequest');
+  if (fnStart < 0) throw new Error('parseChatRequest not found in source');
+  return consts + '\n' + sliceBalanced(ts, fnStart);
+}
+
+function buildParser(ts: string): { parseChatRequest: (b: unknown) => any; MAX_MESSAGE: number; MAX_HISTORY: number; MAX_CONTEXT_CHARS: number } {
+  const js = PARSER_TRANSPILER.transformSync(extractParserTs(ts)).replace(/export\s+/g, '');
+  const factory = new Function(
+    js + '\nreturn { parseChatRequest, MAX_MESSAGE, MAX_HISTORY, MAX_CONTEXT_CHARS };'
+  ) as () => any;
+  return factory();
+}
+
+const REAL_PARSER = buildParser(PARSER_TS);
+
+/**
+ * The oracle: run a fixed battery of cases through the (mutated) parser and
+ * return the name of the first case whose outcome disagrees with the contract,
+ * or null if every case holds. This is what actually executes the mutated
+ * source; a mutant survives only if no case flips.
+ */
+function parserViolated(ts: string): string | null {
+  let parse: (b: unknown) => any;
+  try {
+    parse = buildParser(ts).parseChatRequest;
+  } catch (e) {
+    return 'threw building parser: ' + String(e).slice(0, 60);
+  }
+  const M = REAL_PARSER.MAX_MESSAGE;
+  const H = REAL_PARSER.MAX_HISTORY;
+  const C = REAL_PARSER.MAX_CONTEXT_CHARS;
+  const bigCtx = { x: 'y'.repeat(C + 10) };
+  const longHistory = Array.from({ length: 15 }, (_, i) => ({ role: 'user', text: 'm' + i }));
+  const badHistory = [{ role: 'user', text: 'a' }, { text: 'x' }] as any;
+
+  const cases: Array<{ name: string; body: unknown; check: (r: any) => boolean }> = [
+    { name: 'rejects null', body: null, check: r => r.ok === false },
+    { name: 'rejects bare string', body: 'hi', check: r => r.ok === false },
+    { name: 'rejects array body', body: [1, 2], check: r => r.ok === false },
+    { name: 'rejects missing message', body: {}, check: r => r.ok === false },
+    { name: 'rejects blank message', body: { message: '   ' }, check: r => r.ok === false },
+    { name: 'rejects non-string message', body: { message: 123 }, check: r => r.ok === false },
+    { name: 'rejects over-long message', body: { message: 'x'.repeat(M + 1) }, check: r => r.ok === false },
+    { name: 'accepts minimal message', body: { message: 'hi' }, check: r => r.ok === true },
+    { name: 'persona teacher stays teacher', body: { message: 'hi', persona: 'teacher' }, check: r => r.ok && r.persona === 'teacher' },
+    { name: 'persona mentor honored', body: { message: 'hi', persona: 'mentor' }, check: r => r.ok && r.persona === 'mentor' },
+    { name: 'verify truthy', body: { message: 'hi', verify: 1 }, check: r => r.ok && r.verify === true },
+    { name: 'history drops malformed entries', body: { message: 'hi', history: badHistory }, check: r => r.ok && r.history.length === 1 && r.history[0].text === 'a' },
+    { name: 'history capped to MAX_HISTORY', body: { message: 'hi', history: longHistory }, check: r => r.ok && r.history.length === H },
+    { name: 'oversized context replaced with marker', body: { message: 'hi', context: bigCtx }, check: r => r.ok && r.context.note === 'context too large, dropped' },
+    { name: 'array context not an object', body: { message: 'hi', context: [1, 2] }, check: r => r.ok && r.context && Object.keys(r.context).length === 0 },
+  ];
+
+  for (const c of cases) {
+    let r: any;
+    try { r = parse(c.body); } catch (e) { return c.name + ' threw: ' + String(e).slice(0, 40); }
+    if (!c.check(r)) return c.name;
+  }
+  return null;
+}
+
+/** Each mutant is a real defect someone could plausibly introduce in the parser. */
+const PARSER_MUTANTS: Array<{ name: string; from: string; to: string }> = [
+  { name: 'blank message accepted', from: "typeof message !== 'string' || !message.trim() || message.length > MAX_MESSAGE", to: "typeof message !== 'string' || message.length > MAX_MESSAGE" },
+  { name: 'over-long message accepted', from: "typeof message !== 'string' || !message.trim() || message.length > MAX_MESSAGE", to: "typeof message !== 'string' || !message.trim()" },
+  { name: 'history role check dropped', from: "(m as ChatMsg).role === 'user' || (m as ChatMsg).role === 'bot'", to: 'true' },
+  { name: 'oversized context accepted', from: "if (size > MAX_CONTEXT_CHARS) context = { note: 'context too large, dropped' };", to: "if (false) context = { note: 'context too large, dropped' };" },
+  { name: 'persona always mentor', from: "b.persona === 'mentor' ? 'mentor' : 'teacher'", to: "'mentor'" },
+  { name: 'verify always false', from: 'verify: !!b.verify,', to: 'verify: false,' },
+  { name: 'history not capped', from: '.slice(-MAX_HISTORY);', to: ';' },
+];
+
+test('L4 mutation: the parser oracle passes on the real source', () => {
+  expect(parserViolated(PARSER_TS)).toBe(null);
+});
+
+test('L4 mutation: every planted parser defect is caught', () => {
+  const survivors: string[] = [];
+  for (const m of PARSER_MUTANTS) {
+    expect(PARSER_TS.includes(m.from)).toBe(true);              // the mutation still applies
+    const mutated = PARSER_TS.replace(m.from, m.to);
+    expect(mutated).not.toBe(PARSER_TS);
+    const violation = parserViolated(mutated);                  // the oracle actually runs it
+    if (!violation) survivors.push(m.name);
+  }
+  // A survivor is a hole in the suite. Naming it is the point of the layer.
+  expect(survivors).toEqual([]);
+});
+
+test('L4 mutation: the parser harness can actually fail (control)', () => {
+  // Guards against a mutation runner that reports 100 percent because its
+  // oracle never returns anything. A deliberately harmless edit must survive.
+  const harmless = PARSER_TS.replace('export const MAX_MESSAGE = 4000;', 'export const MAX_MESSAGE = 4000; /* pragma */');
+  expect(harmless).not.toBe(PARSER_TS);
+  expect(parserViolated(harmless)).toBe(null);
+});

@@ -26,7 +26,7 @@ from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DEADLINE = date(2026, 10, 9)
+DEADLINE = date(2026, 10, 12)
 HOURS_PER_DAY = 3.0
 
 

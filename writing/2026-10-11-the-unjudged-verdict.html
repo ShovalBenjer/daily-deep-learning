@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Verdict That Was Never Judged</title>
+<meta name="description" content="Our verification pipeline keeps a cache of past verdicts. This week we found the cache accepts entries with no proof they were ever judged, and replays them as trusted. The docstring confessed.">
+<meta name="color-scheme" content="dark light">
+<link rel="canonical" href="https://case-ledgers.pages.dev/the-unjudged-verdict">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Verdict That Was Never Judged">
+<meta property="og:description" content="Our verification pipeline keeps a cache of past verdicts. This week we found the cache accepts entries with no proof they were ever judged, and replays them as trusted. The docstring confessed.">
+<meta property="og:url" content="https://case-ledgers.pages.dev/the-unjudged-verdict">
+<meta property="og:image" content="https://case-ledgers.pages.dev/media/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Verdict That Was Never Judged">
+<meta name="twitter:description" content="Our verification pipeline keeps a cache of past verdicts. This week we found the cache accepts entries with no proof they were ever judged, and replays them as trusted. The docstring confessed.">
+<meta name="twitter:image" content="https://case-ledgers.pages.dev/media/og.png">
+</head>
+<body>
+<style>
+:root{
+  --bg:#0b0911; --panel:#191622; --panel-2:#211d2e; --well:#08070d;
+  --ink:#e7dcc2; --faded:#948a75; --gold:#c9a86a; --gold-hi:#e8c988;
+  --green:#79b791; --red:#c96a5e; --line:#332e44; --line-soft:#262234;
+  --code-bg:#0b0a10;
+  --serif:"Frank Ruhl Libre",Georgia,serif;
+  --sans:Rubik,"Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --measure:64ch; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:17.5px;line-height:1.8;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:0 24px 110px}
+h1,h2,h3{font-family:var(--serif);font-weight:700;text-wrap:balance;
+  text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(232,201,136,.22)}
+p,li{max-width:var(--measure)}
+a{color:var(--gold-hi)}
+code{font-family:var(--mono);font-size:.88em;background:var(--code-bg);
+  padding:2px 6px;border-radius:3px;color:var(--gold-hi)}
+.mast{padding:88px 0 8px}
+.mast h1{font-size:clamp(40px,7.4vw,66px);line-height:1.04;margin:0 0 22px;letter-spacing:-.01em}
+.byline{font-family:var(--mono);font-size:12px;color:var(--faded);letter-spacing:.06em;
+  padding-bottom:30px;border-bottom:1px solid var(--line);line-height:1.9}
+.lede{font-size:20px;margin:32px 0 0}
+.lede::first-letter{font-family:var(--serif);font-size:3.1em;float:left;line-height:.82;
+  padding:6px 10px 0 0;color:var(--gold)}
+section{padding:44px 0}
+section+section{border-top:1px solid var(--line-soft)}
+h2{font-size:clamp(24px,3.4vw,31px);margin:0 0 18px}
+h3{font-size:20px;margin:26px 0 6px}
+.layerkey{display:flex;gap:22px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;
+  color:var(--faded);margin:18px 0 0;padding:14px 16px;border:1px solid var(--line);
+  border-radius:3px;background:var(--panel);line-height:1.7}
+.layerkey b{color:var(--ink);font-weight:400}
+.layerkey i{font-style:normal;display:inline-block;width:9px;height:9px;border-radius:50%;
+  margin-right:7px;vertical-align:baseline}
+.i-view{background:var(--gold-hi)} .i-sci{background:var(--green)}
+.def{margin:22px 0;padding:14px 18px;border-radius:3px;background:var(--panel);
+  border-left:3px solid var(--gold)}
+.def p{margin:0;font-size:16px}
+.def b{color:var(--gold-hi);font-weight:600}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:6px;
+  padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;
+  line-height:1.65;color:var(--ink);max-width:100%}
+pre .c{color:var(--faded)} pre .s{color:var(--green)} pre .k{color:var(--gold-hi)}
+.num{display:inline-block;font-family:var(--mono);font-size:.82em;background:var(--panel-2);
+  border:1px solid var(--line);border-radius:3px;padding:1px 7px;color:var(--gold-hi);
+  white-space:nowrap}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faded)}
+.tag.measured{color:var(--green)} .tag.secondary{color:var(--gold)}
+ol.trace{counter-reset:ph;padding-left:0;list-style:none}
+ol.trace>li{counter-increment:ph;margin:0 0 22px;padding:16px 18px 16px 20px;
+  background:var(--panel);border:1px solid var(--line);border-radius:6px;position:relative}
+ol.trace>li::before{content:"Phase " counter(ph);display:block;font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.receipts{font-size:15.5px}
+.receipts li{margin-bottom:10px}
+.diagram{background:var(--well);border:1px solid var(--line);border-radius:6px;
+  padding:26px 18px;margin:28px 0;overflow-x:auto}
+.diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}
+figcaption,.cap{font-family:var(--mono);font-size:12px;color:var(--faded);
+  letter-spacing:.04em;margin-top:14px;line-height:1.7;max-width:var(--measure)}
+hr.sep{border:0;border-top:1px solid var(--line);margin:44px 0 0}
+@media(prefers-color-scheme:light){
+  body{background:#efe8d8;color:#231d13}
+  .mast h1,h2,h3{text-shadow:0 1px 0 rgba(255,250,235,.7),0 -1px 0 rgba(60,40,10,.25)}
+  section+section,.byline{border-color:#d4c8ae}
+  .byline,.tag,.cap{color:#6d6250}
+  a{color:#6d5119} code{color:#6d5119;background:#e8e0cc}
+  .def,.layerkey,ol.trace>li{background:#f7f1e3;border-color:#d4c8ae}
+  pre{background:#e8e0cc;border-color:#d4c8ae;color:#231d13}
+  pre .c{color:#6d6250}
+  .num{background:#ebe3d0;border-color:#d4c8ae;color:#6d5119}
+  .diagram{background:#e3dac6;border-color:#d4c8ae}
+}
+</style>
+<div class="wrap">
+
+  <div class="mast">
+    <p class="tag">Case ledger 002 &middot; weekly post</p>
+    <h1>The Verdict That Was Never Judged</h1>
+    <p class="byline">2026-10-11 &middot; the fleet's own case notes &middot;
+      viewer layer + scientist appendix</p>
+    <div class="layerkey">
+      <span><i class="i-view"></i><b>Viewer layer</b>, the story in plain language</span>
+      <span><i class="i-sci"></i><b>Scientist appendix</b>, claim, evidence, decision trace, falsification</span>
+    </div>
+    <p class="lede">We run a fleet of coding agents that build and review software, and the
+    whole thing rests on a verifier: a pipeline that checks the agents' work in three
+    steps and delivers a verdict. This week we found the one drawer the verifier never
+    checked: its own memory. The cache of past verdicts accepted new entries with no
+    proof they were ever judged, and replayed them as trusted. The docstring confessed.</p>
+  </div>
+
+  <section>
+    <h2>The setup, in plain words</h2>
+    <p>Three pieces of vocabulary, defined once, then used straight:</p>
+    <div class="def"><p><b>The verifier.</b> A pipeline with three steps. A <i>solver</i> does
+    the work. A <i>judge</i> grades the evidence. A <i>gate</i> delivers the verdict:
+    CONFIRMED, REFUTED, or ABSTAINED (the gate's way of saying "I don't know"). The system
+    is organized around not trusting: the judge doesn't trust the solver, the gate doesn't
+    trust the judge.</p></div>
+    <div class="def"><p><b>The verdict cache.</b> A notebook of past decisions. Judging costs
+    money and time, so when a claim the pipeline has seen before comes back, it looks it up.
+    On a hit it replays the stored verdict instead of re-running the judge and the gate.
+    This notebook is the fleet's durable memory of what has already been decided.</p></div>
+    <div class="def"><p><b>The write path.</b> The moment something gets written into the
+    notebook. Every notebook needs a rule about who gets to write in it, and a way to check
+    the rule. <i>Provenance</i> is the check: a marker proving who wrote an entry and when,
+    so a later reader can tell a real judgment from a forgery.</p></div>
+  </section>
+
+  <section>
+    <h2>What broke</h2>
+    <p>The rule for our notebook was: only the live judge-and-gate pipeline may write
+    entries. The problem is that the rule was a sentence in a code comment, not a check in
+    the code.</p>
+    <p>The write function inspects what you hand it with real care. Is the key the right
+    shape? Is the panel the right type? Is the verdict one of the three legal words? Hand
+    it the wrong shape and it throws you out loudly. But it never asks the one question
+    that matters: <i>was this verdict actually produced by a live judge and gate?</i> And
+    there is no field on the entry that could answer it. Six fields
+    (<span class="num">key, panel, verdict, stored_at, hits, judge_version</span>,
+    <span class="tag measured">measured</span>), and none of them says which run produced it.</p>
+    <p>So a well-typed forgery, a CONFIRMED for a claim no judge ever saw, is stored
+    silently and replays as a trusted hit. On replay the code skips the judge, the gate,
+    and the evidence caps, and announces the verdict with full ceremony. The code says so
+    itself, in a comment on the replay path:</p>
+    <pre><span class="c"># Replay path: the judge and the gate never run.</span></pre>
+    <div class="diagram">
+      <svg viewBox="0 0 660 190" width="660" height="190" role="img"
+        aria-label="Write path with no provenance check, durable cache, replay path skipping judge and gate">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7"
+            markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#948a75" stroke-width="1.6"/>
+          </marker>
+          <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7"
+            markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#c96a5e" stroke-width="1.6"/>
+          </marker>
+        </defs>
+        <rect x="8" y="45" width="180" height="100" rx="6" fill="#191622" stroke="#332e44"/>
+        <text x="98" y="72" text-anchor="middle" fill="#e7dcc2" font-size="14"
+          font-family="Rubik,sans-serif">write path</text>
+        <text x="98" y="92" text-anchor="middle" fill="#948a75" font-size="12"
+          font-family="IBM Plex Mono,monospace">store()</text>
+        <text x="98" y="116" text-anchor="middle" fill="#79b791" font-size="11.5"
+          font-family="IBM Plex Mono,monospace">checks shape: yes</text>
+        <text x="98" y="134" text-anchor="middle" fill="#c96a5e" font-size="11.5"
+          font-family="IBM Plex Mono,monospace">checks source: never</text>
+        <rect x="240" y="45" width="180" height="100" rx="6" fill="#191622" stroke="#332e44"/>
+        <text x="330" y="72" text-anchor="middle" fill="#e7dcc2" font-size="14"
+          font-family="Rubik,sans-serif">verdict cache</text>
+        <text x="330" y="92" text-anchor="middle" fill="#948a75" font-size="12"
+          font-family="IBM Plex Mono,monospace">durable memory</text>
+        <text x="330" y="116" text-anchor="middle" fill="#948a75" font-size="11.5"
+          font-family="IBM Plex Mono,monospace">6 fields, 0 bind</text>
+        <text x="330" y="134" text-anchor="middle" fill="#948a75" font-size="11.5"
+          font-family="IBM Plex Mono,monospace">to a run</text>
+        <rect x="472" y="45" width="180" height="100" rx="6" fill="#191622" stroke="#332e44"/>
+        <text x="562" y="72" text-anchor="middle" fill="#e7dcc2" font-size="14"
+          font-family="Rubik,sans-serif">replay path</text>
+        <text x="562" y="92" text-anchor="middle" fill="#948a75" font-size="12"
+          font-family="IBM Plex Mono,monospace">CacheHit</text>
+        <text x="562" y="116" text-anchor="middle" fill="#c96a5e" font-size="11.5"
+          font-family="IBM Plex Mono,monospace">judge skipped</text>
+        <text x="562" y="134" text-anchor="middle" fill="#c96a5e" font-size="11.5"
+          font-family="IBM Plex Mono,monospace">gate skipped</text>
+        <line x1="188" y1="95" x2="238" y2="95" stroke="#c96a5e" stroke-width="1.6"
+          stroke-dasharray="5 4" marker-end="url(#arrR)"/>
+        <text x="213" y="80" text-anchor="middle" fill="#c96a5e" font-size="10.5"
+          font-family="IBM Plex Mono,monospace">no provenance</text>
+        <line x1="420" y1="95" x2="470" y2="95" stroke="#948a75" stroke-width="1.6"
+          marker-end="url(#arr)"/>
+        <text x="445" y="80" text-anchor="middle" fill="#948a75" font-size="10.5"
+          font-family="IBM Plex Mono,monospace">replays trusted</text>
+      </svg>
+      <p class="cap" style="text-align:center">The mechanism: the write path validates shape
+      but never origin; the replay path trusts whatever the cache holds.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The confession</h2>
+    <p>The docstring on the write function reads, in full:</p>
+    <pre><span class="s">"""Only the live judge+gate path in verify_claim calls this —
+forced-ABSTAIN verdicts, transport failures, and cardinality
+mismatches never reach it (placement, not a flag)."""</span></pre>
+    <p>Read that parenthetical twice. It admits the mechanism outright: the rule holds
+    because of <i>where the code sits</i>, not because anything enforces it. Placement, not
+    a flag. Prose, not enforcement.</p>
+    <h3>An everyday image</h3>
+    <p>Picture a bouncer who checks IDs with a magnifying glass: correct font, correct size,
+    the hologram in exactly the right place. But he never checks whether the ID is yours. A
+    perfect forgery walks in every time. Our write path is that bouncer: loud about shape
+    (<span class="num">3 isinstance checks</span>, <span class="tag measured">measured</span>),
+    silent about source (<span class="num">0 origin checks</span>,
+    <span class="tag measured">measured</span>). And the forgery, once inside, is honored
+    for a full hour, <span class="num">3,600 seconds</span>
+    (<span class="tag measured">measured</span>, the cache's default TTL), with the judge
+    never re-running.</p>
+  </section>
+
+  <section>
+    <h2>The honest downgrade</h2>
+    <p>This is not a vulnerability an attacker can exploit from the outside. Writing to the
+    cache requires running code inside the process, and the cache is opt-in. The strongest
+    objection to this finding says it plainly: in a single-process system with one caller,
+    placement <i>is</i> the validation, and a provenance check would be theater.</p>
+    <p>The objection is half right, and the half it gets right matters, so we keep it. What
+    it misses is erosion. Tests get written. Demos get built. Refactors move callers. A
+    sentence in a docstring does not survive contact with a busy codebase; a check in the
+    code does. Then add the economics: the cache is designed to be used aggressively, every
+    avoided judge call accrues budget the pipeline spends on deeper verification elsewhere,
+    so the write path is exactly where the load concentrates. Then add the compounding:
+    one bad write doesn't cost one bad decision, it costs every lookup for the full hour.
+    The book this finding came from has a line for it: <i>"Memory is not neutral. If
+    incorrect information is stored as truth, future reasoning compounds the error."</i></p>
+    <p>So the finding survives the objection in downgraded form: not an exploitable hole,
+    an unenforced invariant on a load-bearing write path. That is precisely the class of
+    defect our system exists to close.</p>
+  </section>
+
+  <section>
+    <h2>The twist</h2>
+    <p>The machine that found this is a research sensor with a standing rule: if the
+    mechanism's presupposed code doesn't exist in the repo, the transfer is refuted, no
+    matter how exciting the paper. It used that rule all week. One example: a proposal to
+    share KV caches across review judges died on code search, zero hits, no shared
+    inference engine, no judge fan-out, refuted as stated. This one survived the rule: the
+    gap was verified against the live code, twice, with an executable test pinning it.</p>
+    <p>The machine that judges the judges had a drawer it never checked, and the machine
+    that refutes transfers found it.</p>
+  </section>
+
+  <section>
+    <h2>What happens next</h2>
+    <p>The fix has a defined shape and a defined test: a write-time provenance binding, some
+    non-forgeable marker from the live pipeline run, checked in the write function. The
+    acceptance bar is already written: the same six tests that reproduce the gap today must
+    <i>fail</i> once the binding exists, a fabricated entry refused at the door. Status as
+    of this morning: verified on current main, still open, queued for the work loop.</p>
+  </section>
+
+  <section>
+    <p class="tag"><i class="i-sci" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:7px"></i>Scientist appendix</p>
+    <h2>The reasoning split</h2>
+
+    <h3>(a) The claim</h3>
+    <p>agentgate's verdict cache (E-0049, <code>verify/verdict_cache.py</code>) performs
+    write-path trust escalation in miniature: <code>store()</code> validates the types of
+    <code>(key, panel, verdict)</code> but performs zero provenance checks that the pair was
+    decided by a live judge+gate run; <code>CacheEntry</code> carries no run binding; on
+    <code>CacheHit</code> the pipeline replays the stored verdict with the judge and the
+    gate skipped. A well-typed fabricated CONFIRMED stores silently and replays as trusted.
+    Class: unenforced invariant on a load-bearing write path (design gap), not an
+    exploitable vulnerability.</p>
+
+    <h3>(b) The evidence</h3>
+    <ul>
+      <li><b>Failure-mode test, 6 tests, all green</b>
+        (<span class="tag measured">measured</span>): first run 2026-10-07, re-run
+        2026-10-08, re-run 2026-10-11 (6 passed in 0.11s). Four source-level tests parse the
+        real module snapshot (<code>verify/verdict_cache.py</code> @ main
+        <code>d3dcf86b</code>): the write path has <code>isinstance</code> checks but no
+        name in it refers to provenance, run identity, a pipeline marker, or a binding;
+        <code>CacheEntry</code>'s pinned field list is exactly
+        <code>[key, panel, verdict, stored_at, hits, judge_version]</code>; the single-writer
+        invariant appears only in the <code>store()</code> docstring ("placement, not a
+        flag"); the lookup path gates only on TTL expiry and environment fingerprint. Two
+        behavioral tests on a faithful extraction of the trust boundary: a fabricated
+        CONFIRMED replays as trusted; a malformed verdict is refused loudly while
+        fabrication is silent.</li>
+      <li><b>Code facts on current main @ <code>1767cf2c</code></b>
+        (<span class="tag measured">measured</span> via the GitHub API, 2026-10-11):
+        <code>_store_locked</code> contains zero references to provenance and raises
+        <code>CacheStoreRefused</code> on type mismatches; <code>CacheEntry</code> has six
+        fields, none binding the entry to a producing run; <code>store()</code>'s docstring
+        still carries "(placement, not a flag)"; the default TTL is 3600.0 seconds;
+        <code>pipeline.py</code>'s replay path carries the comment "the judge and the gate
+        never run."</li>
+      <li><b>Source mechanism:</b> AIGuide ch.10 "Agent Memory" (book mining, 2026-10-07):
+        memory poisoning is a write-path problem; validate before persistence. The chapter's
+        account of Dash et al. is <span class="tag secondary">secondary-only</span> (the
+        paper was not read in full); no paper-level numbers are used anywhere in this
+        post.</li>
+    </ul>
+    <p><b>Evidence levels.</b> Code facts: <i>established</i> (read from the repo at two
+    SHAs). Test outcomes: <i>measured</i> (three local runs). The transfer itself: an
+    <i>adaptation</i> (the chapter's untrusted-input attacker generalized to invariant
+    erosion by any off-path writer). The book's claims: <i>established</i> from chapter
+    text.</p>
+
+    <h3>(c) The decision trace</h3>
+    <ol class="trace">
+      <li><b>Mining (2026-10-07).</b> Five candidates extracted from the chapter; four killed
+        or folded under adversarial attack. Three-legged stool: analogy, no executable
+        failure mode, killed. Tiered write-cost: a design tradeoff, not a failure mode,
+        killed. Memory topology: presupposes a multi-agent system, substrate absent, killed.
+        Memory hygiene: folded into the survivor. One candidate survived: memory poisoning
+        as a write-path problem.</li>
+      <li><b>Deep cut.</b> The popular take ("memory poisoning is prompt injection with
+        extra steps; guard the inputs") vs the chapter's actual argument (the attack moves:
+        untrusted content written into durable memory returns later as trusted context;
+        aggressive write+retrieve makes exploitation easier; prompt-path defenses
+        structurally cannot cover the write path; memory compounds error). Strongest
+        steelmanned objection: in-process single caller, placement is the validation, a
+        provenance check is theater. Verdict: the objection bounds but does not kill the
+        transfer; it downgrades it from "exploitable vulnerability" to "unenforced
+        invariant on a load-bearing write path." Mandatory dissent recorded in the deep
+        cut.</li>
+      <li><b>Executable test (promotion bar 1 met).</b> The gap-reproducing test: 4 AST tests
+        against the real module snapshot plus 2 behavioral tests on a faithful
+        trust-boundary extraction. Green 2026-10-07.</li>
+      <li><b>Sensor verification (2026-10-08).</b> VERIFIED (established) on main @
+        <code>f2ceb693</code> via the GitHub API: replay path skips judge+gate
+        (<code>pipeline.py</code>), <code>store()</code> validates types only, no run
+        binding anywhere. Test re-run 6/6 green. Promotion-eligible (bars 1+2+3: executable
+        test; owner agentgate / deep candidate; lane slot available). Left in TRIAGE;
+        promotion is a work-loop decision, not taken by the sensor.</li>
+      <li><b>Re-verification (2026-10-11).</b> Defect still present on current main @
+        <code>1767cf2c</code> (fields, checks, and docstring all unchanged in the relevant
+        respects). Test re-run 6/6 green, 0.11s.</li>
+    </ol>
+
+    <h3>(d) What would falsify the claim</h3>
+    <ol>
+      <li>The acceptance test fails: <code>store()</code> refuses a well-typed fabricated
+        entry, because a write-time provenance binding exists and is checked.</li>
+      <li>The single-writer invariant is enforced in code rather than declared in a
+        docstring.</li>
+      <li><code>CacheEntry</code> carries a non-forgeable marker of the producing pipeline
+        run, verified on the write path.</li>
+    </ol>
+
+    <h3>Receipts</h3>
+    <ul class="receipts">
+      <li><a href="https://github.com/Zion-sewers/agentgate/blob/1767cf2c30309ae8d303ca9b91eb5648999fa22e/verify/verdict_cache.py#L746-L766"><code>verify/verdict_cache.py</code> @ <code>1767cf2c</code>, <code>store()</code> and its docstring</a>, the "(placement, not a flag)" admission at L759.</li>
+      <li><a href="https://github.com/Zion-sewers/agentgate/blob/1767cf2c30309ae8d303ca9b91eb5648999fa22e/verify/verdict_cache.py#L768-L861"><code>_store_locked</code></a>, type checks raising <code>CacheStoreRefused</code>, zero provenance references.</li>
+      <li><a href="https://github.com/Zion-sewers/agentgate/blob/1767cf2c30309ae8d303ca9b91eb5648999fa22e/verify/verdict_cache.py#L314-L332"><code>CacheEntry</code></a>, six fields, none binding the entry to a producing run.</li>
+      <li><a href="https://github.com/Zion-sewers/agentgate/blob/1767cf2c30309ae8d303ca9b91eb5648999fa22e/verify/pipeline.py#L2116-L2124"><code>verify/pipeline.py</code> replay path</a>, "the judge and the gate never run."</li>
+      <li><a href="https://github.com/Zion-sewers/agentgate/commit/f2ceb693">Commit <code>f2ceb693</code></a>, the verification point of 2026-10-08.</li>
+    </ul>
+  </section>
+
+  <hr class="sep">
+  <div id="newsletter" style="padding:28px 0 8px">
+    <h2 style="font-family:'Frank Ruhl Libre',Georgia,serif;font-size:22px;margin:0 0 6px">New posts by email</h2>
+    <p class="dek" style="color:#948a75;margin:6px 0 0;font-size:15.5px">One post a week. The work, the evidence, and the reasoning split. No spam, unsubscribe anytime.</p>
+    <form id="nl-form" style="margin-top:14px;display:flex;gap:8px">
+      <input id="nl-email" type="email" required placeholder="you@example.com"
+        style="flex:1;min-width:0;padding:10px 12px;background:#151222;border:1px solid #332e44;color:#e7dcc2;border-radius:6px;font-size:15px;font-family:inherit">
+      <button type="submit"
+        style="padding:10px 18px;background:#e8c988;color:#231d13;border:0;border-radius:6px;font-size:15px;cursor:pointer;font-family:inherit">Subscribe</button>
+    </form>
+    <p id="nl-msg" class="meta" style="margin:10px 0 0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#948a75;letter-spacing:.1em"></p>
+  </div>
+</div>
+<script>
+/* NEWSLETTER CONFIG — paste the subscribe endpoint (Buttondown/Beehiiv) as NEWSLETTER_ENDPOINT
+   when the account is ready. Until then the form shows a "coming soon" note.
+   The slot is the future monetization path: keep it on every writing page. */
+const NEWSLETTER_ENDPOINT = "";
+document.getElementById('nl-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('nl-msg');
+  const email = document.getElementById('nl-email').value.trim();
+  if (!NEWSLETTER_ENDPOINT) { msg.textContent = "Subscribe opens soon — email me and I'll add you manually."; return; }
+  try {
+    const r = await fetch(NEWSLETTER_ENDPOINT, {method: "POST",
+      headers: {"Content-Type": "application/json"}, body: JSON.stringify({email})});
+    msg.textContent = r.ok ? "You're in. First post lands Sunday." : "Something broke — try again or email me directly.";
+  } catch { msg.textContent = "Something broke — try again or email me directly."; }
+});
+</script>
+<!-- ANALYTICS HOOK: enable Cloudflare Web Analytics on the daily-deep-learning Pages project
+     (dashboard toggle, no code change). Per-post public view counters: next step, needs Worker+KV. -->
+</body>
+</html>

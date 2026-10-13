@@ -5618,6 +5618,61 @@
         "c-groundedness"
       ],
       "node": "azure-core"
+    },
+    {
+      "id": "c-query-plan",
+      "t": "Query plan",
+      "he": "תוכנית ריצה",
+      "d": "רצף הצעדים שה-Planner בוחר לביצוע שאילתה; כולל סוג הסריקה, צירופים ועלות משוערת",
+      "rel": [
+        "c-seq-scan",
+        "c-index-scan"
+      ],
+      "node": "sql-core"
+    },
+    {
+      "id": "c-seq-scan",
+      "t": "Seq Scan",
+      "he": "סריקה רציפה",
+      "d": "קריאת כל שורות הטבלה בסדר פיזי; עדיפה כשאחוז גבוה מהשורות תואם או הטבלה קטנה",
+      "rel": [
+        "c-query-plan",
+        "c-index-scan"
+      ],
+      "node": "sql-core"
+    },
+    {
+      "id": "c-index-scan",
+      "t": "Index Scan",
+      "he": "סריקת אינדקס",
+      "d": "מעבר ב-B-tree לאיתור מצביע השורה ואז קריאת ה-heap tuple; עדיפה כשהאינדקס סלקטיבי",
+      "rel": [
+        "c-query-plan",
+        "c-seq-scan",
+        "c-btree-index"
+      ],
+      "node": "sql-core"
+    },
+    {
+      "id": "c-btree-index",
+      "t": "B-tree index",
+      "he": "אינדקס עץ בינארי מאוזן",
+      "d": "מבנה נתונים מאוזן ב-O(log n) לשוויון, טווחים ומיון; סוג האינדקס הדיפולטי ב-PostgreSQL",
+      "rel": [
+        "c-index-scan"
+      ],
+      "node": "sql-core"
+    },
+    {
+      "id": "c-index-cardinality",
+      "t": "Index cardinality",
+      "he": "סלקטיביות אינדקס",
+      "d": "כמה ייחודית עמודה; cardinality נמוכה כמו status עם 3 ערכים גורמת ל-Planner לבחור seq scan גם עם אינדקס",
+      "rel": [
+        "c-seq-scan",
+        "c-btree-index"
+      ],
+      "node": "sql-core"
     }
   ]
 }

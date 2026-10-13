@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="brand.css">
 <title>The Verdict That Was Never Judged</title>
 <meta name="description" content="Our verification pipeline keeps a cache of past verdicts. This week we found the cache accepts entries with no proof they were ever judged, and replays them as trusted. The docstring confessed.">
 <meta name="color-scheme" content="dark light">
@@ -37,12 +38,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
   font-size:17.5px;line-height:1.8;-webkit-font-smoothing:antialiased}
 .wrap{max-width:720px;margin:0 auto;padding:0 24px 110px}
 
-/* ---- Zion brand header (wordmark + brass rule) ---- */
-.zion-sitehead{max-width:720px;margin:0 auto;padding:26px 24px 0}
-.zion-wordmark{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-weight:700;
-  font-size:20px;letter-spacing:.38em;color:var(--ink);text-decoration:none}
-.zion-wordmark:hover{color:var(--gold)}
-.zion-rule{display:block;height:3px;background:#D9A13B;margin-top:8px}
+/* brand.css owns the site header (wordmark + tagline + brass rule) */
 h1,h2,h3{font-family:var(--serif);font-weight:700;text-wrap:balance;
   text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(217,161,59,.22)}
 p,li{max-width:var(--measure)}
@@ -94,27 +90,24 @@ ol.trace>li::before{content:"Phase " counter(ph);display:block;font-family:var(-
 figcaption,.cap{font-family:var(--mono);font-size:12px;color:var(--faded);
   letter-spacing:.04em;margin-top:14px;line-height:1.7;max-width:var(--measure)}
 hr.sep{border:0;border-top:1px solid var(--line);margin:44px 0 0}
+/* Light theme: full token remap to the brand's inspection-light values
+   (Bone bg, Vault ink, dimmed brass) — no hardcoded colors. */
 @media(prefers-color-scheme:light){
-  body{background:#efe8d8;color:#231d13}
+  :root{--bg:#F5F1E6;--panel:#FCF9F0;--panel-2:#EFE9D7;--well:#E9E2CE;
+    --ink:#101210;--faded:#5C6B5A;--gold:#8A6514;--gold-hi:#6E5010;
+    --green:#41694f;--red:#B3402A;--line:#D8CDB2;--line-soft:#E4DBC3;
+    --code-bg:#EAE3CF;color-scheme:light}
   .mast h1,h2,h3{text-shadow:0 1px 0 rgba(255,250,235,.7),0 -1px 0 rgba(60,40,10,.25)}
-  section+section,.byline{border-color:#d4c8ae}
-  .byline,.tag,.cap{color:#6d6250}
-  a{color:#6d5119} code{color:#6d5119;background:#e8e0cc}
-  .def,.layerkey,ol.trace>li{background:#f7f1e3;border-color:#d4c8ae}
-  pre{background:#e8e0cc;border-color:#d4c8ae;color:#231d13}
-  pre .c{color:#6d6250}
-  .num{background:#ebe3d0;border-color:#d4c8ae;color:#6d5119}
-  .diagram{background:#e3dac6;border-color:#d4c8ae}
 }
 </style>
 <div class="wrap">
 
-  <header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><span class="zion-rule"></span></header>
+  <header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><p class="zion-tagline">public infrastructure for trust in agents &middot; <a href="https://github.com/Zion-sewers">Zion-sewers</a></p><span class="zion-rule"></span></header>
 <div class="mast">
     <p class="tag">Case ledger 002 &middot; weekly post</p>
     <h1>The Verdict That Was Never Judged</h1>
     <p class="byline">2026-10-11 &middot; the fleet's own case notes &middot;
-      viewer layer + scientist appendix</p>
+      viewer layer + scientist appendix <span class="view-count" data-page="the-unjudged-verdict"></span></p>
     <div class="layerkey">
       <span><i class="i-view"></i><b>Viewer layer</b>, the story in plain language</span>
       <span><i class="i-sci"></i><b>Scientist appendix</b>, claim, evidence, decision trace, falsification</span>
@@ -381,15 +374,16 @@ mismatches never reach it (placement, not a flag)."""</span></pre>
   <hr class="sep">
   <div id="newsletter" style="padding:28px 0 8px">
     <h2 style="font-family:'Space Grotesk',Inter,sans-serif;font-size:22px;margin:0 0 6px">New posts by email</h2>
-    <p class="dek" style="color:#948a75;margin:6px 0 0;font-size:15.5px">One post a week. The work, the evidence, and the reasoning split. No spam, unsubscribe anytime.</p>
+    <p class="dek" style="color:var(--faded);margin:6px 0 0;font-size:15.5px">One post a week. The work, the evidence, and the reasoning split. No spam, unsubscribe anytime.</p>
     <form id="nl-form" style="margin-top:14px;display:flex;gap:8px">
       <input id="nl-email" type="email" required placeholder="you@example.com"
-        style="flex:1;min-width:0;padding:10px 12px;background:#0B0C0A;border:1px solid #2A2E26;color:#F5F1E6;border-radius:6px;font-size:15px;font-family:inherit">
+        style="flex:1;min-width:0;padding:10px 12px;background:var(--well);border:1px solid var(--line);color:var(--ink);border-radius:6px;font-size:15px;font-family:inherit">
       <button type="submit"
-        style="padding:10px 18px;background:#D9A13B;color:#101210;border:0;border-radius:6px;font-size:15px;cursor:pointer;font-family:inherit">Subscribe</button>
+        style="padding:10px 18px;background:var(--gold);color:var(--bg);border:0;border-radius:6px;font-size:15px;cursor:pointer;font-family:inherit">Subscribe</button>
     </form>
-    <p id="nl-msg" class="meta" style="margin:10px 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AA294;letter-spacing:.1em"></p>
+    <p id="nl-msg" class="meta" style="margin:10px 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faded);letter-spacing:.1em"></p>
   </div>
+  <footer class="zion-foot"><span>ZION &mdash; the eval layer for the long-horizon era.</span><a href="https://github.com/Zion-sewers">github.com/Zion-sewers</a></footer>
 </div>
 <script>
 /* NEWSLETTER CONFIG — paste the subscribe endpoint (Buttondown/Beehiiv) as NEWSLETTER_ENDPOINT
@@ -407,6 +401,32 @@ document.getElementById('nl-form').addEventListener('submit', async (e) => {
     msg.textContent = r.ok ? "You're in. First post lands Sunday." : "Something broke — try again or email me directly.";
   } catch { msg.textContent = "Something broke — try again or email me directly."; }
 });
+</script>
+<script>
+/* ZION VIEW COUNTER — public per-post view counts (brand: no counter = invisible).
+   ENABLE (one step): deploy the counter Worker (Worker + KV), then set
+   ZION_COUNTER_ENDPOINT below to its URL. Until then this is a no-op:
+   the endpoint is null, the script returns early and fails silently, and
+   every .view-count placeholder stays empty (hidden via :empty).
+   Worker contract: POST {page, ref} -> 200 {"counts": {"<page>": n, ...}}. */
+const ZION_COUNTER_ENDPOINT = null; // e.g. "https://zion-counter.<account>.workers.dev/hit"
+(function(){
+  if (!ZION_COUNTER_ENDPOINT) return; /* disabled — fail silent */
+  try {
+    var here = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '') || 'index';
+    fetch(ZION_COUNTER_ENDPOINT, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({page: here, ref: document.referrer || null})
+    }).then(function(r){ return r.ok ? r.json() : null; })
+     .then(function(d){
+       if (!d || !d.counts) return;
+       document.querySelectorAll('.view-count[data-page]').forEach(function(el){
+         var c = d.counts[el.getAttribute('data-page')];
+         if (c != null) el.textContent = '· ' + Number(c).toLocaleString() + ' views';
+       });
+     }).catch(function(){});
+  } catch (e) { /* never break the page for a counter */ }
+})();
 </script>
 <!-- ANALYTICS HOOK: enable Cloudflare Web Analytics on the daily-deep-learning Pages project
      (dashboard toggle, no code change). Per-post public view counters: next step, needs Worker+KV. -->

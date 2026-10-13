@@ -1,0 +1,76 @@
+/* ==========================================================================
+   ZION brand chrome — daily-deep-learning / writing/
+   Source of truth: Zion-sewers/.github brand book v1.0 (Noor, Zion Content).
+   Palette: Vault #101210 (bg), Bone #F5F1E6 (text), Brass #D9A13B (the one
+   accent — CTAs, key lines), Signal #B3402A (verdicts only), Slate #5C6B5A
+   (secondary text). Type: Space Grotesk / Inter / JetBrains Mono, OFL,
+   loaded per-page via the Google Fonts <link> (see each page's <head>).
+   This file owns the shared chrome only: tokens, site header, footer,
+   view-count placeholder. Page content keeps its own styles.
+   ========================================================================== */
+
+:root{
+  --vault:#101210;            /* primary dark — backgrounds */
+  --bone:#F5F1E6;             /* primary light — text on dark */
+  --brass:#D9A13B;            /* the one accent: CTAs, key lines, brand marks */
+  --brass-hi:#EAC463;         /* brass, lifted for hover on dark */
+  --signal:#B3402A;           /* verdicts only: REFUTED, failed gates, danger */
+  --slate:#5C6B5A;            /* secondary text, quiet structure */
+  --zline:#2A2E26;            /* hairline rules on dark */
+  color-scheme:dark;
+}
+
+/* Inspection light: vault/bone swap roles, brass steps down so it still
+   reads as an accent on Bone instead of washing out. */
+@media (prefers-color-scheme:light){
+  :root{
+    --vault:#F5F1E6;
+    --bone:#101210;
+    --brass:#8A6514;
+    --brass-hi:#6E5010;
+    --zline:#D8CDB2;
+    color-scheme:light;
+  }
+}
+
+/* Manual theme toggle (the-bench.html sets data-theme on <html>).
+   Explicit choice beats OS preference, so these come last. */
+:root[data-theme="dark"]{
+  --vault:#101210; --bone:#F5F1E6;
+  --brass:#D9A13B; --brass-hi:#EAC463;
+  --zline:#2A2E26; color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --vault:#F5F1E6; --bone:#101210;
+  --brass:#8A6514; --brass-hi:#6E5010;
+  --zline:#D8CDB2; color-scheme:light;
+}
+
+/* ---- Slim branded header ---------------------------------------------
+   ZION — public infrastructure for trust in agents · Zion-sewers        */
+.zion-sitehead{max-width:720px;margin:0 auto;padding:26px 24px 0}
+.zion-wordmark{font-family:"Space Grotesk",Inter,system-ui,sans-serif;
+  font-weight:700;font-size:20px;letter-spacing:.38em;color:var(--bone);
+  text-decoration:none}
+.zion-wordmark:hover{color:var(--brass)}
+.zion-tagline{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px;letter-spacing:.08em;color:var(--slate);margin:8px 0 0}
+.zion-tagline a{color:var(--brass);text-decoration:none}
+.zion-tagline a:hover{color:var(--brass-hi);text-decoration:underline}
+.zion-rule{display:block;height:3px;background:var(--brass);margin-top:10px}
+
+/* ---- Slim branded footer -------------------------------------------- */
+.zion-foot{max-width:720px;margin:56px auto 0;padding:18px 0 8px;
+  border-top:1px solid var(--zline);
+  display:flex;justify-content:space-between;align-items:baseline;
+  gap:8px 20px;flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
+  letter-spacing:.06em;color:var(--slate)}
+.zion-foot a{color:var(--brass);text-decoration:none}
+.zion-foot a:hover{color:var(--brass-hi);text-decoration:underline}
+
+/* ---- Public view counter ---------------------------------------------
+   Empty until the beacon fills it (beacon is disabled by default).      */
+.view-count{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px;letter-spacing:.08em;color:var(--slate);white-space:nowrap}
+.view-count:empty{display:none}

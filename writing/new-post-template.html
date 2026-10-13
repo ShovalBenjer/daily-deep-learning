@@ -5,7 +5,9 @@
   Then update: <title>, og/twitter meta, canonical href, .tag, h1, .byline, and
   replace the <!-- TODO --> blocks with your sections.
   Style is brand-complete out of the box: do not restyle, just write.
-  Keep the NEWSLETTER slot and the ANALYTICS HOOK comment on every post.
+  Keep the NEWSLETTER slot, the ANALYTICS HOOK comment, the brand.css <link>,
+  and the ZION VIEW COUNTER beacon on every post. Leave ZION_COUNTER_ENDPOINT
+  as null until the counter Worker deploys.
 -->
 <html lang="en">
 <head>
@@ -27,6 +29,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="brand.css">
 </head>
 <body>
 <style>
@@ -44,12 +47,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
   font-size:17.5px;line-height:1.8;-webkit-font-smoothing:antialiased}
 .wrap{max-width:720px;margin:0 auto;padding:0 24px 110px}
-/* ---- Zion brand header (wordmark + brass rule) ---- */
-.zion-sitehead{max-width:720px;margin:0 auto;padding:26px 24px 0}
-.zion-wordmark{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-weight:700;
-  font-size:20px;letter-spacing:.38em;color:var(--ink);text-decoration:none}
-.zion-wordmark:hover{color:var(--gold)}
-.zion-rule{display:block;height:3px;background:#D9A13B;margin-top:8px}
+/* brand.css owns the site header (wordmark + tagline + brass rule) */
 h1,h2,h3{font-family:var(--serif);font-weight:700;text-wrap:balance;
   text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(217,161,59,.22)}
 p,li{max-width:var(--measure)}
@@ -78,9 +76,7 @@ figcaption,.cap{font-family:var(--mono);font-size:12px;color:var(--faded)}
 .verdict.refuted{color:var(--red);border-color:var(--red)}
 .verdict.confirmed{color:var(--green);border-color:var(--green)}
 .verdict.abstained{color:var(--gold);border-color:var(--gold)}
-.foot{border-top:1px solid var(--line);padding:32px 0;font-family:var(--mono);
-  font-size:12px;color:var(--faded);letter-spacing:.06em}
-.foot a{color:var(--gold-hi)}
+/* brand.css owns the footer (.zion-foot) */
 #nl-form{margin-top:14px;display:flex;gap:8px}
 #nl-email{flex:1;min-width:0;padding:10px 12px;background:var(--well);
   border:1px solid var(--line);color:var(--ink);border-radius:6px;font-size:15px;font-family:inherit}
@@ -93,12 +89,12 @@ figcaption,.cap{font-family:var(--mono);font-size:12px;color:var(--faded)}
     --code-bg:#EAE3CF;color-scheme:light}
 }
 </style>
-<header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><span class="zion-rule"></span></header>
+<header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><p class="zion-tagline">public infrastructure for trust in agents &middot; <a href="https://github.com/Zion-sewers">Zion-sewers</a></p><span class="zion-rule"></span></header>
 <div class="wrap">
   <div class="mast">
     <p class="tag">Case ledger 003 &middot; weekly post</p>
     <h1>TODO: The post title</h1>
-    <p class="byline">TODO: 2026-10-19 &middot; one-line context</p>
+    <p class="byline">TODO: 2026-10-19 &middot; one-line context <span class="view-count" data-page="TODO-post-slug"></span></p>
     <p class="lede">TODO: the lede — two to three sentences that carry the whole post.
     State the verdict first if you have one. Mechanism after.</p>
   </div>
@@ -128,9 +124,7 @@ figcaption,.cap{font-family:var(--mono);font-size:12px;color:var(--faded)}
     <p id="nl-msg" class="meta" style="font-family:var(--mono);font-size:11px;color:var(--faded);letter-spacing:.1em;margin:10px 0 0"></p>
   </div>
 
-  <div class="foot">
-    <a href="index.html">&larr; All writing</a>
-  </div>
+  <footer class="zion-foot"><span><a href="index.html">&larr; All writing</a> &middot; ZION &mdash; the eval layer for the long-horizon era.</span><a href="https://github.com/Zion-sewers">github.com/Zion-sewers</a></footer>
 </div>
 <script>
 /* NEWSLETTER CONFIG — paste the subscribe endpoint (Buttondown/Beehiiv) as NEWSLETTER_ENDPOINT
@@ -148,6 +142,32 @@ document.getElementById('nl-form').addEventListener('submit', async (e) => {
     msg.textContent = r.ok ? "You're in. First post lands Sunday." : "Something broke — try again or email me directly.";
   } catch { msg.textContent = "Something broke — try again or email me directly."; }
 });
+</script>
+<script>
+/* ZION VIEW COUNTER — public per-post view counts (brand: no counter = invisible).
+   ENABLE (one step): deploy the counter Worker (Worker + KV), then set
+   ZION_COUNTER_ENDPOINT below to its URL. Until then this is a no-op:
+   the endpoint is null, the script returns early and fails silently, and
+   every .view-count placeholder stays empty (hidden via :empty).
+   Worker contract: POST {page, ref} -> 200 {"counts": {"<page>": n, ...}}. */
+const ZION_COUNTER_ENDPOINT = null; // e.g. "https://zion-counter.<account>.workers.dev/hit"
+(function(){
+  if (!ZION_COUNTER_ENDPOINT) return; /* disabled — fail silent */
+  try {
+    var here = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '') || 'index';
+    fetch(ZION_COUNTER_ENDPOINT, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({page: here, ref: document.referrer || null})
+    }).then(function(r){ return r.ok ? r.json() : null; })
+     .then(function(d){
+       if (!d || !d.counts) return;
+       document.querySelectorAll('.view-count[data-page]').forEach(function(el){
+         var c = d.counts[el.getAttribute('data-page')];
+         if (c != null) el.textContent = '· ' + Number(c).toLocaleString() + ' views';
+       });
+     }).catch(function(){});
+  } catch (e) { /* never break the page for a counter */ }
+})();
 </script>
 <!-- ANALYTICS HOOK: enable Cloudflare Web Analytics on the daily-deep-learning Pages project
      (dashboard toggle, no code change). Per-post public view counters: next step, needs Worker+KV. -->

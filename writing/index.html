@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="brand.css">
 <style>
 :root{--vault:#101210;--bone:#F5F1E6;--brass:#D9A13B;--brass-hi:#EAC463;
   --signal:#B3402A;--slate:#5C6B5A;--panel:#181A16;--line:#2A2E26;
@@ -13,12 +14,9 @@
 body{margin:0;background:var(--vault);color:var(--bone);
   font-family:Inter,system-ui,sans-serif;line-height:1.8}
 .w{max-width:640px;margin:0 auto;padding:26px 24px 80px}
-/* brand header: wordmark + brass rule */
-.zion-sitehead{padding:0 0 34px}
-.zion-wordmark{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-weight:700;
-  font-size:22px;letter-spacing:.38em;color:var(--bone);text-decoration:none}
-.zion-wordmark:hover{color:var(--brass)}
-.zion-rule{display:block;height:3px;background:var(--brass);margin-top:10px}
+/* brand.css owns the site header; the index nests it inside .w, so only
+   the bottom spacing is kept here */
+.zion-sitehead{padding:0 0 30px}
 h1{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:38px;margin:0 0 8px}
 p.sub{color:var(--faded);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;
   letter-spacing:.06em;margin:0 0 44px}
@@ -41,16 +39,16 @@ h2{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:22px;margin:
 }
 </style>
 <div class="w">
-  <header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><span class="zion-rule"></span></header>
+  <header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><p class="zion-tagline">public infrastructure for trust in agents &middot; <a href="https://github.com/Zion-sewers">Zion-sewers</a></p><span class="zion-rule"></span></header>
   <h1>Writing</h1>
   <p class="sub">Case ledgers and working notes &middot; the eval layer for the long-horizon era</p>
   <a class="item" href="the-unjudged-verdict.html">
-    <p class="meta">Case ledger 002</p>
+    <p class="meta">Case ledger 002 <span class="view-count" data-page="the-unjudged-verdict"></span></p>
     <h2>The Verdict That Was Never Judged</h2>
     <p class="dek">Our verification pipeline's cache accepted verdicts with no proof they were ever judged, then replayed them as trusted. The docstring confessed.</p>
   </a>
   <a class="item" href="the-bench.html">
-    <p class="meta">Case ledger 001</p>
+    <p class="meta">Case ledger 001 <span class="view-count" data-page="the-bench"></span></p>
     <h2>It started as "help me reply to my messages" and ended ten hours later in a decryption</h2>
     <p class="dek">An AI agent's own account of a ten hour investigation: five wrong
       answers, one archive decrypted, and the architectural defects it exposed.</p>
@@ -65,6 +63,7 @@ h2{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:22px;margin:
     </form>
     <p id="nl-msg" class="meta" style="margin:10px 0 0"></p>
   </div>
+  <footer class="zion-foot"><span>ZION &mdash; the eval layer for the long-horizon era.</span><a href="https://github.com/Zion-sewers">github.com/Zion-sewers</a></footer>
 </div>
 <script>
 /* NEWSLETTER CONFIG — paste the subscribe endpoint (Buttondown/Beehiiv) as NEWSLETTER_ENDPOINT
@@ -82,6 +81,32 @@ document.getElementById('nl-form').addEventListener('submit', async (e) => {
     msg.textContent = r.ok ? "You're in. First post lands Sunday." : "Something broke — try again or email me directly.";
   } catch { msg.textContent = "Something broke — try again or email me directly."; }
 });
+</script>
+<script>
+/* ZION VIEW COUNTER — public per-post view counts (brand: no counter = invisible).
+   ENABLE (one step): deploy the counter Worker (Worker + KV), then set
+   ZION_COUNTER_ENDPOINT below to its URL. Until then this is a no-op:
+   the endpoint is null, the script returns early and fails silently, and
+   every .view-count placeholder stays empty (hidden via :empty).
+   Worker contract: POST {page, ref} -> 200 {"counts": {"<page>": n, ...}}. */
+const ZION_COUNTER_ENDPOINT = null; // e.g. "https://zion-counter.<account>.workers.dev/hit"
+(function(){
+  if (!ZION_COUNTER_ENDPOINT) return; /* disabled — fail silent */
+  try {
+    var here = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '') || 'index';
+    fetch(ZION_COUNTER_ENDPOINT, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({page: here, ref: document.referrer || null})
+    }).then(function(r){ return r.ok ? r.json() : null; })
+     .then(function(d){
+       if (!d || !d.counts) return;
+       document.querySelectorAll('.view-count[data-page]').forEach(function(el){
+         var c = d.counts[el.getAttribute('data-page')];
+         if (c != null) el.textContent = '\u00b7 ' + Number(c).toLocaleString() + ' views';
+       });
+     }).catch(function(){});
+  } catch (e) { /* never break the page for a counter */ }
+})();
 </script>
 <!-- ANALYTICS HOOK: enable Cloudflare Web Analytics on the daily-deep-learning Pages project
      (dashboard toggle, no code change). Per-post public view counters: next step, needs Worker+KV. -->

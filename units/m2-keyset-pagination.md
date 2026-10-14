@@ -140,3 +140,5 @@ WHERE (created_at, id) < ('2024-03-15 10:00:00', 98712)
 ```concepts
 {"items":[{"id":"c-keyset-pagination","t":"Keyset Pagination","he":"עימוד לפי מפתח","d":"שיטת עימוד שבה ה-WHERE של כל דף מייצג את הגבול שנשמר מהדף הקודם; יעיל ב-O(log n) גם על טבלאות גדולות בניגוד ל-OFFSET","rel":["c-btree-index"],"node":"sql-core"},{"id":"c-sort-key-uniqueness","t":"Sort Key Uniqueness","he":"ייחודיות מפתח המיון","d":"כאשר עמודת המיון אינה ייחודית, שורות עם ערכים זהים עלולות להאבד בעימוד לפי מפתח; הפתרון הוא הוספת עמודה ייחודית כ-tiebreaker","rel":["c-keyset-pagination"],"node":"sql-core"}]}
 ```
+
+<!-- audited -->

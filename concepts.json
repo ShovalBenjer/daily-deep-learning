@@ -5693,6 +5693,90 @@
         "c-groundedness"
       ],
       "node": "azure-core"
+    },
+    {
+      "id": "vertical-scaling",
+      "t": "Vertical scaling",
+      "he": "שדרוג מאונך",
+      "d": "הוספת CPU, RAM או דיסק לאותו שרת",
+      "rel": [
+        "horizontal-scaling"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "horizontal-scaling",
+      "t": "Horizontal scaling",
+      "he": "שדרוג מאוזן",
+      "d": "הוספת שרתים זהים מאחורי load balancer",
+      "rel": [
+        "vertical-scaling",
+        "load-balancer",
+        "stateless-tier"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "load-balancer",
+      "t": "Load balancer",
+      "he": "מאזן עומסים",
+      "d": "שרת שמחלק בקשות נכנסות בין שרתים עסקיים",
+      "rel": [
+        "horizontal-scaling"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "database-replication",
+      "t": "Database replication",
+      "he": "שכפול מסד נתונים",
+      "d": "master מקבל כתיבות, replicas משרתות קריאות, עם replication lag",
+      "rel": [
+        "caching-layer"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "caching-layer",
+      "t": "Cache",
+      "he": "מטמון",
+      "d": "שכבת אחסון מהירה כמו Redis שמחזיקה תוצאות שאילתות יקרות",
+      "rel": [
+        "database-replication",
+        "cdn"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "cdn",
+      "t": "CDN",
+      "he": "רשת הפצת תוכן",
+      "d": "שרתים גיאוגרפיים שמשרתים נכסים סטטיים קרוב למשתמש",
+      "rel": [
+        "caching-layer"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "stateless-tier",
+      "t": "Stateless web tier",
+      "he": "שכבת אפליקציה חסרת מצב",
+      "d": "session state נשמר חיצונית ב-Redis, לא בשרת, כדי לאפשר horizontal scaling",
+      "rel": [
+        "horizontal-scaling",
+        "load-balancer"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "message-queue-arch",
+      "t": "Message queue",
+      "he": "תור הודעות",
+      "d": "אחסון ביניים שמנתק יצרן מצרכן ומאפשר עיבוד אסינכרוני",
+      "rel": [
+        "horizontal-scaling"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

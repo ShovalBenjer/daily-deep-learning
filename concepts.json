@@ -4608,6 +4608,154 @@
         "c-keyset-pagination"
       ],
       "node": "sql-core"
+    },
+    {
+      "id": "vertical-scaling",
+      "t": "Vertical scaling",
+      "he": "שדרוג מאונך",
+      "d": "הוספת CPU, RAM או דיסק לאותו שרת",
+      "rel": [
+        "horizontal-scaling"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "horizontal-scaling",
+      "t": "Horizontal scaling",
+      "he": "שדרוג מאוזן",
+      "d": "הוספת שרתים זהים מאחורי load balancer",
+      "rel": [
+        "vertical-scaling",
+        "load-balancer",
+        "stateless-tier"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "load-balancer",
+      "t": "Load balancer",
+      "he": "מאזן עומסים",
+      "d": "שרת שמחלק בקשות נכנסות בין שרתים עסקיים",
+      "rel": [
+        "horizontal-scaling"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "database-replication",
+      "t": "Database replication",
+      "he": "שכפול מסד נתונים",
+      "d": "master מקבל כתיבות, replicas משרתות קריאות, עם replication lag",
+      "rel": [
+        "caching-layer"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "caching-layer",
+      "t": "Cache",
+      "he": "מטמון",
+      "d": "שכבת אחסון מהירה כמו Redis שמחזיקה תוצאות שאילתות יקרות",
+      "rel": [
+        "database-replication",
+        "cdn"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "cdn",
+      "t": "CDN",
+      "he": "רשת הפצת תוכן",
+      "d": "שרתים גיאוגרפיים שמשרתים נכסים סטטיים קרוב למשתמש",
+      "rel": [
+        "caching-layer"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "stateless-tier",
+      "t": "Stateless web tier",
+      "he": "שכבת אפליקציה חסרת מצב",
+      "d": "session state נשמר חיצונית ב-Redis, לא בשרת, כדי לאפשר horizontal scaling",
+      "rel": [
+        "horizontal-scaling",
+        "load-balancer"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "message-queue-arch",
+      "t": "Message queue",
+      "he": "תור הודעות",
+      "d": "אחסון ביניים שמנתק יצרן מצרכן ומאפשר עיבוד אסינכרוני",
+      "rel": [
+        "horizontal-scaling"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-agent-loop",
+      "t": "Agent Loop",
+      "he": "לולאת סוכן",
+      "d": "observe, plan, act בלולאת קוד סביב LLM; כל iteration: tool call, execute, inject result",
+      "rel": [
+        "c-tool-call",
+        "c-agent-memory"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-tool-call",
+      "t": "Tool Call",
+      "he": "קריאת כלי",
+      "d": "JSON שהמודל פולט שמתאר פונקציה לביצוע; הקוד מריץ ומחזיר tool_result",
+      "rel": [
+        "c-agent-loop",
+        "c-agent-architecture"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-agent-memory",
+      "t": "Agent Memory",
+      "he": "זיכרון סוכן",
+      "d": "short-term: messages array; long-term: vector/KV store חיצוני לשליפה לפי צורך",
+      "rel": [
+        "c-agent-loop"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-human-in-the-loop",
+      "t": "Human-in-the-loop",
+      "he": "אדם בלולאה",
+      "d": "checkpoint בלולאת הסוכן שמחכה לאישור אנושי לפני פעולה בלתי-הפיכה",
+      "rel": [
+        "c-agent-loop"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-agent-architecture",
+      "t": "Agent Architecture",
+      "he": "ארכיטקטורת סוכן",
+      "d": "LLM בלולאת קוד עם tools, memory ו-human-in-the-loop; הלולאה בקוד, לא במודל",
+      "rel": [
+        "c-agent-loop",
+        "c-mcp-protocol"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-mcp-protocol",
+      "t": "Model Context Protocol",
+      "he": "פרוטוקול הקשר מודל",
+      "d": "תקן JSON-RPC פתוח (Anthropic 2024) לתקשורת בין LLM client לבין tool server",
+      "rel": [
+        "c-agent-architecture",
+        "c-tool-call"
+      ],
+      "node": "agents-loop"
     }
   ],
   "items": [

@@ -149,3 +149,5 @@ while True:
 - **m4-agent-orchestration**: לחבר כמה סוכנים בארכיטקטורת supervisor / swarm.
 
 הקשר ל-**m4-eval-design**: כדי לדעת שהסוכן עובד, צריך evals על התנהגות הלולאה בפועל, ולא רק על תשובות בודדות.
+
+<!-- audited -->

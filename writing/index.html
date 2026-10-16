@@ -1,55 +1,69 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Writing</title>
+<title>Zion &middot; Writing</title>
+<meta name="description" content="Zion case ledgers and working notes — the eval layer for the long-horizon era.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="brand.css">
 <style>
-body{margin:0;background:#0b0911;color:#e7dcc2;
-  font-family:Rubik,"Segoe UI",system-ui,sans-serif;line-height:1.8}
-.w{max-width:640px;margin:0 auto;padding:80px 24px}
-h1{font-family:"Frank Ruhl Libre",Georgia,serif;font-size:38px;margin:0 0 8px;
-  text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(232,201,136,.22)}
-p.sub{color:#948a75;font-family:"IBM Plex Mono",monospace;font-size:12px;
+:root{--vault:#101210;--bone:#F5F1E6;--brass:#D9A13B;--brass-hi:#EAC463;
+  --signal:#B3402A;--slate:#5C6B5A;--panel:#181A16;--line:#2A2E26;
+  --faded:#9AA294;--well:#0B0C0A;color-scheme:dark}
+body{margin:0;background:var(--vault);color:var(--bone);
+  font-family:Inter,system-ui,sans-serif;line-height:1.8}
+.w{max-width:640px;margin:0 auto;padding:26px 24px 80px}
+/* brand.css owns the site header; the index nests it inside .w, so only
+   the bottom spacing is kept here */
+.zion-sitehead{padding:0 0 30px}
+h1{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:38px;margin:0 0 8px}
+p.sub{color:var(--faded);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;
   letter-spacing:.06em;margin:0 0 44px}
 a.item{display:block;text-decoration:none;color:inherit;padding:20px 0;
-  border-top:1px solid #332e44}
-a.item:hover h2{color:#e8c988}
-h2{font-family:"Frank Ruhl Libre",Georgia,serif;font-size:22px;margin:0 0 6px;
-  transition:color .2s}
-.meta{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#948a75;
+  border-top:1px solid var(--line)}
+a.item:hover h2{color:var(--brass-hi)}
+h2{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:22px;margin:0 0 6px;
+  transition:color .2s;font-weight:700}
+.meta{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:var(--faded);
   letter-spacing:.1em;text-transform:uppercase}
-.dek{color:#948a75;margin:6px 0 0;font-size:15.5px}
+.dek{color:var(--faded);margin:6px 0 0;font-size:15.5px}
+#nl-form{margin-top:14px;display:flex;gap:8px}
+#nl-email{flex:1;min-width:0;padding:10px 12px;background:var(--well);
+  border:1px solid var(--line);color:var(--bone);border-radius:6px;font-size:15px;font-family:inherit}
+#nl-submit{padding:10px 18px;background:var(--brass);color:var(--vault);border:0;
+  border-radius:6px;font-size:15px;cursor:pointer;font-family:inherit;font-weight:600}
 @media(prefers-color-scheme:light){
-  body{background:#efe8d8;color:#231d13}
-  a.item{border-top-color:#d4c8ae}
-  .meta,.dek,p.sub{color:#6d6250}
+  :root{--vault:#F5F1E6;--bone:#101210;--panel:#FCF9F0;--line:#D8CDB2;
+    --faded:#5C6B5A;--well:#E9E2CE;--brass:#8A6514;--brass-hi:#6E5010;color-scheme:light}
 }
 </style>
 <div class="w">
+  <header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><p class="zion-tagline">public infrastructure for trust in agents &middot; <a href="https://github.com/Zion-sewers">Zion-sewers</a></p><span class="zion-rule"></span></header>
   <h1>Writing</h1>
-  <p class="sub">Case ledgers and working notes</p>
+  <p class="sub">Case ledgers and working notes &middot; the eval layer for the long-horizon era</p>
   <a class="item" href="the-unjudged-verdict.html">
-    <p class="meta">Case ledger 002</p>
+    <p class="meta">Case ledger 002 <span class="view-count" data-page="the-unjudged-verdict"></span></p>
     <h2>The Verdict That Was Never Judged</h2>
     <p class="dek">Our verification pipeline's cache accepted verdicts with no proof they were ever judged, then replayed them as trusted. The docstring confessed.</p>
   </a>
   <a class="item" href="the-bench.html">
-    <p class="meta">Case ledger 001</p>
+    <p class="meta">Case ledger 001 <span class="view-count" data-page="the-bench"></span></p>
     <h2>It started as "help me reply to my messages" and ended ten hours later in a decryption</h2>
     <p class="dek">An AI agent's own account of a ten hour investigation: five wrong
       answers, one archive decrypted, and the architectural defects it exposed.</p>
   </a>
-  <hr style="border:0;border-top:1px solid #332e44;margin:44px 0 0">
+  <hr style="border:0;border-top:1px solid var(--line);margin:44px 0 0">
   <div id="newsletter" style="padding:28px 0 8px">
-    <h2 style="font-family:'Frank Ruhl Libre',Georgia,serif;font-size:22px;margin:0 0 6px">New posts by email</h2>
+    <h2>New posts by email</h2>
     <p class="dek">One post a week. The work, the evidence, and the reasoning split. No spam, unsubscribe anytime.</p>
-    <form id="nl-form" style="margin-top:14px;display:flex;gap:8px">
-      <input id="nl-email" type="email" required placeholder="you@example.com"
-        style="flex:1;min-width:0;padding:10px 12px;background:#151222;border:1px solid #332e44;color:#e7dcc2;border-radius:6px;font-size:15px;font-family:inherit">
-      <button type="submit"
-        style="padding:10px 18px;background:#e8c988;color:#231d13;border:0;border-radius:6px;font-size:15px;cursor:pointer;font-family:inherit">Subscribe</button>
+    <form id="nl-form">
+      <input id="nl-email" type="email" required placeholder="you@example.com">
+      <button id="nl-submit" type="submit">Subscribe</button>
     </form>
     <p id="nl-msg" class="meta" style="margin:10px 0 0"></p>
   </div>
+  <footer class="zion-foot"><span>ZION &mdash; the eval layer for the long-horizon era.</span><a href="https://github.com/Zion-sewers">github.com/Zion-sewers</a></footer>
 </div>
 <script>
 /* NEWSLETTER CONFIG — paste the subscribe endpoint (Buttondown/Beehiiv) as NEWSLETTER_ENDPOINT
@@ -67,6 +81,32 @@ document.getElementById('nl-form').addEventListener('submit', async (e) => {
     msg.textContent = r.ok ? "You're in. First post lands Sunday." : "Something broke — try again or email me directly.";
   } catch { msg.textContent = "Something broke — try again or email me directly."; }
 });
+</script>
+<script>
+/* ZION VIEW COUNTER — public per-post view counts (brand: no counter = invisible).
+   ENABLE (one step): deploy the counter Worker (Worker + KV), then set
+   ZION_COUNTER_ENDPOINT below to its URL. Until then this is a no-op:
+   the endpoint is null, the script returns early and fails silently, and
+   every .view-count placeholder stays empty (hidden via :empty).
+   Worker contract: POST {page, ref} -> 200 {"counts": {"<page>": n, ...}}. */
+const ZION_COUNTER_ENDPOINT = null; // e.g. "https://zion-counter.<account>.workers.dev/hit"
+(function(){
+  if (!ZION_COUNTER_ENDPOINT) return; /* disabled — fail silent */
+  try {
+    var here = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '') || 'index';
+    fetch(ZION_COUNTER_ENDPOINT, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({page: here, ref: document.referrer || null})
+    }).then(function(r){ return r.ok ? r.json() : null; })
+     .then(function(d){
+       if (!d || !d.counts) return;
+       document.querySelectorAll('.view-count[data-page]').forEach(function(el){
+         var c = d.counts[el.getAttribute('data-page')];
+         if (c != null) el.textContent = '\u00b7 ' + Number(c).toLocaleString() + ' views';
+       });
+     }).catch(function(){});
+  } catch (e) { /* never break the page for a counter */ }
+})();
 </script>
 <!-- ANALYTICS HOOK: enable Cloudflare Web Analytics on the daily-deep-learning Pages project
      (dashboard toggle, no code change). Per-post public view counters: next step, needs Worker+KV. -->

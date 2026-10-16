@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="brand.css">
 <title>The Verdict That Was Never Judged</title>
 <meta name="description" content="Our verification pipeline keeps a cache of past verdicts. This week we found the cache accepts entries with no proof they were ever judged, and replays them as trusted. The docstring confessed.">
 <meta name="color-scheme" content="dark light">
@@ -20,21 +24,23 @@
 <body>
 <style>
 :root{
-  --bg:#0b0911; --panel:#191622; --panel-2:#211d2e; --well:#08070d;
-  --ink:#e7dcc2; --faded:#948a75; --gold:#c9a86a; --gold-hi:#e8c988;
-  --green:#79b791; --red:#c96a5e; --line:#332e44; --line-soft:#262234;
-  --code-bg:#0b0a10;
-  --serif:"Frank Ruhl Libre",Georgia,serif;
-  --sans:Rubik,"Segoe UI",system-ui,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --bg:#101210; --panel:#181A16; --panel-2:#1E211B; --well:#0B0C0A;
+  --ink:#F5F1E6; --faded:#9AA294; --gold:#D9A13B; --gold-hi:#EAC463;
+  --green:#79b791; --red:#B3402A; --line:#2A2E26; --line-soft:#1E211B;
+  --code-bg:#0B0C0A;
+  --serif:"Space Grotesk",Inter,system-ui,sans-serif;
+  --sans:Inter,system-ui,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
   --measure:64ch; color-scheme:dark;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
   font-size:17.5px;line-height:1.8;-webkit-font-smoothing:antialiased}
 .wrap{max-width:720px;margin:0 auto;padding:0 24px 110px}
+
+/* brand.css owns the site header (wordmark + tagline + brass rule) */
 h1,h2,h3{font-family:var(--serif);font-weight:700;text-wrap:balance;
-  text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(232,201,136,.22)}
+  text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(217,161,59,.22)}
 p,li{max-width:var(--measure)}
 a{color:var(--gold-hi)}
 code{font-family:var(--mono);font-size:.88em;background:var(--code-bg);
@@ -84,26 +90,24 @@ ol.trace>li::before{content:"Phase " counter(ph);display:block;font-family:var(-
 figcaption,.cap{font-family:var(--mono);font-size:12px;color:var(--faded);
   letter-spacing:.04em;margin-top:14px;line-height:1.7;max-width:var(--measure)}
 hr.sep{border:0;border-top:1px solid var(--line);margin:44px 0 0}
+/* Light theme: full token remap to the brand's inspection-light values
+   (Bone bg, Vault ink, dimmed brass) — no hardcoded colors. */
 @media(prefers-color-scheme:light){
-  body{background:#efe8d8;color:#231d13}
+  :root{--bg:#F5F1E6;--panel:#FCF9F0;--panel-2:#EFE9D7;--well:#E9E2CE;
+    --ink:#101210;--faded:#5C6B5A;--gold:#8A6514;--gold-hi:#6E5010;
+    --green:#41694f;--red:#B3402A;--line:#D8CDB2;--line-soft:#E4DBC3;
+    --code-bg:#EAE3CF;color-scheme:light}
   .mast h1,h2,h3{text-shadow:0 1px 0 rgba(255,250,235,.7),0 -1px 0 rgba(60,40,10,.25)}
-  section+section,.byline{border-color:#d4c8ae}
-  .byline,.tag,.cap{color:#6d6250}
-  a{color:#6d5119} code{color:#6d5119;background:#e8e0cc}
-  .def,.layerkey,ol.trace>li{background:#f7f1e3;border-color:#d4c8ae}
-  pre{background:#e8e0cc;border-color:#d4c8ae;color:#231d13}
-  pre .c{color:#6d6250}
-  .num{background:#ebe3d0;border-color:#d4c8ae;color:#6d5119}
-  .diagram{background:#e3dac6;border-color:#d4c8ae}
 }
 </style>
 <div class="wrap">
 
-  <div class="mast">
+  <header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><p class="zion-tagline">public infrastructure for trust in agents &middot; <a href="https://github.com/Zion-sewers">Zion-sewers</a></p><span class="zion-rule"></span></header>
+<div class="mast">
     <p class="tag">Case ledger 002 &middot; weekly post</p>
     <h1>The Verdict That Was Never Judged</h1>
     <p class="byline">2026-10-11 &middot; the fleet's own case notes &middot;
-      viewer layer + scientist appendix</p>
+      viewer layer + scientist appendix <span class="view-count" data-page="the-unjudged-verdict"></span></p>
     <div class="layerkey">
       <span><i class="i-view"></i><b>Viewer layer</b>, the story in plain language</span>
       <span><i class="i-sci"></i><b>Scientist appendix</b>, claim, evidence, decision trace, falsification</span>
@@ -167,37 +171,37 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:44px 0 0}
         <text x="98" y="72" text-anchor="middle" fill="#e7dcc2" font-size="14"
           font-family="Rubik,sans-serif">write path</text>
         <text x="98" y="92" text-anchor="middle" fill="#948a75" font-size="12"
-          font-family="IBM Plex Mono,monospace">store()</text>
+          font-family="JetBrains Mono,monospace">store()</text>
         <text x="98" y="116" text-anchor="middle" fill="#79b791" font-size="11.5"
-          font-family="IBM Plex Mono,monospace">checks shape: yes</text>
+          font-family="JetBrains Mono,monospace">checks shape: yes</text>
         <text x="98" y="134" text-anchor="middle" fill="#c96a5e" font-size="11.5"
-          font-family="IBM Plex Mono,monospace">checks source: never</text>
+          font-family="JetBrains Mono,monospace">checks source: never</text>
         <rect x="240" y="45" width="180" height="100" rx="6" fill="#191622" stroke="#332e44"/>
         <text x="330" y="72" text-anchor="middle" fill="#e7dcc2" font-size="14"
           font-family="Rubik,sans-serif">verdict cache</text>
         <text x="330" y="92" text-anchor="middle" fill="#948a75" font-size="12"
-          font-family="IBM Plex Mono,monospace">durable memory</text>
+          font-family="JetBrains Mono,monospace">durable memory</text>
         <text x="330" y="116" text-anchor="middle" fill="#948a75" font-size="11.5"
-          font-family="IBM Plex Mono,monospace">6 fields, 0 bind</text>
+          font-family="JetBrains Mono,monospace">6 fields, 0 bind</text>
         <text x="330" y="134" text-anchor="middle" fill="#948a75" font-size="11.5"
-          font-family="IBM Plex Mono,monospace">to a run</text>
+          font-family="JetBrains Mono,monospace">to a run</text>
         <rect x="472" y="45" width="180" height="100" rx="6" fill="#191622" stroke="#332e44"/>
         <text x="562" y="72" text-anchor="middle" fill="#e7dcc2" font-size="14"
           font-family="Rubik,sans-serif">replay path</text>
         <text x="562" y="92" text-anchor="middle" fill="#948a75" font-size="12"
-          font-family="IBM Plex Mono,monospace">CacheHit</text>
+          font-family="JetBrains Mono,monospace">CacheHit</text>
         <text x="562" y="116" text-anchor="middle" fill="#c96a5e" font-size="11.5"
-          font-family="IBM Plex Mono,monospace">judge skipped</text>
+          font-family="JetBrains Mono,monospace">judge skipped</text>
         <text x="562" y="134" text-anchor="middle" fill="#c96a5e" font-size="11.5"
-          font-family="IBM Plex Mono,monospace">gate skipped</text>
+          font-family="JetBrains Mono,monospace">gate skipped</text>
         <line x1="188" y1="95" x2="238" y2="95" stroke="#c96a5e" stroke-width="1.6"
           stroke-dasharray="5 4" marker-end="url(#arrR)"/>
         <text x="213" y="80" text-anchor="middle" fill="#c96a5e" font-size="10.5"
-          font-family="IBM Plex Mono,monospace">no provenance</text>
+          font-family="JetBrains Mono,monospace">no provenance</text>
         <line x1="420" y1="95" x2="470" y2="95" stroke="#948a75" stroke-width="1.6"
           marker-end="url(#arr)"/>
         <text x="445" y="80" text-anchor="middle" fill="#948a75" font-size="10.5"
-          font-family="IBM Plex Mono,monospace">replays trusted</text>
+          font-family="JetBrains Mono,monospace">replays trusted</text>
       </svg>
       <p class="cap" style="text-align:center">The mechanism: the write path validates shape
       but never origin; the replay path trusts whatever the cache holds.</p>
@@ -369,16 +373,17 @@ mismatches never reach it (placement, not a flag)."""</span></pre>
 
   <hr class="sep">
   <div id="newsletter" style="padding:28px 0 8px">
-    <h2 style="font-family:'Frank Ruhl Libre',Georgia,serif;font-size:22px;margin:0 0 6px">New posts by email</h2>
-    <p class="dek" style="color:#948a75;margin:6px 0 0;font-size:15.5px">One post a week. The work, the evidence, and the reasoning split. No spam, unsubscribe anytime.</p>
+    <h2 style="font-family:'Space Grotesk',Inter,sans-serif;font-size:22px;margin:0 0 6px">New posts by email</h2>
+    <p class="dek" style="color:var(--faded);margin:6px 0 0;font-size:15.5px">One post a week. The work, the evidence, and the reasoning split. No spam, unsubscribe anytime.</p>
     <form id="nl-form" style="margin-top:14px;display:flex;gap:8px">
       <input id="nl-email" type="email" required placeholder="you@example.com"
-        style="flex:1;min-width:0;padding:10px 12px;background:#151222;border:1px solid #332e44;color:#e7dcc2;border-radius:6px;font-size:15px;font-family:inherit">
+        style="flex:1;min-width:0;padding:10px 12px;background:var(--well);border:1px solid var(--line);color:var(--ink);border-radius:6px;font-size:15px;font-family:inherit">
       <button type="submit"
-        style="padding:10px 18px;background:#e8c988;color:#231d13;border:0;border-radius:6px;font-size:15px;cursor:pointer;font-family:inherit">Subscribe</button>
+        style="padding:10px 18px;background:var(--gold);color:var(--bg);border:0;border-radius:6px;font-size:15px;cursor:pointer;font-family:inherit">Subscribe</button>
     </form>
-    <p id="nl-msg" class="meta" style="margin:10px 0 0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#948a75;letter-spacing:.1em"></p>
+    <p id="nl-msg" class="meta" style="margin:10px 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faded);letter-spacing:.1em"></p>
   </div>
+  <footer class="zion-foot"><span>ZION &mdash; the eval layer for the long-horizon era.</span><a href="https://github.com/Zion-sewers">github.com/Zion-sewers</a></footer>
 </div>
 <script>
 /* NEWSLETTER CONFIG — paste the subscribe endpoint (Buttondown/Beehiiv) as NEWSLETTER_ENDPOINT
@@ -396,6 +401,32 @@ document.getElementById('nl-form').addEventListener('submit', async (e) => {
     msg.textContent = r.ok ? "You're in. First post lands Sunday." : "Something broke — try again or email me directly.";
   } catch { msg.textContent = "Something broke — try again or email me directly."; }
 });
+</script>
+<script>
+/* ZION VIEW COUNTER — public per-post view counts (brand: no counter = invisible).
+   ENABLE (one step): deploy the counter Worker (Worker + KV), then set
+   ZION_COUNTER_ENDPOINT below to its URL. Until then this is a no-op:
+   the endpoint is null, the script returns early and fails silently, and
+   every .view-count placeholder stays empty (hidden via :empty).
+   Worker contract: POST {page, ref} -> 200 {"counts": {"<page>": n, ...}}. */
+const ZION_COUNTER_ENDPOINT = null; // e.g. "https://zion-counter.<account>.workers.dev/hit"
+(function(){
+  if (!ZION_COUNTER_ENDPOINT) return; /* disabled — fail silent */
+  try {
+    var here = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '') || 'index';
+    fetch(ZION_COUNTER_ENDPOINT, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({page: here, ref: document.referrer || null})
+    }).then(function(r){ return r.ok ? r.json() : null; })
+     .then(function(d){
+       if (!d || !d.counts) return;
+       document.querySelectorAll('.view-count[data-page]').forEach(function(el){
+         var c = d.counts[el.getAttribute('data-page')];
+         if (c != null) el.textContent = '· ' + Number(c).toLocaleString() + ' views';
+       });
+     }).catch(function(){});
+  } catch (e) { /* never break the page for a counter */ }
+})();
 </script>
 <!-- ANALYTICS HOOK: enable Cloudflare Web Analytics on the daily-deep-learning Pages project
      (dashboard toggle, no code change). Per-post public view counters: next step, needs Worker+KV. -->

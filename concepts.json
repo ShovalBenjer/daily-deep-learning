@@ -5777,6 +5777,70 @@
         "horizontal-scaling"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-agent-loop",
+      "t": "Agent Loop",
+      "he": "לולאת סוכן",
+      "d": "observe, plan, act בלולאת קוד סביב LLM; כל iteration: tool call, execute, inject result",
+      "rel": [
+        "c-tool-call",
+        "c-agent-memory"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-tool-call",
+      "t": "Tool Call",
+      "he": "קריאת כלי",
+      "d": "JSON שהמודל פולט שמתאר פונקציה לביצוע; הקוד מריץ ומחזיר tool_result",
+      "rel": [
+        "c-agent-loop",
+        "c-agent-architecture"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-agent-memory",
+      "t": "Agent Memory",
+      "he": "זיכרון סוכן",
+      "d": "short-term: messages array; long-term: vector/KV store חיצוני לשליפה לפי צורך",
+      "rel": [
+        "c-agent-loop"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-human-in-the-loop",
+      "t": "Human-in-the-loop",
+      "he": "אדם בלולאה",
+      "d": "checkpoint בלולאת הסוכן שמחכה לאישור אנושי לפני פעולה בלתי-הפיכה",
+      "rel": [
+        "c-agent-loop"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-agent-architecture",
+      "t": "Agent Architecture",
+      "he": "ארכיטקטורת סוכן",
+      "d": "LLM בלולאת קוד עם tools, memory ו-human-in-the-loop; הלולאה בקוד, לא במודל",
+      "rel": [
+        "c-agent-loop",
+        "c-mcp-protocol"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-mcp-protocol",
+      "t": "Model Context Protocol",
+      "he": "פרוטוקול הקשר מודל",
+      "d": "תקן JSON-RPC פתוח (Anthropic 2024) לתקשורת בין LLM client לבין tool server",
+      "rel": [
+        "c-agent-architecture",
+        "c-tool-call"
+      ],
+      "node": "agents-loop"
     }
   ]
 }

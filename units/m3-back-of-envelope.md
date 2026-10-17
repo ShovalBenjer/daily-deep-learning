@@ -157,3 +157,5 @@
 ```concepts
 {"items":[{"id":"back-of-envelope","t":"Back-of-envelope estimation","he":"הערכה על גב מעטפה","d":"חישוב קיבולת מערכת מעקרונות ראשוניים, למציאת סדר גודל","rel":["qps-estimation","availability-nines","replication-factor"],"node":"sysdesign"},{"id":"qps-estimation","t":"QPS (Queries Per Second)","he":"שאילתות לשנייה","d":"מדד תפוקת מערכת: DAU × בקשות/משתמש/יום חלקי 86,400","rel":["back-of-envelope","peak-traffic-ratio"],"node":"sysdesign"},{"id":"availability-nines","t":"Availability nines","he":"אחוזי זמינות","d":"מספר ה-9ים ב-SLA: 3 nines = 8.76 שעות השבתה בשנה, 4 nines = 52 דקות","rel":["back-of-envelope"],"node":"sysdesign"},{"id":"peak-traffic-ratio","t":"Peak-to-average traffic ratio","he":"יחס עומס שיא לממוצע","d":"שיא נפח בדרך כלל 2 עד 3 פי הממוצע; קיבולת מתוכננת לשיא","rel":["qps-estimation"],"node":"sysdesign"},{"id":"replication-factor","t":"Replication factor","he":"מקדם שכפול","d":"מספר עותקי הנתונים במערכת מבוזרת; בדרך כלל 3; מכפיל דרישת אחסון","rel":["back-of-envelope"],"node":"sysdesign"}]}
 ```
+
+<!-- audited -->

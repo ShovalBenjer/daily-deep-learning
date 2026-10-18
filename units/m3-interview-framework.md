@@ -179,3 +179,5 @@ Bottlenecks: ה-counter service כ-single point of failure ב-Snowflake approach
 ```concepts
 {"items":[{"id":"interview-framework","t":"Interview framework","he":"מסגרת הראיון","d":"ארבעה שלבים לשאלת system design: הגדרת בעיה, תכנון ראשוני, deep dive, סיכום","rel":["functional-requirements","nonfunctional-requirements","back-of-envelope"],"node":"sysdesign"},{"id":"functional-requirements","t":"Functional requirements","he":"דרישות פונקציונליות","d":"מה המערכת עושה: הפעולות, הinputs והoutputs שהמשתמש חווה","rel":["nonfunctional-requirements","interview-framework"],"node":"sysdesign"},{"id":"nonfunctional-requirements","t":"Non-functional requirements","he":"דרישות לא-פונקציונליות","d":"כמה טוב המערכת עובדת: scale, latency, availability, consistency, durability","rel":["functional-requirements","interview-framework","back-of-envelope"],"node":"sysdesign"}]}
 ```
+
+<!-- audited -->

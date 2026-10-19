@@ -6077,6 +6077,85 @@
         "back-of-envelope"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "websocket",
+      "t": "WebSocket",
+      "he": "ווב-סוקט",
+      "d": "פרוטוקול תקשורת דו-כיווני עם חיבור פתוח. מתחיל ב-HTTP handshake ומתרומם לפרוטוקול משלו. משמש לצ'אט, משחקים ועדכונים real-time.",
+      "rel": [
+        "chat-system",
+        "sse",
+        "long-polling"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "long-polling",
+      "t": "Long-Polling",
+      "he": "long-polling",
+      "d": "הלקוח שולח בקשת HTTP והשרת מחכה לפני שעונה עד שיש חדשות. פחות יעיל מ-WebSocket בגלל overhead של חיבור חדש בכל מסר.",
+      "rel": [
+        "websocket",
+        "chat-system"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "presence-service",
+      "t": "Presence Service",
+      "he": "שירות נוכחות",
+      "d": "רכיב שמנהל מיפוי user_id -> connected_server ואת סטטוס online/offline. מסתמך על heartbeats מהלקוח ו-TTL ב-Redis.",
+      "rel": [
+        "chat-system",
+        "heartbeat"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "heartbeat",
+      "t": "Heartbeat",
+      "he": "פעימת לב",
+      "d": "הודעה קטנה שלקוח שולח לשרת מדי N שניות כדי להוכיח שהוא עדיין חי. אם לא מגיעה בזמן, השרת מסמן אותו כ-offline.",
+      "rel": [
+        "presence-service"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "snowflake-id",
+      "t": "Snowflake ID",
+      "he": "מזהה Snowflake",
+      "d": "מזהה 64-bit ייחודי ומסודר לפי זמן: timestamp + worker ID + sequence. מאפשר IDs ייחודיים ב-distributed system ללא נקודת כשל יחידה.",
+      "rel": [
+        "chat-system",
+        "message-ordering"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "fan-out",
+      "t": "Fan-out",
+      "he": "פיזור אחד-לרבים",
+      "d": "שליחת הודעה אחת לרשימת נמענים רבים. הבעיה המרכזית בקבוצות גדולות: O(n) operations לכל הודעה.",
+      "rel": [
+        "chat-system",
+        "pub-sub"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "chat-system",
+      "t": "Chat System",
+      "he": "מערכת צ'אט",
+      "d": "מערכת real-time להעברת הודעות. רכיבי ליבה: chat servers עם WebSocket, presence service, key-value store לאחסון, push notifications לאופליין.",
+      "rel": [
+        "websocket",
+        "presence-service",
+        "fan-out",
+        "snowflake-id"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

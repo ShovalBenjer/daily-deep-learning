@@ -6245,6 +6245,39 @@
     "sliding-window-counter"
    ],
    "node": "sysdesign"
+  },
+  {
+   "id": "c-consistent-hashing",
+   "t": "Consistent Hashing",
+   "he": "גיבוב עקבי",
+   "d": "אלגוריתם חלוקת מפתחות על Hash Ring כך שהוספת/הסרת שרת מזיזה לכל היותר K/(N+1) מפתחות",
+   "rel": [
+    "c-hash-ring",
+    "c-virtual-nodes"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "c-hash-ring",
+   "t": "Hash Ring",
+   "he": "טבעת הגיבוב",
+   "d": "מרחב ערכים מעגלי שעליו ממוקמים שרתים ומפתחות; כל מפתח שייך לשרת הראשון clockwise",
+   "rel": [
+    "c-consistent-hashing",
+    "c-virtual-nodes"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "c-virtual-nodes",
+   "t": "Virtual Nodes",
+   "he": "צמתים וירטואליים",
+   "d": "נקודות נוספות על ה-Hash Ring שמייצגות שרת פיזי אחד, לשם איזון עומס אחיד",
+   "rel": [
+    "c-hash-ring",
+    "c-consistent-hashing"
+   ],
+   "node": "sysdesign"
   }
  ]
 }

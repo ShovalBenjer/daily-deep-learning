@@ -90,3 +90,4 @@ Consistent hashing היא אחד מלבני הבניין של distributed system
 ```
 
 <!-- widget-request: ring: Hash Ring אינטראקטיבית: משתמש מוסיף/מסיר שרתים ורואה בזמן אמת אילו מפתחות עוברים -->
+<!-- audited -->

@@ -1,0 +1,175 @@
+<!doctype html>
+<!--
+  ZION POST TEMPLATE — copy this file to your post slug and fill in the blanks.
+  Example: cp new-post-template.html the-next-case.html
+  Then update: <title>, og/twitter meta, canonical href, .tag, h1, .byline, and
+  replace the <!-- TODO --> blocks with your sections.
+  Style is brand-complete out of the box: do not restyle, just write.
+  Keep the NEWSLETTER slot, the ANALYTICS HOOK comment, the brand.css <link>,
+  and the ZION VIEW COUNTER beacon on every post. Leave ZION_COUNTER_ENDPOINT
+  as null until the counter Worker deploys.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>POST TITLE — Zion Writing</title>
+<meta name="description" content="TODO: one-sentence summary for search and social.">
+<meta name="color-scheme" content="dark light">
+<link rel="canonical" href="https://case-ledgers.pages.dev/TODO-post-slug">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TODO: Post title">
+<meta property="og:description" content="TODO: one-sentence summary.">
+<meta property="og:url" content="https://case-ledgers.pages.dev/TODO-post-slug">
+<meta property="og:image" content="https://case-ledgers.pages.dev/media/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TODO: Post title">
+<meta name="twitter:description" content="TODO: one-sentence summary.">
+<meta name="twitter:image" content="https://case-ledgers.pages.dev/media/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="brand.css">
+</head>
+<body>
+<style>
+:root{
+  --bg:#101210; --panel:#181A16; --panel-2:#1E211B; --well:#0B0C0A;
+  --ink:#F5F1E6; --faded:#9AA294; --gold:#D9A13B; --gold-hi:#EAC463;
+  --green:#79b791; --red:#B3402A; --line:#2A2E26; --line-soft:#1E211B;
+  --code-bg:#0B0C0A;
+  --serif:"Space Grotesk",Inter,system-ui,sans-serif;
+  --sans:Inter,system-ui,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --measure:64ch; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:17.5px;line-height:1.8;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:0 24px 110px}
+/* brand.css owns the site header (wordmark + tagline + brass rule) */
+h1,h2,h3{font-family:var(--serif);font-weight:700;text-wrap:balance;
+  text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(217,161,59,.22)}
+p,li{max-width:var(--measure)}
+a{color:var(--gold-hi)}
+code{font-family:var(--mono);font-size:.88em;background:var(--code-bg);
+  padding:2px 6px;border-radius:3px;color:var(--gold-hi)}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:13.5px}
+.mast{padding:88px 0 8px}
+.mast h1{font-size:clamp(40px,7.4vw,66px);line-height:1.04;margin:0 0 22px;letter-spacing:-.01em}
+.byline{font-family:var(--mono);font-size:12px;color:var(--faded);letter-spacing:.06em;
+  padding-bottom:30px;border-bottom:1px solid var(--line);line-height:1.9}
+.lede{font-size:20px;margin:32px 0 0}
+.lede::first-letter{font-family:var(--serif);font-size:3.1em;float:left;line-height:.82;
+  padding:6px 10px 0 0;color:var(--gold)}
+section{padding:44px 0}
+section+section{border-top:1px solid var(--line-soft)}
+h2{font-size:clamp(24px,3.4vw,31px);margin:0 0 18px}
+h3{font-size:20px;margin:0 0 6px}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faded);margin:0 0 14px}
+figcaption,.cap{font-family:var(--mono);font-size:12px;color:var(--faded)}
+/* Verdict chips: Signal (#B3402A) appears ONLY where a verdict is stated */
+.verdict{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  display:inline-block;padding:4px 10px;border-radius:4px;border:1px solid var(--line)}
+.verdict.refuted{color:var(--red);border-color:var(--red)}
+.verdict.confirmed{color:var(--green);border-color:var(--green)}
+.verdict.abstained{color:var(--gold);border-color:var(--gold)}
+/* brand.css owns the footer (.zion-foot) */
+#nl-form{margin-top:14px;display:flex;gap:8px}
+#nl-email{flex:1;min-width:0;padding:10px 12px;background:var(--well);
+  border:1px solid var(--line);color:var(--ink);border-radius:6px;font-size:15px;font-family:inherit}
+#nl-submit{padding:10px 18px;background:var(--gold);color:var(--bg);border:0;border-radius:6px;
+  font-size:15px;cursor:pointer;font-family:inherit;font-weight:600}
+@media(prefers-color-scheme:light){
+  :root{--bg:#F5F1E6;--panel:#FCF9F0;--panel-2:#EFE9D7;--well:#E9E2CE;
+    --ink:#101210;--faded:#5C6B5A;--gold:#8A6514;--gold-hi:#6E5010;
+    --green:#41694f;--red:#B3402A;--line:#D8CDB2;--line-soft:#E4DBC3;
+    --code-bg:#EAE3CF;color-scheme:light}
+}
+</style>
+<header class="zion-sitehead"><a class="zion-wordmark" href="index.html">ZION</a><p class="zion-tagline">public infrastructure for trust in agents &middot; <a href="https://github.com/Zion-sewers">Zion-sewers</a></p><span class="zion-rule"></span></header>
+<div class="wrap">
+  <div class="mast">
+    <p class="tag">Case ledger 003 &middot; weekly post</p>
+    <h1>TODO: The post title</h1>
+    <p class="byline">TODO: 2026-10-19 &middot; one-line context <span class="view-count" data-page="TODO-post-slug"></span></p>
+    <p class="lede">TODO: the lede — two to three sentences that carry the whole post.
+    State the verdict first if you have one. Mechanism after.</p>
+  </div>
+
+  <section>
+    <h2>TODO: Section heading</h2>
+    <p>TODO: write here. Brand rules: verdicts first, mechanism after, every public
+    number carries its receipt. Use a verdict chip where you state one:</p>
+    <p><span class="verdict refuted">Refuted</span> <span class="verdict confirmed">Confirmed</span> <span class="verdict abstained">Abstained</span></p>
+    <pre><code>TODO: code goes here — JetBrains Mono, Vault well</code></pre>
+    <p class="cap">TODO: figure caption in JetBrains Mono.</p>
+  </section>
+
+  <section>
+    <h2>TODO: What we measured</h2>
+    <p>TODO: evidence, numbers, receipts.</p>
+  </section>
+
+  <hr style="border:0;border-top:1px solid var(--line);margin:44px 0 0">
+  <div id="newsletter" style="padding:28px 0 8px">
+    <h2>New posts by email</h2>
+    <p class="dek" style="color:var(--faded)">One post a week. The work, the evidence, and the reasoning split. No spam, unsubscribe anytime.</p>
+    <form id="nl-form">
+      <input id="nl-email" type="email" required placeholder="you@example.com">
+      <button id="nl-submit" type="submit">Subscribe</button>
+    </form>
+    <p id="nl-msg" class="meta" style="font-family:var(--mono);font-size:11px;color:var(--faded);letter-spacing:.1em;margin:10px 0 0"></p>
+  </div>
+
+  <footer class="zion-foot"><span><a href="index.html">&larr; All writing</a> &middot; ZION &mdash; the eval layer for the long-horizon era.</span><a href="https://github.com/Zion-sewers">github.com/Zion-sewers</a></footer>
+</div>
+<script>
+/* NEWSLETTER CONFIG — paste the subscribe endpoint (Buttondown/Beehiiv) as NEWSLETTER_ENDPOINT
+   when the account is ready. Until then the form shows a "coming soon" note.
+   The slot is the future monetization path: keep it on every writing page. */
+const NEWSLETTER_ENDPOINT = "";
+document.getElementById('nl-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('nl-msg');
+  const email = document.getElementById('nl-email').value.trim();
+  if (!NEWSLETTER_ENDPOINT) { msg.textContent = "Subscribe opens soon — email me and I'll add you manually."; return; }
+  try {
+    const r = await fetch(NEWSLETTER_ENDPOINT, {method: "POST",
+      headers: {"Content-Type": "application/json"}, body: JSON.stringify({email})});
+    msg.textContent = r.ok ? "You're in. First post lands Sunday." : "Something broke — try again or email me directly.";
+  } catch { msg.textContent = "Something broke — try again or email me directly."; }
+});
+</script>
+<script>
+/* ZION VIEW COUNTER — public per-post view counts (brand: no counter = invisible).
+   ENABLE (one step): deploy the counter Worker (Worker + KV), then set
+   ZION_COUNTER_ENDPOINT below to its URL. Until then this is a no-op:
+   the endpoint is null, the script returns early and fails silently, and
+   every .view-count placeholder stays empty (hidden via :empty).
+   Worker contract: POST {page, ref} -> 200 {"counts": {"<page>": n, ...}}. */
+const ZION_COUNTER_ENDPOINT = null; // e.g. "https://zion-counter.<account>.workers.dev/hit"
+(function(){
+  if (!ZION_COUNTER_ENDPOINT) return; /* disabled — fail silent */
+  try {
+    var here = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '') || 'index';
+    fetch(ZION_COUNTER_ENDPOINT, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({page: here, ref: document.referrer || null})
+    }).then(function(r){ return r.ok ? r.json() : null; })
+     .then(function(d){
+       if (!d || !d.counts) return;
+       document.querySelectorAll('.view-count[data-page]').forEach(function(el){
+         var c = d.counts[el.getAttribute('data-page')];
+         if (c != null) el.textContent = '· ' + Number(c).toLocaleString() + ' views';
+       });
+     }).catch(function(){});
+  } catch (e) { /* never break the page for a counter */ }
+})();
+</script>
+<!-- ANALYTICS HOOK: enable Cloudflare Web Analytics on the daily-deep-learning Pages project
+     (dashboard toggle, no code change). Per-post public view counters: next step, needs Worker+KV. -->
+</body>
+</html>

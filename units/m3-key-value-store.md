@@ -219,3 +219,5 @@ unit זה שייך לblock M3 של system design. הוא מתבסס על:
 ```
 
 <!-- widget-request: ring: consistent-hashing ring showing key-to-node mapping with N=3 replication as nodes are added or removed -->
+
+<!-- audited -->

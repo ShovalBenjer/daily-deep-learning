@@ -30,6 +30,11 @@ ROOT = Path(__file__).resolve().parent.parent
 
 #: Every path the deployed app serves. Derived from what index.html fetches and
 #: references, the sw.js precache list, and style.css url() references.
+#:
+#: An entry may be written "src:dest" to stage a source tree under a different
+#: output path (e.g. "game/dist:game" stages the game's build tree as /game/).
+#: Plain entries keep current behavior. The audit is not weakened: FORBIDDEN
+#: is re-checked under every mapped destination as well as at the root.
 SHIP = [
     "index.html", "style.css", "sw.js", "manifest.webmanifest", "_headers",
     "_redirects",
@@ -37,6 +42,7 @@ SHIP = [
     "research_ladder.json", "skills.json", "syllabus.json", "talents.json",
     "curriculum.json", "goals.json",
     "icons", "vendor", "assets", "posts", "corpus", "units",
+    "game/dist:game",
 ]
 
 #: Pruned from inside shipped directories. Source art is 6.8 MB of raw PNG the
@@ -65,25 +71,47 @@ def _prune(directory: str, names: list[str]) -> set[str]:
     return {n for n in names if f"{rel}/{n}".lstrip("./") in PRUNE}
 
 
+def _split(name: str) -> tuple[str, str]:
+    """Split a SHIP entry into (source, destination).
+
+    Args:
+        name: a SHIP entry, either "path" or "src:dest".
+
+    Returns:
+        The repo-relative source and the staged-tree-relative destination.
+    """
+    if ":" in name:
+        src, dest = name.split(":", 1)
+        return src, dest
+    return name, name
+
+
+def _pairs(names: list[str]) -> list[tuple[str, str]]:
+    """Return the (source, destination) pairs for SHIP entries."""
+    return [_split(n) for n in names]
+
+
 def expected(names: list[str]) -> set[str]:
-    """Return every repo-relative file path the staged tree should contain.
+    """Return every staged-tree-relative file path the staged tree should contain.
 
     Args:
         names: SHIP entries that exist in the repo.
 
     Returns:
-        Posix-style relative paths, with PRUNE subtrees excluded.
+        Posix-style paths relative to the staged tree root, with PRUNE
+        subtrees excluded. Mapped entries ("src:dest") appear under dest/.
     """
     out = set()
     for name in names:
-        src = ROOT / name
+        src_name, dest_name = _split(name)
+        src = ROOT / src_name
         if src.is_file():
-            out.add(name)
+            out.add(dest_name)
             continue
         for p in src.rglob("*"):
-            rel = p.relative_to(ROOT).as_posix()
-            if p.is_file() and not any(rel.startswith(f"{d}/") for d in PRUNE):
-                out.add(rel)
+            rel = p.relative_to(src).as_posix()
+            if p.is_file() and not any(f"{src_name}/{rel}".startswith(f"{d}/") for d in PRUNE):
+                out.add(f"{dest_name}/{rel}")
     return out
 
 
@@ -129,15 +157,18 @@ def stage(out: Path) -> tuple[list[str], int]:
 
     staged = []
     for name in SHIP:
-        src = ROOT / name
+        src_name, dest_name = _split(name)
+        src = ROOT / src_name
+        dest = out / dest_name
         if not src.exists():
             if name in OPTIONAL:
                 continue
             raise FileNotFoundError(f"SHIP entry missing from the repo: {name}")
         if src.is_dir():
-            shutil.copytree(src, out / name, ignore=_prune, dirs_exist_ok=True)
+            shutil.copytree(src, dest, ignore=_prune, dirs_exist_ok=True)
         else:
-            shutil.copy2(src, out / name)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
         staged.append(name)
     return staged, sweep(out, expected(staged))
 
@@ -149,14 +180,23 @@ def audit(out: Path) -> list[str]:
         out: the staged directory.
 
     Returns:
-        Repo-relative paths that must not be published but were staged. Empty
-        means the staged tree is clean.
+        Staged-tree-relative paths that must not be published but were
+        staged. Checked at the root AND under every mapped destination,
+        so a "src:dest" mapping cannot smuggle a forbidden path past the
+        audit. Empty means the staged tree is clean.
 
     Examples:
         >>> audit(Path("dist"))
         []
     """
-    return [p for p in FORBIDDEN if (out / p).exists()]
+    dests = [""] + [dest for name in SHIP if ":" in name for dest in [_split(name)[1]]]
+    hits = []
+    for d in dests:
+        for p in FORBIDDEN:
+            hit = f"{d}/{p}" if d else p
+            if (out / hit).exists():
+                hits.append(hit)
+    return hits
 
 
 def main() -> None:

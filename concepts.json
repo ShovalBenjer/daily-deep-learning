@@ -6278,6 +6278,68 @@
     "c-consistent-hashing"
    ],
    "node": "sysdesign"
+  },
+  {
+   "id": "c-cap-theorem",
+   "t": "CAP theorem",
+   "he": "משפט CAP",
+   "d": "מערכת מבוזרת יכולה להבטיח שניים בלבד: Consistency, Availability, Partition tolerance",
+   "rel": [
+    "c-consistent-hashing",
+    "c-kv-consistency"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "c-gossip-protocol",
+   "t": "Gossip protocol",
+   "he": "פרוטוקול רכילות",
+   "d": "מנגנון לזיהוי כשלים מבוזר: כל node מחליף עדכוני בריאות עם node אקראי כל כמה שניות",
+   "rel": [
+    "c-cap-theorem"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "c-hinted-handoff",
+   "t": "Hinted handoff",
+   "he": "מסירה מוסווית",
+   "d": "node זמני שומר write עם hint, ומעביר לnode האחראי כשחוזר לאוויר",
+   "rel": [
+    "c-sloppy-quorum"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "c-vector-clock",
+   "t": "Vector clock",
+   "he": "שעון וקטורי",
+   "d": "מנגנון לזיהוי סדר אירועים ב-distributed system ללא שעון גלובלי",
+   "rel": [
+    "c-cap-theorem"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "c-sloppy-quorum",
+   "t": "Sloppy quorum",
+   "he": "מניין רך",
+   "d": "שליחת write לnode זמני זמין במקום node האחראי שנפל, כדי לשמור על availability",
+   "rel": [
+    "c-hinted-handoff",
+    "c-cap-theorem"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "c-kv-consistency",
+   "t": "Quorum consistency",
+   "he": "עקביות מניין",
+   "d": "W+R>N מבטיח strong consistency; W+R<=N מאפשר eventual consistency",
+   "rel": [
+    "c-cap-theorem"
+   ],
+   "node": "sysdesign"
   }
  ]
 }

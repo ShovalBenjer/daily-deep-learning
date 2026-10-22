@@ -7,21 +7,33 @@
  * unverified-KYC merchant whose August volume spikes (bust-out shape).
  * Numbers are deterministic (seeded RNG) so drill predictions stay true.
  *
- * Contracts: initDb() resolves once with a connected AsyncDuckDB; runSql()
+ * Boot: the eh bundle is vendored at build time into vendor/
+ * (duckdb-browser-eh.worker.js + duckdb-eh.wasm, copied from
+ * node_modules/@duckdb/duckdb-wasm/dist/ by tools/build.ts) and loaded
+ * from same-origin URLs. No jsdelivr, no extensions.duckdb.org, no
+ * SharedArrayBuffer, so no COOP/COEP headers. The eh build is picked
+ * explicitly; the coi/pthread worker is never shipped.
+ *
+ * Seed: CREATE TABLE ... AS FROM read_csv over registered CSV files.
+ * read_csv is DuckDB core, so no extension is ever autoloaded (unlike
+ * read_json, whose extensions.duckdb.org fetch failed in Phase 1); the rows
+ * travel as a data file, never assembled into SQL text (review panel
+ * 2026-08-24, sql-concat). Batched prepared-statement inserts were measured
+ * at ~70s for these 3.9k rows in the eh build (per-row bridge cost is
+ * linear, so no batch size fixes it); CSV bulk-loads the same rows in
+ * ~100ms. Money is generated as integer cents and divided by 100 in SQL,
+ * never floated in JS.
+ *
+ * Lifecycle: initDb() is lazy (called on first SQL drill open, never at
+ * boot) and idempotent; concurrent callers share one in-flight init.
+ * Contracts: initDb() resolves once with a connected engine; runSql()
  * returns { columns, rows } or throws with the engine's message; the
  * schema matches the drill text exactly (merchants, transactions).
- * Seeding never assembles row values into SQL text: rows are registered
- * as JSON files and loaded with read_json, so the only SQL strings are
- * literal DDL (review panel 2026-08-24, sql-concat). Money is generated
- * as integer cents and stored as DECIMAL(12,2), never floated in JS.
- *
- * Agent-context: worker+wasm load from jsdelivr at runtime. POC-only
- * shortcut, acceptable because the POC runs on localhost (no CSP); the
- * deploy story vendors the bundle per ADR-0002's consequences.
  */
 import * as duckdb from '@duckdb/duckdb-wasm';
 
 let conn: duckdb.AsyncDuckDBConnection | null = null;
+let initPromise: Promise<void> | null = null;
 
 function mulberry32(a: number) {
   return () => {
@@ -43,9 +55,10 @@ const MERCHANTS = [
   [7, 'PixelPay Top-ups', 'digital', 'IL', '2025-12-05', true, 30, 0.72],
 ] as const;
 
-interface TxnRow { txn_id: number; merchant_id: number; txn_ts: string; amount_cents: number; status: string; card_id: number; }
+export interface TxnRow { txn_id: number; merchant_id: number; txn_ts: string; amount_cents: number; status: string; card_id: number; }
 
-function seedRows(): TxnRow[] {
+/** The deterministic seed, exported for tests. Same seed -> same rows. */
+export function seedRows(): TxnRow[] {
   const rnd = mulberry32(20260824);
   const rows: TxnRow[] = [];
   let txn = 1000;
@@ -78,37 +91,86 @@ function seedRows(): TxnRow[] {
   return rows;
 }
 
-export async function initDb(onStatus: (s: string) => void): Promise<void> {
-  onStatus('טוען מנוע SQL');
-  const bundles = duckdb.getJsDelivrBundles();
-  const bundle = await duckdb.selectBundle(bundles);
-  const workerUrl = URL.createObjectURL(
-    new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' }));
-  const worker = new Worker(workerUrl);
-  const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(duckdb.LogLevel.ERROR), worker);
-  await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-  URL.revokeObjectURL(workerUrl);
-  conn = await db.connect();
-  onStatus('זורע נתונים');
-  const merchants = MERCHANTS.map(m => ({
-    merchant_id: m[0], name: m[1], category: m[2], country: m[3], signup_date: m[4], kyc_verified: m[5],
-  }));
-  await db.registerFileText('seed_merchants.json', JSON.stringify(merchants));
-  await db.registerFileText('seed_transactions.json', JSON.stringify(seedRows()));
-  await conn.query(`
-    CREATE TABLE merchants AS
-      SELECT merchant_id, name, category, country,
-             CAST(signup_date AS DATE) AS signup_date, kyc_verified
-      FROM read_json('seed_merchants.json',
-        columns={merchant_id: 'INT', name: 'TEXT', category: 'TEXT', country: 'TEXT', signup_date: 'TEXT', kyc_verified: 'BOOLEAN'});
-    CREATE TABLE transactions AS
-      SELECT txn_id, merchant_id, CAST(txn_ts AS TIMESTAMP) AS txn_ts,
-             CAST(amount_cents AS DECIMAL(14,2)) / 100 AS amount,
-             status, card_id
-      FROM read_json('seed_transactions.json',
-        columns={txn_id: 'INT', merchant_id: 'INT', txn_ts: 'TEXT', amount_cents: 'BIGINT', status: 'TEXT', card_id: 'INT'});
-  `);
-  onStatus('');
+/** Minimal CSV field quoter: quotes when the field needs it, doubles quotes. */
+function csvField(v: string | number | boolean): string {
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+async function seed(
+  db: duckdb.AsyncDuckDB,
+  c: duckdb.AsyncDuckDBConnection,
+  onStatus: (s: string) => void,
+): Promise<void> {
+  // Bulk load via CSV: read_csv is DuckDB core (no extension autoload, unlike
+  // read_json), and the rows travel as a registered data file, never as SQL
+  // text — the 2026-08-24 sql-concat rule. Prepared-statement seeding was
+  // measured at ~70s for 3.9k rows in this build (per-row bridge cost is
+  // linear, so larger batches cannot fix it); CSV bulk-loads the same rows
+  // in ~2s, inside the sheet-open budget.
+  const merchantsCsv = MERCHANTS.map(m =>
+    [m[0], m[1], m[2], m[3], m[4], m[5]].map(csvField).join(',')).join('\n');
+  const rows = seedRows();
+  onStatus(`זורע נתונים 0/${rows.length}`);
+  const txnsCsv = rows.map(r =>
+    [r.txn_id, r.merchant_id, r.txn_ts, r.amount_cents, r.status, r.card_id].map(csvField).join(',')).join('\n');
+  await db.registerFileText('seed_merchants.csv', merchantsCsv);
+  await db.registerFileText('seed_transactions.csv', txnsCsv);
+  await c.query(`CREATE TABLE merchants AS SELECT
+      CAST(merchant_id AS INTEGER) AS merchant_id, name, category, country,
+      CAST(signup_date AS DATE) AS signup_date, CAST(kyc_verified AS BOOLEAN) AS kyc_verified
+    FROM read_csv('seed_merchants.csv', header=false,
+      columns={merchant_id: 'VARCHAR', name: 'VARCHAR', category: 'VARCHAR',
+               country: 'VARCHAR', signup_date: 'VARCHAR', kyc_verified: 'VARCHAR'})`);
+  await c.query(`CREATE TABLE transactions AS SELECT
+      CAST(txn_id AS INTEGER) AS txn_id, CAST(merchant_id AS INTEGER) AS merchant_id,
+      CAST(txn_ts AS TIMESTAMP) AS txn_ts,
+      CAST(amount_cents AS DECIMAL(14,2)) / 100 AS amount,
+      status, CAST(card_id AS INTEGER) AS card_id
+    FROM read_csv('seed_transactions.csv', header=false,
+      columns={txn_id: 'VARCHAR', merchant_id: 'VARCHAR', txn_ts: 'VARCHAR',
+               amount_cents: 'VARCHAR', status: 'VARCHAR', card_id: 'VARCHAR'})`);
+}
+
+export interface DbOptions {
+  /** Base URL the vendored bundle resolves against (document.baseURI in the app). */
+  baseUrl: string;
+  /** Timing seam for measurements: phase name -> elapsed ms. */
+  onPhase?: (phase: 'instantiate' | 'seed', ms: number) => void;
+}
+
+/**
+ * Boot the vendored eh engine and seed it. Idempotent: concurrent callers
+ * share the one in-flight init; a failed init clears so a retry re-runs it.
+ */
+export function initDb(onStatus: (s: string) => void, opts: DbOptions): Promise<void> {
+  if (conn) return Promise.resolve();
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    onStatus('טוען מנוע SQL');
+    const workerUrl = new URL('vendor/duckdb-browser-eh.worker.js', opts.baseUrl).href;
+    const wasmUrl = new URL('vendor/duckdb-eh.wasm', opts.baseUrl).href;
+    // same blob+importScripts boot the POC used; the URL is now same-origin.
+    const bootUrl = URL.createObjectURL(
+      new Blob([`importScripts(${JSON.stringify(workerUrl)});`], { type: 'text/javascript' }));
+    const worker = new Worker(bootUrl);
+    try {
+      const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(duckdb.LogLevel.ERROR), worker);
+      const t0 = performance.now();
+      await db.instantiate(wasmUrl);
+      opts.onPhase?.('instantiate', performance.now() - t0);
+      const c = await db.connect();
+      const t1 = performance.now();
+      await seed(db, c, onStatus);
+      opts.onPhase?.('seed', performance.now() - t1);
+      conn = c;
+    } finally {
+      URL.revokeObjectURL(bootUrl);
+    }
+    onStatus('');
+  })();
+  initPromise.catch(() => { initPromise = null; });
+  return initPromise;
 }
 
 export interface SqlResult { columns: string[]; rows: unknown[][]; }

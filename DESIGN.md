@@ -89,6 +89,29 @@ designed yet.
 - Imagery: NO stock photos ever. Widgets, hand-authored SVG diagrams, and the
   frame/seal/spark language ARE the imagery.
 
+## 3D game surfaces (addendum, 2026-10-21)
+
+The contract above was written for the ledger DOM. The game (`game/`) is a
+3D surface; this addendum names what the contract was silent on. Nothing
+below weakens the motion contract or the fiction map; it extends both.
+
+- Tool: Babylon.js 9 is the scene renderer, per ADR-0002 (which rejected
+  Three.js with reasons). No second 3D library. No raw-canvas improvisation
+  while Babylon serves.
+- Fiction classes for 3D: lamps and book shelves are diegetic (exercises
+  you tap); the city vista itself is spatial (it inhabits the chrome, like
+  הניצוץ); the econ/shift HUD is non-diegetic chrome; the lamp pulse and
+  the miss shake are meta, reduced-motion gated.
+- Ambient-motion allowance: the city may run at most two ambient systems
+  (lantern flicker, horizon drift) that claim no state. Reason: a fully
+  static 3D city reads as crashed on a phone. Still gated on
+  prefers-reduced-motion. No exceptions, no third system without amending
+  this line.
+- Measured figure: the lamp pulse resolves in <= 600ms on the one spring
+  family. No second celebration ritual.
+- Tap targets: lamp pick targets >= 44px at 390px width (an invisible
+  hit-sphere wider than the visible head).
+
 ## The avoid-list (named bans — Anthropic distributional-convergence fix)
 
 Inter/Roboto/system-default display type · purple→blue gradients · glass

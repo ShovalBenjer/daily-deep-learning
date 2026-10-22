@@ -64,6 +64,39 @@ let city: CityHandles;
 let progress = loadP();
 let bookDrills: BookDrill[] = [];
 
+/* ---------- lazy DB lifecycle: the city boots first; the engine starts
+   on the first SQL drill open. The case drill never touches the DB. ---- */
+let dbReady = false;
+let dbInit: Promise<void> | null = null;
+
+function hideSheet() {
+  $('#sheet').hidden = true;
+}
+
+/** Ensure the engine is up; renders the failure into the sheet and returns false when it is not. */
+async function ensureDb(sheet: HTMLElement): Promise<boolean> {
+  if (dbReady) return true;
+  if (!dbInit) {
+    dbInit = initDb(
+      s => { const st = document.getElementById('status'); if (st) st.textContent = s; },
+      { baseUrl: document.baseURI },
+    ).then(() => {
+      dbReady = true;
+      const st = document.getElementById('status');
+      if (st) st.textContent = '';
+    });
+  }
+  try {
+    await dbInit;
+    return true;
+  } catch (e) {
+    sheet.replaceChildren(
+      el('button', { class: 'close', onclick: hideSheet }, 'סגור'),
+      el('p', { class: 'verdict bad' }, 'המנוע לא עלה: ' + (e as Error).message.slice(0, 200)));
+    return false;
+  }
+}
+
 const stateOf = (id: string): LampState =>
   progress[id] === 'passed' ? 'lit' : progress[id] === 'attempted' ? 'flicker' : 'dark';
 
@@ -151,12 +184,14 @@ function closeBtn(id: string): HTMLElement {
   return el('button', { class: 'close', onclick: () => {
     if (openAttempt === id && progress[id] !== 'passed') { review(id, 'fail'); paintEcon(); }
     openAttempt = null;
+    city.setRenderingPaused(false);
     $('#sheet').hidden = true;
     city.setLampState(id, lampStateFromMemory(id));
   } }, 'סגור');
 }
 function returnToCity(id: string) {
   $('#sheet').hidden = true;
+  city.setRenderingPaused(false);
   city.pulseLamp(id); // the performed moment happens where you can see it
 }
 function returnBtn(id: string, extra = ''): HTMLElement {
@@ -218,9 +253,18 @@ function holePanel(d: SqlDrill, ta: HTMLTextAreaElement, onHelp: (h: Help) => vo
 
 /* ---------- drill sheets ---------- */
 
-function openSql(d: SqlDrill) {
+async function openSql(d: SqlDrill) {
   openAttempt = null; // a fresh sheet must not inherit a stale attempt
   const sheet = $('#sheet');
+  // the loading state IS the lazy-init contract: the engine was never
+  // booted before this tap, so the sheet says so instead of failing.
+  sheet.replaceChildren(
+    closeBtn(d.id),
+    el('h2', {}, d.title),
+    el('p', { class: 'muted' }, 'טוען מנוע SQL…'));
+  sheet.hidden = false;
+  city.setRenderingPaused(true);
+  if (!await ensureDb(sheet)) return;
   sheet.replaceChildren();
   const ta = el('textarea', { id: 'sql', dir: 'ltr', spellcheck: 'false' }) as HTMLTextAreaElement;
   ta.value = d.starter;
@@ -328,16 +372,18 @@ function openCase(d: CaseDrill) {
     el('p', { class: 'muted' }, 'בחר פסיקה + את ה-Block שמנמק אותה, ואז אמור בקול את ההסבר של 30 השניות.'),
     out);
   sheet.hidden = false;
+  city.setRenderingPaused(true);
 }
 
 function openBook(d: BookDrill) {
   openAttempt = null; // a fresh sheet must not inherit a stale attempt
   const sheet = $('#sheet');
   sheet.replaceChildren();
+  city.setRenderingPaused(true);
   const out = el('div', { id: 'out', 'aria-live': 'polite' });
   const next = () => {
     const remaining = bookDrills.find(b => progress[b.id] !== 'passed');
-    if (remaining) openBook(remaining); else sheet.hidden = true;
+    if (remaining) openBook(remaining); else { city.setRenderingPaused(false); sheet.hidden = true; }
   };
   const help = makeHelpTracker();
   const buttons = d.options.map((opt, i) => el('button', {
@@ -387,7 +433,9 @@ function openDrill(id: string) {
 
 async function boot() {
   try {
-    const r = await fetch('/bank/book-drills.json');
+    // relative: the game lives under /game/ in prod; the bank is optional
+    // (empty shelf is honest, no fixture ships), so a 404 here is expected.
+    const r = await fetch('./bank/book-drills.json');
     // an SPA-fallback server answers HTML with 200; demand actual JSON so a
     // broken bank is visible instead of silently empty
     if (r.ok && (r.headers.get('content-type') || '').includes('json')) {
@@ -405,6 +453,7 @@ async function boot() {
   // dev hook for headless playtesting (agents drive drills without 3D picking)
   if (location.search.includes('dev')) {
     (window as unknown as Record<string, unknown>).__open = openDrill;
+    (window as unknown as Record<string, unknown>).__db = { initDb, runSql, canonical };
   }
   // lamp brightness IS live retrievability: FSRS decides what flickers.
   // Per-lamp try/catch: one corrupted stored card must not darken the city.
@@ -427,17 +476,18 @@ async function boot() {
       paintEcon();
     }
   };
-  const status = $('#status');
-  try {
-    await initDb(s => { status.textContent = s; });
-    status.textContent = '';
-    // set after initDb so the boot hint cannot overwrite it (PR #10 warning)
-    const tendedNote = tended ? ' הפנסאי עבר בלילה וטיפל בפנס שדעך.' : '';
-    $('#hint').textContent = (bookDrills.length
-      ? `הקש על פנס ברחוב לתיק, או על מדף הספרים מאחור (${bookDrills.length} פנסים מהקורפוס).`
-      : 'הקש על פנס ברחוב כדי לפתוח תיק.') + tendedNote;
-  } catch (e) {
-    status.textContent = 'המנוע לא עלה: ' + (e as Error).message.slice(0, 200);
+  // the city is up before any engine work: boot never blocks on the DB.
+  // The engine starts lazily on the first SQL drill open (see ensureDb).
+  const tendedNote = tended ? ' הפנסאי עבר בלילה וטיפל בפנס שדעך.' : '';
+  $('#hint').textContent = (bookDrills.length
+    ? `הקש על פנס ברחוב לתיק, או על מדף הספרים מאחור (${bookDrills.length} פנסים מהקורפוס).`
+    : 'הקש על פנס ברחוב כדי לפתוח תיק.') + tendedNote;
+
+  // scoped worker: /game/sw.js precaches the shell + wasm + fonts.
+  // dev (?dev) and non-/game paths skip it: no worker file is served there.
+  if ('serviceWorker' in navigator && !location.search.includes('dev')
+      && location.pathname.startsWith('/game')) {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* offline is best-effort */ });
   }
 }
 

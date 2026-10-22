@@ -161,3 +161,5 @@ Backtracking שייך לבלוק M1 ובנוי על DFS מ-tree traversal. של�
 ```concepts
 {"items":[{"id":"c-backtracking","t":"Backtracking","he":"נסיגה","d":"חיפוש DFS שיטתי: make-choose-recurse-undo. בונה מועמדים שלב-שלב, נסוג כשהמסלול לא יכול להוביל לפתרון","rel":["c-pruning","c-state-space","c-tree-dfs-stack"],"node":"dsa"},{"id":"c-pruning","t":"Pruning","he":"גיזום","d":"דחיית ענף ב-backtracking לפני שנחקרו כל המועמדים בו; מפחית זמן ריצה ללא פגיעה בנכונות","rel":["c-backtracking","c-state-space"],"node":"dsa"},{"id":"c-state-space","t":"State Space","he":"מרחב מצבים","d":"קבוצת כל המצבים האפשריים בחיפוש; ב-backtracking נחקרת כ-DFS עם pruning כדי לצמצמה","rel":["c-backtracking","c-pruning"],"node":"dsa"},{"id":"c-decision-tree-bt","t":"Decision Tree (search)","he":"עץ החלטות (חיפוש)","d":"ייצוג עץ של מרחב הבחירות: כל צומת בחירה אחת, כל נתיב שלם מועמד לפתרון","rel":["c-backtracking","c-state-space"],"node":"dsa"}]}
 ```
+
+<!-- audited -->

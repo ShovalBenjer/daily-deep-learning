@@ -204,3 +204,5 @@ if height[i] > height[j]:
 ```concepts
 {"items":[{"id":"three-pointers","t":"Three Pointers","he":"שלושה מצביעים","d":"הרחבה של Two Pointers ל-3Sum: לולאה חיצונית O(n) ו-Converging Ends פנימית O(n); סה\"כ O(n²). מחייב skip-duplicates בשתי הרמות.","rel":["two-pointers","converging-pointers"],"node":"dsa"},{"id":"skip-duplicates","t":"Skip Duplicates","he":"דילוג על כפילויות","d":"בבעיות k-Sum: לאחר מציאת פתרון, מקדימים/מאחרים את המצביע מעל ערכים זהים כדי למנוע שלשות כפולות ב-output.","rel":["three-pointers","converging-pointers"],"node":"dsa"}]}
 ```
+
+<!-- audited -->

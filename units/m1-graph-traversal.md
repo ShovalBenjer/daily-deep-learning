@@ -196,3 +196,5 @@ Graph traversal שייך ל-M1 ומשלים את tree traversal על גרפים 
 ```concepts
 {"items":[{"id":"c-graph-bfs","t":"BFS (Breadth-First Search)","he":"חיפוש לרוחב","d":"סריקת גרף שחוקרת לפי שכבות מרחק מ-start; מוצאת מסלול קצר ביותר (מספר קשתות) בגרף לא-ממושקל","rel":["c-graph-dfs","c-adjacency-list","c-visited-set"],"node":"dsa"},{"id":"c-graph-dfs","t":"DFS (Depth-First Search)","he":"חיפוש לעומק","d":"סריקת גרף שעוקבת אחרי מסלול עד הסוף לפני שחוזרת; מוצאת מסלול כלשהו, לא בהכרח הקצר","rel":["c-graph-bfs","c-adjacency-list","c-visited-set"],"node":"dsa"},{"id":"c-adjacency-list","t":"Adjacency List","he":"רשימת שכנות","d":"ייצוג גרף כ-dict[node, list[node]]; יעיל לגרפים דלילים","rel":["c-graph-bfs","c-graph-dfs"],"node":"dsa"},{"id":"c-visited-set","t":"Visited Set","he":"קבוצת ביקורים","d":"קבוצה שמונעת ביקור כפול בצמתים בסריקת גרף; חיונית בגרפים עם מעגלים","rel":["c-graph-bfs","c-graph-dfs"],"node":"dsa"}]}
 ```
+
+<!-- audited -->

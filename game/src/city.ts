@@ -23,6 +23,10 @@ export interface CityHandles {
    *  before settling to lit. Reduced-motion gets the settled state only. */
   pulseLamp: (id: string) => void;
   onLampTap: (cb: (id: string) => void) => void;
+  /** Pause/resume the render loop. Paused while a drill sheet covers the
+   *  city: nothing behind the sheet needs frames, and on a phone the GPU
+   *  (and the DuckDB worker's CPU share) is better spent elsewhere. */
+  setRenderingPaused: (paused: boolean) => void;
 }
 
 const GOLD = new Color3(0.79, 0.66, 0.42);
@@ -31,8 +35,17 @@ const DIM = new Color3(0.2, 0.19, 0.23);
 
 export interface LampSpec { id: string; row: number; }
 
-export function buildCity(canvas: HTMLCanvasElement, specs: LampSpec[]): CityHandles {
-  const engine = new Engine(canvas, true, { adaptToDeviceRatio: true });
+/**
+ * Engine factory seam: production passes nothing (real Engine on the
+ * canvas); tests pass a NullEngine factory so the scene graph is
+ * exercised without WebGL or a DOM canvas.
+ */
+export function buildCity(
+  canvas: HTMLCanvasElement,
+  specs: LampSpec[],
+  createEngine: (canvas: HTMLCanvasElement) => Engine = (c) => new Engine(c, true, { adaptToDeviceRatio: true }),
+): CityHandles {
+  const engine = createEngine(canvas);
   const scene = new Scene(engine);
   scene.clearColor = new Color4(0.059, 0.051, 0.078, 1);
 
@@ -140,8 +153,15 @@ export function buildCity(canvas: HTMLCanvasElement, specs: LampSpec[]): CityHan
   engine.runRenderLoop(() => scene.render());
   addEventListener('resize', () => engine.resize());
 
+  let renderPaused = false;
   return {
     scene,
+    setRenderingPaused(paused: boolean) {
+      if (paused === renderPaused) return;
+      renderPaused = paused;
+      if (paused) engine.stopRenderLoop();
+      else engine.runRenderLoop(() => scene.render());
+    },
     pulseLamp(id) {
       const l = lamps.get(id); if (!l) return;
       l.state = 'lit';

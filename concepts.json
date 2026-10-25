@@ -6453,6 +6453,47 @@
     "converging-pointers"
    ],
    "node": "dsa"
+  },
+  {
+   "id": "shortest-path-bfs",
+   "t": "BFS for shortest path",
+   "he": "BFS למסלול קצר",
+   "d": "מוצא מינימום קשתות בגרף לא-ממושקל ב-O(V+E)",
+   "rel": [
+    "graph-traversal"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "dijkstra",
+   "t": "Dijkstra's algorithm",
+   "he": "אלגוריתם דייקסטרה",
+   "d": "מסלול קצר ביותר בגרף ממושקל עם משקלים אי-שליליים, O((V+E)logV)",
+   "rel": [
+    "relaxation",
+    "priority-queue-heap"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "relaxation",
+   "t": "Edge relaxation",
+   "he": "הרפיית קשת",
+   "d": "עדכון dist[u] = dist[v]+w כשנמצא נתיב קצר יותר",
+   "rel": [
+    "dijkstra"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "priority-queue-heap",
+   "t": "Priority queue (min-heap)",
+   "he": "תור עדיפות (ערימת מינימום)",
+   "d": "מבנה נתונים שמחזיר את המינימום ב-O(log n), ממומש ב-heapq ב-Python",
+   "rel": [
+    "heap-topk"
+   ],
+   "node": "dsa"
   }
  ]
 }

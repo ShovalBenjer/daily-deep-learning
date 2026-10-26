@@ -6494,6 +6494,37 @@
     "heap-topk"
    ],
    "node": "dsa"
+  },
+  {
+   "id": "union-find",
+   "t": "Union-Find / DSU",
+   "he": "איחוד-מציאה",
+   "d": "מבנה נתונים לניהול קבוצות זרות עם find ו-union ב-O(alpha(n)) בממוצע",
+   "rel": [
+    "graph-traversal",
+    "shortest-path"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "path-compression",
+   "t": "Path compression",
+   "he": "דחיסת מסלול",
+   "d": "אופטימיזציה ב-DSU: אחרי find, מעדכנים parent של כל צמתי המסלול לשורש",
+   "rel": [
+    "union-find"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "union-by-rank",
+   "t": "Union by rank",
+   "he": "איחוד לפי דרגה",
+   "d": "אופטימיזציה ב-DSU: מחברים עץ נמוך מתחת לגבוה לשמירה על עץ שטוח",
+   "rel": [
+    "union-find"
+   ],
+   "node": "dsa"
   }
  ]
 }

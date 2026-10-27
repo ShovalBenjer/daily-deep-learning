@@ -6525,6 +6525,62 @@
     "union-find"
    ],
    "node": "dsa"
+  },
+  {
+   "id": "dp-1d",
+   "t": "1D Dynamic Programming",
+   "he": "תכנון דינמי חד-ממדי",
+   "d": "פירוק בעיה לתת-בעיות חופפות ושמירת תוצאותיהן. State סקלר i; recurrence קובע dp[i] מתוך dp[j] לj<i. זמן O(n), זיכרון O(n) או O(k).",
+   "rel": [
+    "memoization",
+    "tabulation",
+    "overlapping-subproblems"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "memoization",
+   "t": "Memoization",
+   "he": "שינון",
+   "d": "top-down DP: רקורסיה עם cache. פותרים בעיה גדולה, קוראים רקורסיבית לתת-בעיות, שומרים תוצאה בפעם הראשונה.",
+   "rel": [
+    "dp-1d",
+    "tabulation"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "tabulation",
+   "t": "Tabulation",
+   "he": "טבלאות",
+   "d": "bottom-up DP: מילוי מערך dp מהבסיס למעלה ללא רקורסיה. זמן O(n), זיכרון O(n) או O(k) אם מחזיקים רק k ערכים קודמים.",
+   "rel": [
+    "dp-1d",
+    "memoization"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "overlapping-subproblems",
+   "t": "Overlapping Subproblems",
+   "he": "תת-בעיות חופפות",
+   "d": "אותן תת-בעיות נפתרות שוב ושוב בגישה נאיבית. תנאי הכרחי ל-DP; Divide and Conquer פותר תת-בעיות disjoint.",
+   "rel": [
+    "dp-1d",
+    "optimal-substructure"
+   ],
+   "node": "dsa"
+  },
+  {
+   "id": "optimal-substructure",
+   "t": "Optimal Substructure",
+   "he": "מבנה אופטימלי",
+   "d": "הפתרון האופטימלי לבעיה נגזר מפתרונות אופטימליים לתת-בעיות. תנאי הכרחי ל-DP ול-Greedy.",
+   "rel": [
+    "dp-1d",
+    "overlapping-subproblems"
+   ],
+   "node": "dsa"
   }
  ]
 }

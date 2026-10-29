@@ -157,3 +157,5 @@ LCS מחפש Subsequence (תווים לא-רצופים בסדר). **Longest Comm
 ```concepts
 {"items":[{"id":"dp-2d","t":"2D Dynamic Programming","he":"תכנון דינמי דו-ממדי","d":"DP שה-State שלו הוא זוג (i,j). ממלא טבלה 2D שורה-שורה; כל תא תלוי בתאים מעליו ומשמאלו.","rel":["dp-1d","lcs","edit-distance","unique-paths"],"node":"dsa"},{"id":"lcs","t":"Longest Common Subsequence","he":"תת-סדרה משותפת ארוכה ביותר","d":"אורך הסדרה המשותפת הארוכה ביותר לשתי מחרוזות. מחושב ב-O(m*n) עם DP 2D.","rel":["dp-2d","edit-distance"],"node":"dsa"},{"id":"edit-distance","t":"Edit Distance","he":"מרחק עריכה","d":"מספר פעולות insert/delete/replace מינימלי להמרת מחרוזת אחת לשנייה. Levenshtein distance. O(m*n).","rel":["dp-2d","lcs"],"node":"dsa"}]}
 ```
+
+<!-- audited -->

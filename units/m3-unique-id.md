@@ -108,3 +108,5 @@ sequence     = 4,194,324,483 & 4095  = 3
 ```concepts
 {"items":[{"id":"unique-id","t":"Unique ID Generator","he":"מחולל מזהים ייחודיים","d":"מנגנון לייצור מזהים ייחודיים בסביבה מבוזרת ללא תיאום מרכזי","rel":["snowflake-id","uuid-v4","ticket-server"],"node":"sysdesign"},{"id":"snowflake-id","t":"Snowflake ID","he":"מזהה Snowflake","d":"64-bit ID עם 41 ביט timestamp, 10 ביט machine ID, ו-12 ביט sequence. ממויין בזמן, אין תיאום.","rel":["unique-id","clock-skew"],"node":"sysdesign"},{"id":"uuid-v4","t":"UUID v4","he":"UUID גרסה 4","d":"128-bit ID אקראי לחלוטין. ללא תיאום, ללא מיון בזמן, ללא חילוץ timestamp.","rel":["unique-id","snowflake-id"],"node":"sysdesign"},{"id":"ticket-server","t":"Ticket Server","he":"שרת כרטיסים","d":"DB ייעודי עם AUTO_INCREMENT. כל שרת מבצע INSERT ומקבל ID ייחודי. Single point of failure.","rel":["unique-id"],"node":"sysdesign"},{"id":"clock-skew","t":"Clock Skew","he":"סטיית שעון","d":"הפרש בין שעוני מכונות שגורם ל-Snowflake IDs מחוץ לסדר כרונולוגי","rel":["snowflake-id"],"node":"sysdesign"}]}
 ```
+
+<!-- audited -->

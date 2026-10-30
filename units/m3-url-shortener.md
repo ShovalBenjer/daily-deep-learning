@@ -203,3 +203,5 @@ Bloom filter לבדיקת כפילויות longUrl הוא אופטימיזציה
 ```concepts
 {"items":[{"id":"url-shortener","t":"URL Shortener","he":"מקצר כתובות","d":"שירות שממפה longUrl לשבעה תווים Base62 ומפנה בHTTP 302","rel":["base62-encoding","hash-collision","302-redirect"],"node":"sysdesign"},{"id":"base62-encoding","t":"Base62 Encoding","he":"קידוד בסיס 62","d":"קידוד עם [0-9a-zA-Z]. 62^7 ≈ 3.5 טריליון שילובים לשבעה תווים","rel":["url-shortener","hash-collision"],"node":"sysdesign"},{"id":"hash-collision","t":"Hash Collision","he":"התנגשות hash","d":"שתי קלטות שונות שמייצרות אותו hash. מטפלים ע\"י salt ו-retry עד 5 ניסיונות","rel":["url-shortener","base62-encoding"],"node":"sysdesign"},{"id":"302-redirect","t":"302 Redirect","he":"הפניה זמנית","d":"HTTP 302 Found: הדפדפן לא שומר, כל לחיצה מגיעה לשרת. מאפשר analytics ושינוי יעד","rel":["url-shortener","301-redirect"],"node":"sysdesign"},{"id":"301-redirect","t":"301 Redirect","he":"הפניה קבועה","d":"HTTP 301 Moved Permanently: הדפדפן שומר ולא חוזר לשרת. חוסך bandwidth, מסתיר analytics","rel":["url-shortener","302-redirect"],"node":"sysdesign"}]}
 ```
+
+<!-- audited -->

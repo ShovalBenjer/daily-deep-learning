@@ -4880,6 +4880,71 @@
         "c-graph-dfs"
       ],
       "node": "dsa"
+    },
+    {
+      "id": "url-frontier",
+      "t": "URL Frontier",
+      "he": "תור הכתובות",
+      "d": "תור עדיפויות מבוזר של URLs שטרם נסרקו; הלב של כל web crawler",
+      "rel": [
+        "politeness-policy",
+        "bloom-filter"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "bloom-filter",
+      "t": "Bloom Filter",
+      "he": "פילטר בלום",
+      "d": "מבנה הסתברותי O(1) לבדיקת שייכות בסט; false positives אפשריים, false negatives אינם; משמש לdeduplication בcrawler",
+      "rel": [
+        "url-frontier",
+        "url-normalization"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "spider-trap",
+      "t": "Spider Trap",
+      "he": "מלכודת עכביש",
+      "d": "URL space אינסופי כמו לוח שנה דינמי שמוביל crawler ללולאה אינסופית",
+      "rel": [
+        "url-frontier",
+        "url-normalization"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "robots-txt",
+      "t": "robots.txt",
+      "he": "קובץ הרשאות לסורקים",
+      "d": "קובץ טקסט בשורש domain שמגדיר אילו paths מותרים לסריקה אוטומטית",
+      "rel": [
+        "politeness-policy"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "politeness-policy",
+      "t": "Politeness Policy",
+      "he": "מדיניות נימוס",
+      "d": "הגבלת קצב בקשות לאותו domain כדי לא להציף שרתים; בדרך כלל 1 שנייה מינימום בין בקשות",
+      "rel": [
+        "url-frontier",
+        "robots-txt"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "url-normalization",
+      "t": "URL Normalization",
+      "he": "נרמול כתובות",
+      "d": "המרת URL לצורה קנונית: lowercase scheme+host, הסרת port דיפולטי, מיון query params",
+      "rel": [
+        "url-frontier",
+        "bloom-filter"
+      ],
+      "node": "sysdesign"
     }
   ],
   "items": [

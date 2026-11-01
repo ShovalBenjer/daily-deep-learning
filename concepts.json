@@ -4945,6 +4945,35 @@
         "bloom-filter"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-intervals-algo",
+      "t": "Intervals Pattern",
+      "he": "תבנית קטעים",
+      "d": "בעיות על רשימת זוגות [start,end]; פתרון קאנוני: מיון לפי start ומעבר לינארי",
+      "rel": [],
+      "node": "dsa"
+    },
+    {
+      "id": "c-interval-overlap-cond",
+      "t": "Interval Overlap (sorted)",
+      "he": "תנאי חפיפה אחרי מיון",
+      "d": "לאחר מיון לפי start: [a,b] ו-[c,d] חופפים אם c <= b",
+      "rel": [
+        "c-intervals-algo"
+      ],
+      "node": "dsa"
+    },
+    {
+      "id": "c-interval-merge-step",
+      "t": "Merge Step",
+      "he": "צעד מיזוג",
+      "d": "אם קטעים חופפים, ה-end הממוזג הוא max(prev.end, next.end)",
+      "rel": [
+        "c-intervals-algo",
+        "c-interval-overlap-cond"
+      ],
+      "node": "dsa"
     }
   ],
   "items": [

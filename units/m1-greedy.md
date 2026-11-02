@@ -209,3 +209,5 @@ print(dp_coins([1, 5, 10, 25], 41))  # 4
 ```concepts
 {"items":[{"id":"greedy","t":"Greedy Algorithm","he":"אלגוריתם חמדני","d":"בנה פתרון צעד-צעד; בכל שלב בחר את הבחירה המקומית האופטימלית בתקווה שתצטבר לאופטימום גלובלי.","rel":["greedy-choice-property","exchange-argument","activity-selection"],"node":"dsa"},{"id":"greedy-choice-property","t":"Greedy Choice Property","he":"תכונת הבחירה החמדנית","d":"קיים פתרון אופטימלי המכיל את הבחירה החמדנית; מבטיחה שחמדני לא מוותר על האופטימום.","rel":["greedy","exchange-argument"],"node":"dsa"},{"id":"exchange-argument","t":"Exchange Argument","he":"ארגומנט ההחלפה","d":"טכניקת הוכחה: כל פתרון שדוחה את הבחירה החמדנית ניתן להמיר לפתרון שכולל אותה ואינו גרוע.","rel":["greedy-choice-property","greedy"],"node":"dsa"},{"id":"activity-selection","t":"Activity Selection","he":"תחרות פעילויות","d":"בחר מקסימום פעילויות שלא חופפות: מיין לפי זמן סיום, תמיד קח את המסתיימת הכי מוקדם.","rel":["greedy"],"node":"dsa"}]}
 ```
+
+<!-- audited -->

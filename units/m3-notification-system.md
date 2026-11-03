@@ -121,3 +121,5 @@ Service → Notification Service → Message Queue → Workers → Providers →
 ```concepts
 {"items":[{"id":"notification-system","t":"Notification System","he":"מערכת התראות","d":"תשתית שמקבלת בקשות שליחה משירותים ומממסרת לנמענים דרך push, SMS, email","rel":["push-notification","message-queue","notification-idempotency"],"node":"sysdesign"},{"id":"push-notification","t":"Push Notification","he":"התראת דחיפה","d":"הודעה שנשלחת לטלפון דרך APNs (iOS) או FCM (Android) גם כשהאפליקציה סגורה","rel":["notification-system","apns","fcm"],"node":"sysdesign"},{"id":"apns","t":"APNs","he":"Apple Push Notification Service","d":"שרת Apple לשליחת push notifications לאייפון. דורש device token ותעודה.","rel":["push-notification","fcm"],"node":"sysdesign"},{"id":"fcm","t":"FCM","he":"Firebase Cloud Messaging","d":"שרת Google לשליחת push notifications לאנדרואיד ולאפליקציות web.","rel":["push-notification","apns"],"node":"sysdesign"},{"id":"notification-idempotency","t":"Notification Idempotency","he":"אידמפוטנטיות הודעה","d":"שימוש ב-idempotency key בעת שליחה חוזרת כדי שהספק לא ישלח הודעה כפולה","rel":["notification-system","message-queue"],"node":"sysdesign"}]}
 ```
+
+<!-- audited -->

@@ -157,3 +157,5 @@ c_2 + c_3 = 0 \quad \Rightarrow \quad c_2 = -c_3
 - **c2-la-svd**: SVD = הפירוק המלא של כל מיפוי לינארי
 
 בפרויקטים: MatchIQ מחשב embedding-ים לצוותים ב-\(\mathbb{R}^k\) ואז מדד אוקלידי; הGap בין הוקטורים הוא מה שעושה את העבודה. PCA על feature vectors מוריד רעש לפני regression.
+
+<!-- audited -->

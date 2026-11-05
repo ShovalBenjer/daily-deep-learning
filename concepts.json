@@ -7079,6 +7079,76 @@
         "la-basis"
       ],
       "node": "math-la"
+    },
+    {
+      "id": "news-feed",
+      "t": "News Feed",
+      "he": "פיד חדשות",
+      "d": "רצף פוסטים ממשתמשים שעוקבים אחריהם, ממוין לפי אלגוריתם או זמן",
+      "rel": [
+        "fanout-on-write",
+        "fanout-on-read",
+        "hybrid-fanout"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "fanout-on-write",
+      "t": "Fanout on Write",
+      "he": "פיזור בזמן כתיבה",
+      "d": "בפרסום פוסט, המערכת כותבת את post_id לתיבות כל עוקביו. קריאה מהירה, כתיבה כבדה",
+      "rel": [
+        "news-feed",
+        "fanout-on-read",
+        "celebrity-problem"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "fanout-on-read",
+      "t": "Fanout on Read",
+      "he": "פיזור בזמן קריאה",
+      "d": "בפתיחת פיד, שואלים בזמן אמת מי עוקבים ומביאים פוסטים. כתיבה קלה, קריאה כבדה",
+      "rel": [
+        "news-feed",
+        "fanout-on-write",
+        "hybrid-fanout"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "hybrid-fanout",
+      "t": "Hybrid Fanout",
+      "he": "פיזור היברידי",
+      "d": "push למשתמשים רגילים, pull ל-celebrities מעל סף עוקבים. מאזן עלויות כתיבה וקריאה",
+      "rel": [
+        "fanout-on-write",
+        "fanout-on-read",
+        "celebrity-problem"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "celebrity-problem",
+      "t": "Celebrity Problem",
+      "he": "בעיית הסלבריטי",
+      "d": "משתמש עם מיליוני עוקבים שמפרסם גורם למיליוני כתיבות מקבילות ומציף את ה-fanout service",
+      "rel": [
+        "hybrid-fanout",
+        "fanout-on-write"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "social-graph-feed",
+      "t": "Social Graph",
+      "he": "גרף חברתי",
+      "d": "מבנה nodes=משתמשים ו-edges=follows. מאוחסן ב-graph DB או Redis sets ל-hot users",
+      "rel": [
+        "news-feed",
+        "fanout-on-write"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

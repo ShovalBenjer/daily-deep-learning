@@ -7219,6 +7219,38 @@
         "fanout-on-write"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-typeahead-service",
+      "t": "Typeahead Service",
+      "he": "שירות השלמה אוטומטית",
+      "d": "שירות שמקבל קידומת ומחזיר עד K הצעות ממוינות לפי תדירות שאילתה, מגובה ב-Trie עם topK cache.",
+      "rel": [
+        "c-trie",
+        "c-trie-prefix"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-topk-trie-cache",
+      "t": "topK cache in Trie",
+      "he": "מטמון K הטובים בצומת",
+      "d": "שדה top_K בכל צומת Trie שמחזיק מראש K ההצעות הפופולריות מתת-העץ; מחושב offline ומאפשר החזרת הצעות ב-O(P).",
+      "rel": [
+        "c-typeahead-service",
+        "c-trie"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-typeahead-aggregation",
+      "t": "Typeahead Data Aggregation",
+      "he": "צינור איסוף נתוני שאילתות",
+      "d": "pipeline offline שקורא search logs, מצבר תדירויות, מסנן תכנים פוגעניים ומעדכן את ה-Trie - מופעל שעתי/יומי, לא real-time.",
+      "rel": [
+        "c-typeahead-service"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

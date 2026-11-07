@@ -7251,6 +7251,71 @@
         "c-typeahead-service"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-bitwise-and",
+      "t": "Bitwise AND",
+      "he": "AND ביטי",
+      "d": "פעולה בינארית שמחזירה 1 רק כשגם שני ביטי הקלט הם 1; משמשת לבידוד ביטים ספציפיים",
+      "rel": [
+        "c-bitwise-or",
+        "c-bitwise-xor"
+      ],
+      "node": "dsa"
+    },
+    {
+      "id": "c-bitwise-or",
+      "t": "Bitwise OR",
+      "he": "OR ביטי",
+      "d": "פעולה בינארית שמחזירה 1 כשלפחות אחד מביטי הקלט הוא 1; משמשת להגדרת ביטים",
+      "rel": [
+        "c-bitwise-and",
+        "c-bitwise-xor"
+      ],
+      "node": "dsa"
+    },
+    {
+      "id": "c-bitwise-xor",
+      "t": "Bitwise XOR",
+      "he": "XOR ביטי",
+      "d": "פעולה בינארית שמחזירה 1 כשבדיוק אחד מביטי הקלט הוא 1; משמשת להיפוך ביטים ולאלגוריתמי swap",
+      "rel": [
+        "c-bitwise-and",
+        "c-bitwise-or"
+      ],
+      "node": "dsa"
+    },
+    {
+      "id": "c-bit-shift",
+      "t": "Bit shift",
+      "he": "הזזת ביטים",
+      "d": "הזזה שמאלה << מכפילה ב-2^k, הזזה ימינה >> מחלקת; הזזה ימינה בPython היא אריתמטית",
+      "rel": [
+        "c-two-complement"
+      ],
+      "node": "dsa"
+    },
+    {
+      "id": "c-two-complement",
+      "t": "Two's complement",
+      "he": "משלים לשניים",
+      "d": "ייצוג מספרים שליליים ב-NOT+1; מאפשר חיסור כחיבור; ~n == -(n+1) בPython",
+      "rel": [
+        "c-bit-shift",
+        "c-bitwise-and"
+      ],
+      "node": "dsa"
+    },
+    {
+      "id": "c-bitmask",
+      "t": "Bitmask",
+      "he": "מסכת ביטים",
+      "d": "מספר שלם המשמש כסט של דגלים בינאריים; AND, OR ו-XOR עם המסכה מאפשרים לקרוא, להגדיר ולנקות דגלים",
+      "rel": [
+        "c-bitwise-and",
+        "c-bitwise-or"
+      ],
+      "node": "dsa"
     }
   ]
 }

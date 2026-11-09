@@ -7348,6 +7348,59 @@
         "c-matrix-python"
       ],
       "node": "dsa"
+    },
+    {
+      "id": "c-conditional-probability",
+      "t": "Conditional Probability",
+      "he": "הסתברות מותנית",
+      "d": "P(A|B)=P(A∩B)/P(B): הסיכוי ל-A בהינתן שידוע ש-B התרחש; מצמצם את ה-universe לאירועים שבהם B נכון",
+      "rel": [
+        "c-bayes-theorem",
+        "c-joint-probability"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-bayes-theorem",
+      "t": "Bayes' Theorem",
+      "he": "משפט בייס",
+      "d": "P(A|B)=P(B|A)P(A)/P(B): הופך likelihood ו-prior ל-posterior; מאפשר עדכון אמונה לאחר ראיה",
+      "rel": [
+        "c-conditional-probability",
+        "c-marginal-probability"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-marginal-probability",
+      "t": "Marginal Probability",
+      "he": "הסתברות שולית",
+      "d": "P(A) ללא תנאי; מתקבלת מסכום P(A,B) על כל ערכי B (marginalization)",
+      "rel": [
+        "c-joint-probability"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-joint-probability",
+      "t": "Joint Probability",
+      "he": "הסתברות משותפת",
+      "d": "P(A∩B): הסיכוי שגם A וגם B מתרחשים; P(A∩B)=P(A|B)P(B)",
+      "rel": [
+        "c-conditional-probability",
+        "c-statistical-independence"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-statistical-independence",
+      "t": "Statistical Independence",
+      "he": "עצמאות סטטיסטית",
+      "d": "A,B עצמאיים אם P(A∩B)=P(A)P(B); ידיעה על B לא שינתה את P(A)",
+      "rel": [
+        "c-conditional-probability"
+      ],
+      "node": "prob-stats"
     }
   ]
 }

@@ -5198,6 +5198,60 @@
         "fanout-on-write"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "blob-storage-yt",
+      "t": "Blob Storage",
+      "he": "אחסון אובייקטים",
+      "d": "מאגר PUT/GET לקבצים בינאריים גדולים; לא מיועד לשאילתות SQL",
+      "rel": [
+        "cdn",
+        "message-queue-arch"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "video-transcoding",
+      "t": "Video Transcoding",
+      "he": "קידוד-מחדש",
+      "d": "המרת וידאו גולמי למספר פורמטים ורזולוציות; תהליך אסינכרוני עתיר CPU",
+      "rel": [
+        "dag-processor-yt",
+        "blob-storage-yt"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "dag-processor-yt",
+      "t": "DAG Processor",
+      "he": "מעבד DAG",
+      "d": "רשת משימות מקבליות בגרף מכוון ללא מחזורים; ב-YouTube: thumbnail + encode + watermark",
+      "rel": [
+        "video-transcoding",
+        "message-queue-arch"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "adaptive-bitrate",
+      "t": "Adaptive Bitrate (ABR)",
+      "he": "הזרמה אדפטיבית",
+      "d": "לקוח בוחר איכות וידאו דינמית לפי רוחב סרט; HLS/DASH",
+      "rel": [
+        "cdn",
+        "blob-storage-yt"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "presigned-url",
+      "t": "Presigned URL",
+      "he": "URL חתום",
+      "d": "URL זמני עם אישורים מוטמעים; מאפשר העלאה ישירה ל-Blob Storage ללא העברת bytes דרך ה-API",
+      "rel": [
+        "blob-storage-yt"
+      ],
+      "node": "sysdesign"
     }
   ],
   "items": [

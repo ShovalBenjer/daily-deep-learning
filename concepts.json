@@ -7455,6 +7455,37 @@
         "c-conditional-probability"
       ],
       "node": "prob-stats"
+    },
+    {
+      "id": "c-tool-schema",
+      "t": "Tool Schema",
+      "he": "סכמת כלים",
+      "d": "מפרט JSON (name, description, parameters) ש-LLM קורא כדי לדעת מה כלי עושה ואיך לקרוא לו",
+      "rel": [
+        "c-tool-description",
+        "c-json-schema-params"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-tool-description",
+      "t": "Tool Description",
+      "he": "תיאור כלי",
+      "d": "השדה הקריטי ב-tool schema: מסביר מה הכלי עושה, מתי להשתמש ומה מחריג; משפיע יותר על איכות הקריאה מכל שדה אחר",
+      "rel": [
+        "c-tool-schema"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-json-schema-params",
+      "t": "JSON Schema Parameters",
+      "he": "פרמטרי JSON Schema",
+      "d": "תבנית type/properties/required שמגדירה קלט לכלי; enum, minimum ו-maximum מאלצים ערכים תקינים",
+      "rel": [
+        "c-tool-schema"
+      ],
+      "node": "agents-loop"
     }
   ]
 }

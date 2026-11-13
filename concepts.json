@@ -5296,6 +5296,39 @@
         "delta-sync"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-mcp-server",
+      "t": "MCP Server",
+      "he": "שרת MCP",
+      "d": "תהליך שמממש את MCP protocol בצד השרת: רושם tools, resources ו-prompts, מקבל JSON-RPC ומחזיר תוצאות",
+      "rel": [
+        "c-mcp-protocol",
+        "c-tool-call"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-mcp-transport",
+      "t": "MCP Transport",
+      "he": "הובלת MCP",
+      "d": "שכבת ההובלה של הודעות MCP: stdio (subprocess, localhost) או SSE (HTTP, shared server)",
+      "rel": [
+        "c-mcp-server",
+        "c-mcp-protocol"
+      ],
+      "node": "agents-loop"
+    },
+    {
+      "id": "c-mcp-capability-neg",
+      "t": "MCP Capability Negotiation",
+      "he": "משא ומתן על יכולות MCP",
+      "d": "חילופי initialize בחיבור MCP: גרסת פרוטוקול, capabilities של client ו-server; מאפשר גרסאות שונות",
+      "rel": [
+        "c-mcp-server",
+        "c-mcp-transport"
+      ],
+      "node": "agents-loop"
     }
   ],
   "items": [

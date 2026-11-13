@@ -7585,6 +7585,58 @@
         "delta-sync"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-geohash",
+      "t": "Geohash",
+      "he": "גיאוהאש",
+      "d": "קידוד קואורדינטות גיאוגרפיות למחרוזת Base32 שבה קידומת משותפת = שכנות גיאוגרפית",
+      "rel": [
+        "c-quad-tree",
+        "c-proximity-service"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-quad-tree",
+      "t": "Quad-tree",
+      "he": "עץ רבעי",
+      "d": "מבנה נתונים מרחבי שמחלק מפה לארבעה רבעים רקורסיבית עד שכל עלה מכיל פחות מ-N עסקים",
+      "rel": [
+        "c-geohash"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-proximity-service",
+      "t": "Proximity service",
+      "he": "שירות קרבה",
+      "d": "שירות שמחזיר רשומות גיאוגרפיות בתוך רדיוס נתון ממיקום משתמש",
+      "rel": [
+        "c-geohash",
+        "c-haversine"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-haversine",
+      "t": "Haversine distance",
+      "he": "מרחק הוורסין",
+      "d": "נוסחה לחישוב המרחק הגדול-עיגולי בין שתי נקודות על כדור, בהינתן קואורדינטותיהן",
+      "rel": [
+        "c-proximity-service"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-geohash-boundary",
+      "t": "Geohash boundary problem",
+      "he": "בעיית גבול גיאוהאש",
+      "d": "שתי נקודות צמודות יכולות להיות בתאי geohash שונים אם הן משני צידי קו גבול; הפתרון: לחפש ב-9 תאים",
+      "rel": [
+        "c-geohash"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

@@ -212,3 +212,4 @@ GEOADD עם 100M entries ב-Sorted Set אחד = כולם על אותו Redis nod
 ```concepts
 {"items":[{"id":"nearby-friends","t":"Nearby Friends System","he":"מערכת חברים בסביבה","d":"מערכת שמציגה חברים גיאוגרפיים בזמן אמת. מבוססת geohash לחיפוש שכנות, Redis GEOADD לאחסון, Kafka ל-event streaming ו-WebSocket לדחיפה.","rel":["c-geohash","redis-geospatial","fan-out","websocket"],"node":"sysdesign"},{"id":"redis-geospatial","t":"Redis Geospatial","he":"Redis גיאוגרפי","d":"Redis Sorted Set שמקודד קואורדינטות כ-geohash. GEOADD מוסיף נקודה, GEOSEARCH מחזיר כל מה שבתוך radius. O(log n) על N משתמשים.","rel":["c-geohash","nearby-friends"],"node":"sysdesign"},{"id":"location-service","t":"Location Service","he":"שירות מיקום","d":"שירות שמקבל עדכוני GPS ממכשירים, מחשב geohash, מעדכן Redis ו-Cassandra, ומפרסם events ל-Kafka. TTL קצר ב-Redis כדי שמשתמשים לא פעילים לא יופיעו בתוצאות.","rel":["nearby-friends","redis-geospatial","c-geohash"],"node":"sysdesign"}]}
 ```
+<!-- audited -->

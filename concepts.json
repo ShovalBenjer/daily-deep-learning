@@ -1,3 +1,1709 @@
 {
   "note": "The codex registry: every day's key concepts, appended by the generator (and the council). rel[] edges draw the knowledge graph.",
   "concepts": [
+    {
+      "id": "mdp",
+      "t": "Markov Decision Process",
+      "he": "תהליך החלטה מרקובי",
+      "d": "A tuple (S, A, P, R, γ) defining a sequential decision problem under uncertainty.",
+      "rel": ["q-learning", "policy-gradient"],
+      "node": "rl-foundations"
+    },
+    {
+      "id": "q-learning",
+      "t": "Q-Learning",
+      "he": "למידת Q",
+      "d": "Model-free RL algorithm that learns the value of action-state pairs via temporal difference.",
+      "rel": ["mdp", "temporal-difference"],
+      "node": "rl-foundations"
+    },
+    {
+      "id": "temporal-difference",
+      "t": "Temporal Difference Learning",
+      "he": "למידת הפרש זמנית",
+      "d": "Updates value estimates based on the difference between successive predictions.",
+      "rel": ["q-learning", "mdp"],
+      "node": "rl-foundations"
+    },
+    {
+      "id": "policy-gradient",
+      "t": "Policy Gradient",
+      "he": "גרדיאנט מדיניות",
+      "d": "Directly optimizes a parameterized policy by computing gradients of expected return.",
+      "rel": ["mdp", "reinforce-algorithm"],
+      "node": "rl-policy"
+    },
+    {
+      "id": "reinforce-algorithm",
+      "t": "REINFORCE Algorithm",
+      "he": "אלגוריתם REINFORCE",
+      "d": "Monte-Carlo policy gradient algorithm using full episode returns as the signal.",
+      "rel": ["policy-gradient"],
+      "node": "rl-policy"
+    },
+    {
+      "id": "actor-critic",
+      "t": "Actor-Critic",
+      "he": "שחקן-מבקר",
+      "d": "Combines policy gradient (actor) with a value function baseline (critic) to reduce variance.",
+      "rel": ["policy-gradient", "value-function"],
+      "node": "rl-policy"
+    },
+    {
+      "id": "value-function",
+      "t": "Value Function",
+      "he": "פונקציית ערך",
+      "d": "V(s): expected cumulative discounted reward from state s under a policy.",
+      "rel": ["mdp", "temporal-difference"],
+      "node": "rl-foundations"
+    },
+    {
+      "id": "exploration-exploitation",
+      "t": "Exploration-Exploitation Trade-off",
+      "he": "פשרת חקירה-ניצול",
+      "d": "Tension between trying new actions (exploration) and using known good ones (exploitation).",
+      "rel": ["mdp", "epsilon-greedy"],
+      "node": "rl-foundations"
+    },
+    {
+      "id": "epsilon-greedy",
+      "t": "Epsilon-Greedy",
+      "he": "אפסילון-חמדני",
+      "d": "With probability ε pick a random action; otherwise pick the greedy best action.",
+      "rel": ["exploration-exploitation"],
+      "node": "rl-foundations"
+    },
+    {
+      "id": "attention-mechanism",
+      "t": "Attention Mechanism",
+      "he": "מנגנון קשב",
+      "d": "Allows a model to focus on relevant parts of the input when producing each output token.",
+      "rel": ["self-attention", "transformer-arch"],
+      "node": "attention"
+    },
+    {
+      "id": "self-attention",
+      "t": "Self-Attention",
+      "he": "קשב עצמי",
+      "d": "Each token attends to all other tokens in the same sequence via Q, K, V projections.",
+      "rel": ["attention-mechanism", "multi-head-attention"],
+      "node": "attention"
+    },
+    {
+      "id": "multi-head-attention",
+      "t": "Multi-Head Attention",
+      "he": "קשב רב-ראשי",
+      "d": "Runs h parallel attention heads, each in a subspace, then concatenates and projects.",
+      "rel": ["self-attention"],
+      "node": "attention"
+    },
+    {
+      "id": "transformer-arch",
+      "t": "Transformer Architecture",
+      "he": "ארכיטקטורת Transformer",
+      "d": "Encoder-decoder stack of self-attention and feed-forward layers; backbone of modern LLMs.",
+      "rel": ["attention-mechanism", "positional-encoding"],
+      "node": "attention"
+    },
+    {
+      "id": "positional-encoding",
+      "t": "Positional Encoding",
+      "he": "קידוד מיקום",
+      "d": "Adds order information to token embeddings since attention is permutation-invariant.",
+      "rel": ["transformer-arch"],
+      "node": "attention"
+    },
+    {
+      "id": "tokenization",
+      "t": "Tokenization",
+      "he": "טוקניזציה",
+      "d": "Splits raw text into sub-word units (BPE, WordPiece) that the model processes.",
+      "rel": ["bpe", "vocabulary"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "bpe",
+      "t": "Byte-Pair Encoding",
+      "he": "קידוד זוגות בתים",
+      "d": "Iteratively merges the most frequent symbol pairs to build a fixed-size sub-word vocabulary.",
+      "rel": ["tokenization"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "vocabulary",
+      "t": "Vocabulary",
+      "he": "אוצר מילים",
+      "d": "The fixed set of tokens a model can emit; size trades coverage against embedding matrix cost.",
+      "rel": ["tokenization", "bpe"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "language-model",
+      "t": "Language Model",
+      "he": "מודל שפה",
+      "d": "A model that assigns probabilities to sequences, usually by predicting the next token.",
+      "rel": ["tokenization", "perplexity"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "perplexity",
+      "t": "Perplexity",
+      "he": "פרפלקסיטי",
+      "d": "Exponentiated average negative log-likelihood; lower is better for language models.",
+      "rel": ["language-model"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "fine-tuning",
+      "t": "Fine-Tuning",
+      "he": "כיוון עדין",
+      "d": "Continuing training a pretrained model on a task-specific dataset to specialise its weights.",
+      "rel": ["transfer-learning", "lora"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "transfer-learning",
+      "t": "Transfer Learning",
+      "he": "למידת העברה",
+      "d": "Using representations learned on one task to accelerate learning on a related task.",
+      "rel": ["fine-tuning", "pretrained-model"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "pretrained-model",
+      "t": "Pretrained Model",
+      "he": "מודל מאומן מראש",
+      "d": "A model trained on large general data, whose weights are reused as a starting point.",
+      "rel": ["transfer-learning", "fine-tuning"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "lora",
+      "t": "LoRA",
+      "he": "LoRA",
+      "d": "Low-Rank Adaptation: inserts small trainable rank-decomposition matrices, freezing base weights.",
+      "rel": ["fine-tuning", "peft"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "peft",
+      "t": "Parameter-Efficient Fine-Tuning",
+      "he": "כיוון עדין יעיל בפרמטרים",
+      "d": "Techniques (LoRA, adapters, prefix-tuning) that fine-tune <1% of parameters.",
+      "rel": ["lora", "fine-tuning"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "rlhf",
+      "t": "RLHF",
+      "he": "חיזוק מתגמול אנושי",
+      "d": "Reinforcement Learning from Human Feedback: trains a reward model on preferences, then RL-fine-tunes.",
+      "rel": ["policy-gradient", "reward-model"],
+      "node": "alignment"
+    },
+    {
+      "id": "reward-model",
+      "t": "Reward Model",
+      "he": "מודל תגמול",
+      "d": "A classifier trained on human preference pairs to score outputs for RLHF.",
+      "rel": ["rlhf"],
+      "node": "alignment"
+    },
+    {
+      "id": "constitutional-ai",
+      "t": "Constitutional AI",
+      "he": "AI חוקתי",
+      "d": "Anthropic's method of self-critique and revision guided by a written set of principles.",
+      "rel": ["rlhf", "reward-model"],
+      "node": "alignment"
+    },
+    {
+      "id": "prompt-engineering",
+      "t": "Prompt Engineering",
+      "he": "הנדסת הנחיות",
+      "d": "Crafting input text to elicit desired model behaviour without changing weights.",
+      "rel": ["chain-of-thought", "few-shot"],
+      "node": "prompting"
+    },
+    {
+      "id": "chain-of-thought",
+      "t": "Chain of Thought",
+      "he": "שרשרת מחשבה",
+      "d": "Prompting the model to produce intermediate reasoning steps before the final answer.",
+      "rel": ["prompt-engineering", "few-shot"],
+      "node": "prompting"
+    },
+    {
+      "id": "few-shot",
+      "t": "Few-Shot Prompting",
+      "he": "הנחיה עם דוגמאות",
+      "d": "Providing k labeled examples in the prompt so the model generalises to new instances.",
+      "rel": ["prompt-engineering", "chain-of-thought"],
+      "node": "prompting"
+    },
+    {
+      "id": "rag",
+      "t": "Retrieval-Augmented Generation",
+      "he": "יצירה עם אחזור",
+      "d": "Augments LLM generation with retrieved documents to ground answers in external knowledge.",
+      "rel": ["dense-retrieval", "reranker"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "dense-retrieval",
+      "t": "Dense Retrieval",
+      "he": "אחזור צפוף",
+      "d": "Encodes queries and passages into vectors; retrieval is nearest-neighbour search.",
+      "rel": ["rag", "embedding"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "embedding",
+      "t": "Embedding",
+      "he": "הטמעה",
+      "d": "A dense real-valued vector representation of a token, sentence or document.",
+      "rel": ["dense-retrieval", "similarity-search"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "similarity-search",
+      "t": "Similarity Search",
+      "he": "חיפוש דמיון",
+      "d": "Finding the k nearest vectors in a corpus, typically with cosine or dot-product distance.",
+      "rel": ["embedding", "ann"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "ann",
+      "t": "Approximate Nearest Neighbour",
+      "he": "שכן קרוב מקורב",
+      "d": "HNSW, IVF, LSH — trade recall for speed when searching million-scale embedding corpora.",
+      "rel": ["similarity-search"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "reranker",
+      "t": "Reranker",
+      "he": "מדרג מחדש",
+      "d": "A cross-encoder that scores (query, passage) pairs to re-order a retrieved candidate set.",
+      "rel": ["rag", "dense-retrieval"],
+      "node": "rag-advanced"
+    },
+    {
+      "id": "chunking",
+      "t": "Chunking",
+      "he": "חיתוך לקטעים",
+      "d": "Splitting documents into passage-size units before embedding for retrieval.",
+      "rel": ["rag", "embedding"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "context-window",
+      "t": "Context Window",
+      "he": "חלון הקשר",
+      "d": "The maximum number of tokens a model can attend to in a single forward pass.",
+      "rel": ["transformer-arch", "positional-encoding"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "hallucination",
+      "t": "Hallucination",
+      "he": "הזיה",
+      "d": "When an LLM generates plausible-sounding but factually unsupported text.",
+      "rel": ["rag", "grounding"],
+      "node": "alignment"
+    },
+    {
+      "id": "grounding",
+      "t": "Grounding",
+      "he": "עיגון",
+      "d": "Connecting model outputs to verifiable external sources to reduce hallucination.",
+      "rel": ["hallucination", "rag"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "tool-use",
+      "t": "Tool Use",
+      "he": "שימוש בכלים",
+      "d": "LLM ability to call external functions or APIs and incorporate their results.",
+      "rel": ["function-calling", "agent-loop"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "function-calling",
+      "t": "Function Calling",
+      "he": "קריאת פונקציה",
+      "d": "Structured API where the model emits JSON describing a function name and arguments.",
+      "rel": ["tool-use"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "agent-loop",
+      "t": "Agent Loop",
+      "he": "לולאת סוכן",
+      "d": "Think → act → observe cycle where an LLM iterates tool calls until a goal is reached.",
+      "rel": ["tool-use", "react-pattern"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "react-pattern",
+      "t": "ReAct Pattern",
+      "he": "תבנית ReAct",
+      "d": "Interleaves Reasoning and Acting: the model writes a thought, an action, then observes.",
+      "rel": ["agent-loop", "chain-of-thought"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "mcp-protocol",
+      "t": "Model Context Protocol",
+      "he": "פרוטוקול הקשר מודל",
+      "d": "Open standard for connecting AI models to external data and tools via a JSON-RPC transport.",
+      "rel": ["tool-use", "agent-loop"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "batch-normalization",
+      "t": "Batch Normalization",
+      "he": "נורמליזציית אצווה",
+      "d": "Normalises layer inputs across the batch dimension during training to stabilise gradients.",
+      "rel": ["layer-normalization"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "layer-normalization",
+      "t": "Layer Normalization",
+      "he": "נורמליזציית שכבה",
+      "d": "Normalises across the feature dimension of each sample; preferred in Transformers.",
+      "rel": ["batch-normalization", "transformer-arch"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "dropout",
+      "t": "Dropout",
+      "he": "נשירה",
+      "d": "During training, randomly zeros a fraction p of activations to prevent co-adaptation.",
+      "rel": ["regularization"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "regularization",
+      "t": "Regularization",
+      "he": "רגולריזציה",
+      "d": "Techniques (L1, L2, dropout) that penalise complexity to reduce overfitting.",
+      "rel": ["dropout"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "backpropagation",
+      "t": "Backpropagation",
+      "he": "התפשטות לאחור",
+      "d": "Chain-rule algorithm computing parameter gradients efficiently in deep networks.",
+      "rel": ["gradient-descent", "computation-graph"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "gradient-descent",
+      "t": "Gradient Descent",
+      "he": "ירידת גרדיאנט",
+      "d": "Iteratively updates parameters in the direction of steepest loss decrease.",
+      "rel": ["backpropagation", "adam-optimizer"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "computation-graph",
+      "t": "Computation Graph",
+      "he": "גרף חישוב",
+      "d": "DAG representation of operations enabling automatic differentiation.",
+      "rel": ["backpropagation"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "adam-optimizer",
+      "t": "Adam Optimizer",
+      "he": "אופטימייזר Adam",
+      "d": "Adaptive moment estimation: combines momentum and RMSProp with bias correction.",
+      "rel": ["gradient-descent"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "learning-rate",
+      "t": "Learning Rate",
+      "he": "קצב למידה",
+      "d": "Scalar controlling the step size during gradient descent; critical hyper-parameter.",
+      "rel": ["gradient-descent", "lr-scheduler"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "lr-scheduler",
+      "t": "Learning Rate Scheduler",
+      "he": "מתזמן קצב למידה",
+      "d": "Adjusts learning rate during training, e.g. cosine annealing or linear warm-up.",
+      "rel": ["learning-rate"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "convolution",
+      "t": "Convolution",
+      "he": "קונבולוציה",
+      "d": "Sliding-window dot product that shares weights spatially; forms the core of CNNs.",
+      "rel": ["pooling"],
+      "node": "cnn"
+    },
+    {
+      "id": "pooling",
+      "t": "Pooling",
+      "he": "פוּלינג",
+      "d": "Spatial downsampling operation (max or average) reducing feature map resolution.",
+      "rel": ["convolution"],
+      "node": "cnn"
+    },
+    {
+      "id": "residual-connection",
+      "t": "Residual Connection",
+      "he": "חיבור שיורי",
+      "d": "Skip connection that adds a layer's input to its output, enabling very deep networks.",
+      "rel": ["layer-normalization"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "encoder-decoder",
+      "t": "Encoder-Decoder",
+      "he": "מקודד-מפענח",
+      "d": "Architecture where encoder maps input to a latent representation, decoder generates output.",
+      "rel": ["transformer-arch", "attention-mechanism"],
+      "node": "attention"
+    },
+    {
+      "id": "autoregressive",
+      "t": "Autoregressive",
+      "he": "אוטורגרסיבי",
+      "d": "Generates output sequentially, conditioning each step on previously generated tokens.",
+      "rel": ["language-model", "transformer-arch"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "beam-search",
+      "t": "Beam Search",
+      "he": "חיפוש קרן",
+      "d": "Approximate decoding that keeps the top-k partial sequences at each step.",
+      "rel": ["autoregressive"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "temperature",
+      "t": "Temperature",
+      "he": "טמפרטורה",
+      "d": "Scales logits before softmax; >1 flattens distribution, <1 sharpens it.",
+      "rel": ["autoregressive", "top-p-sampling"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "top-p-sampling",
+      "t": "Top-p Sampling",
+      "he": "דגימת top-p",
+      "d": "Nucleus sampling: samples from the smallest set of tokens whose probability sums to p.",
+      "rel": ["temperature"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "knowledge-distillation",
+      "t": "Knowledge Distillation",
+      "he": "זיקוק ידע",
+      "d": "Training a small student model to mimic a large teacher's soft output distribution.",
+      "rel": ["transfer-learning"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "quantization",
+      "t": "Quantization",
+      "he": "קוונטיזציה",
+      "d": "Reducing weight precision (FP32→INT8/INT4) to shrink model size and speed inference.",
+      "rel": ["knowledge-distillation"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "inference-serving",
+      "t": "Inference Serving",
+      "he": "הגשת הסקה",
+      "d": "Infrastructure for running model inference at scale: batching, caching, hardware selection.",
+      "rel": ["quantization", "kv-cache"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "kv-cache",
+      "t": "KV Cache",
+      "he": "מטמון KV",
+      "d": "Caches the key and value tensors from prior tokens to avoid recomputing attention.",
+      "rel": ["inference-serving", "self-attention"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "flash-attention",
+      "t": "FlashAttention",
+      "he": "פלאש-קשב",
+      "d": "IO-aware exact attention that tiles computation to stay in SRAM, dramatically reducing memory.",
+      "rel": ["self-attention", "kv-cache"],
+      "node": "attention"
+    },
+    {
+      "id": "speculative-decoding",
+      "t": "Speculative Decoding",
+      "he": "פענוח ספקולטיבי",
+      "d": "A small draft model proposes tokens; the large model verifies many in parallel.",
+      "rel": ["autoregressive", "inference-serving"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "prompt-caching",
+      "t": "Prompt Caching",
+      "he": "מטמון הנחיות",
+      "d": "Storing the KV cache of a reused prompt prefix to avoid recomputing it on each request.",
+      "rel": ["kv-cache", "inference-serving"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "sparse-attention",
+      "t": "Sparse Attention",
+      "he": "קשב דליל",
+      "d": "Restricts each token to attend to a small subset of positions, reducing O(n²) cost.",
+      "rel": ["self-attention", "flash-attention"],
+      "node": "attention"
+    },
+    {
+      "id": "mixture-of-experts",
+      "t": "Mixture of Experts",
+      "he": "תערובת מומחים",
+      "d": "Routes each token to a subset of specialised sub-networks, expanding capacity cheaply.",
+      "rel": ["transformer-arch"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "data-parallelism",
+      "t": "Data Parallelism",
+      "he": "מקביליות נתונים",
+      "d": "Replicates the model across devices; each device processes a different batch shard.",
+      "rel": ["tensor-parallelism", "pipeline-parallelism"],
+      "node": "distributed-training"
+    },
+    {
+      "id": "tensor-parallelism",
+      "t": "Tensor Parallelism",
+      "he": "מקביליות טנסורים",
+      "d": "Splits individual weight matrices across devices so each holds a shard.",
+      "rel": ["data-parallelism"],
+      "node": "distributed-training"
+    },
+    {
+      "id": "pipeline-parallelism",
+      "t": "Pipeline Parallelism",
+      "he": "מקביליות צינור",
+      "d": "Distributes layers across devices; micro-batches flow through the pipeline.",
+      "rel": ["data-parallelism"],
+      "node": "distributed-training"
+    },
+    {
+      "id": "gradient-checkpointing",
+      "t": "Gradient Checkpointing",
+      "he": "שמירת נקודות גרדיאנט",
+      "d": "Recomputes activations during backward pass, trading compute for memory.",
+      "rel": ["backpropagation", "data-parallelism"],
+      "node": "distributed-training"
+    },
+    {
+      "id": "mixed-precision",
+      "t": "Mixed Precision Training",
+      "he": "אימון דיוק מעורב",
+      "d": "Uses FP16/BF16 for forward/backward and FP32 for the master copy of weights.",
+      "rel": ["gradient-descent", "gradient-checkpointing"],
+      "node": "distributed-training"
+    },
+    {
+      "id": "evaluation-metrics",
+      "t": "Evaluation Metrics",
+      "he": "מדדי הערכה",
+      "d": "Quantitative measures (BLEU, ROUGE, accuracy, F1, win-rate) for comparing model outputs.",
+      "rel": ["benchmark"],
+      "node": "evals-basics"
+    },
+    {
+      "id": "benchmark",
+      "t": "Benchmark",
+      "he": "ספסל מבחן",
+      "d": "A standardised evaluation dataset and scoring procedure for comparing models.",
+      "rel": ["evaluation-metrics"],
+      "node": "evals-basics"
+    },
+    {
+      "id": "evals",
+      "t": "Evals",
+      "he": "הערכות",
+      "d": "The practice of systematically measuring model capabilities and failure modes.",
+      "rel": ["benchmark", "evaluation-metrics"],
+      "node": "evals-basics"
+    },
+    {
+      "id": "red-teaming",
+      "t": "Red Teaming",
+      "he": "צוות אדום",
+      "d": "Adversarial testing by humans or models to surface harmful or undesired model behaviours.",
+      "rel": ["evals", "constitutional-ai"],
+      "node": "alignment"
+    },
+    {
+      "id": "multimodal",
+      "t": "Multimodal",
+      "he": "רב-מודאלי",
+      "d": "Models that jointly process and generate multiple data types (text, images, audio, video).",
+      "rel": ["vision-encoder"],
+      "node": "multimodal"
+    },
+    {
+      "id": "vision-encoder",
+      "t": "Vision Encoder",
+      "he": "מקודד ראייה",
+      "d": "Network (ViT, CLIP) that maps an image to a sequence of patch embeddings.",
+      "rel": ["multimodal", "self-attention"],
+      "node": "multimodal"
+    },
+    {
+      "id": "clip",
+      "t": "CLIP",
+      "he": "CLIP",
+      "d": "Contrastive Language-Image Pretraining: joint image-text embedding via contrastive loss.",
+      "rel": ["vision-encoder", "contrastive-loss"],
+      "node": "multimodal"
+    },
+    {
+      "id": "contrastive-loss",
+      "t": "Contrastive Loss",
+      "he": "פסד קונטרסטיבי",
+      "d": "Pulls similar pairs together and pushes dissimilar pairs apart in embedding space.",
+      "rel": ["clip", "embedding"],
+      "node": "multimodal"
+    },
+    {
+      "id": "diffusion-model",
+      "t": "Diffusion Model",
+      "he": "מודל דיפוזיה",
+      "d": "Generates data by learning to reverse a gradual Gaussian noise-addition process.",
+      "rel": ["score-matching"],
+      "node": "generative-models"
+    },
+    {
+      "id": "score-matching",
+      "t": "Score Matching",
+      "he": "התאמת ניקוד",
+      "d": "Learning the gradient of the data log-density, used as the backbone of diffusion.",
+      "rel": ["diffusion-model"],
+      "node": "generative-models"
+    },
+    {
+      "id": "vae",
+      "t": "Variational Autoencoder",
+      "he": "אוטומקודד ורייאציוני",
+      "d": "Encodes inputs to a latent distribution and decodes samples; trained with ELBO.",
+      "rel": ["encoder-decoder"],
+      "node": "generative-models"
+    },
+    {
+      "id": "gan",
+      "t": "Generative Adversarial Network",
+      "he": "רשת יריבות גנרטיבית",
+      "d": "Generator and discriminator trained adversarially; generator aims to fool the discriminator.",
+      "rel": ["diffusion-model"],
+      "node": "generative-models"
+    },
+    {
+      "id": "federated-learning",
+      "t": "Federated Learning",
+      "he": "למידה פדרלית",
+      "d": "Training across decentralised devices without sharing raw data; gradients are aggregated.",
+      "rel": ["data-parallelism"],
+      "node": "privacy-ml"
+    },
+    {
+      "id": "differential-privacy",
+      "t": "Differential Privacy",
+      "he": "פרטיות דיפרנציאלית",
+      "d": "Adds calibrated noise to gradients or outputs to bound information leakage about individuals.",
+      "rel": ["federated-learning"],
+      "node": "privacy-ml"
+    },
+    {
+      "id": "model-card",
+      "t": "Model Card",
+      "he": "כרטיס מודל",
+      "d": "Structured documentation of a model's intended use, limitations, and evaluation results.",
+      "rel": ["evals", "red-teaming"],
+      "node": "alignment"
+    },
+    {
+      "id": "inference-latency",
+      "t": "Inference Latency",
+      "he": "זמן תגובת הסקה",
+      "d": "Time to first token (TTFT) and time between tokens (TBT); critical UX metrics.",
+      "rel": ["inference-serving", "speculative-decoding"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "throughput",
+      "t": "Throughput",
+      "he": "תפוקה",
+      "d": "Tokens or requests processed per second; trades off with latency under batching.",
+      "rel": ["inference-latency", "inference-serving"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "sparse-retrieval",
+      "t": "Sparse Retrieval",
+      "he": "אחזור דליל",
+      "d": "BM25 and TF-IDF: lexical matching using inverted indexes; fast and interpretable.",
+      "rel": ["dense-retrieval", "rag"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "hybrid-search",
+      "t": "Hybrid Search",
+      "he": "חיפוש היברידי",
+      "d": "Combines dense and sparse retrieval scores (via RRF or linear interpolation) for best recall.",
+      "rel": ["dense-retrieval", "sparse-retrieval"],
+      "node": "rag-advanced"
+    },
+    {
+      "id": "query-expansion",
+      "t": "Query Expansion",
+      "he": "הרחבת שאילתה",
+      "d": "Augmenting the query with related terms or generated hypothetical answers to improve recall.",
+      "rel": ["hybrid-search", "rag"],
+      "node": "rag-advanced"
+    },
+    {
+      "id": "metadata-filtering",
+      "t": "Metadata Filtering",
+      "he": "סינון מטא-נתונים",
+      "d": "Restricting retrieval to documents matching structured predicates (date, author, tag).",
+      "rel": ["dense-retrieval", "hybrid-search"],
+      "node": "rag-advanced"
+    },
+    {
+      "id": "multi-hop-rag",
+      "t": "Multi-Hop Retrieval",
+      "he": "אחזור רב-קפיצה",
+      "d": "Chaining retrieval steps: the answer to one sub-query seeds the next retrieval.",
+      "rel": ["rag", "query-expansion"],
+      "node": "rag-advanced"
+    },
+    {
+      "id": "document-store",
+      "t": "Document Store",
+      "he": "מאגר מסמכים",
+      "d": "Persistent store for chunks and their metadata, backing a retrieval system (Elasticsearch, pgvector).",
+      "rel": ["dense-retrieval", "sparse-retrieval"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "vector-db",
+      "t": "Vector Database",
+      "he": "מסד נתוני וקטורים",
+      "d": "Specialised store that indexes and queries high-dimensional embedding vectors (Pinecone, Weaviate).",
+      "rel": ["ann", "document-store"],
+      "node": "rag-basics"
+    },
+    {
+      "id": "caching-layer",
+      "t": "Caching Layer",
+      "he": "שכבת מטמון",
+      "d": "Stores recent or frequent results to avoid redundant computation or retrieval.",
+      "rel": ["prompt-caching", "inference-serving"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "token-budget",
+      "t": "Token Budget",
+      "he": "תקציב טוקנים",
+      "d": "Hard limit on how many tokens a request or generation may consume, for cost and safety.",
+      "rel": ["context-window", "inference-latency"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "system-prompt",
+      "t": "System Prompt",
+      "he": "הנחיית מערכת",
+      "d": "Instructions prepended before the conversation that shape the model's behaviour and persona.",
+      "rel": ["prompt-engineering", "token-budget"],
+      "node": "prompting"
+    },
+    {
+      "id": "tool-schema",
+      "t": "Tool Schema",
+      "he": "סכמת כלי",
+      "d": "JSON Schema describing a function's name, parameters and types for LLM function-calling.",
+      "rel": ["function-calling", "tool-use"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "orchestrator",
+      "t": "Orchestrator",
+      "he": "מתזמר",
+      "d": "Component that plans high-level tasks and delegates subtasks to specialised agents or tools.",
+      "rel": ["agent-loop", "react-pattern"],
+      "node": "agents-multi"
+    },
+    {
+      "id": "subagent",
+      "t": "Subagent",
+      "he": "תת-סוכן",
+      "d": "An agent spawned by an orchestrator to execute a bounded, well-defined subtask.",
+      "rel": ["orchestrator", "agent-loop"],
+      "node": "agents-multi"
+    },
+    {
+      "id": "memory-module",
+      "t": "Memory Module",
+      "he": "מודול זיכרון",
+      "d": "Component giving an agent persistent storage: episodic, semantic or working memory.",
+      "rel": ["agent-loop", "rag"],
+      "node": "agents-multi"
+    },
+    {
+      "id": "state-machine",
+      "t": "State Machine",
+      "he": "מכונת מצבים",
+      "d": "Explicit representation of agent states and transitions, adding predictability to complex flows.",
+      "rel": ["agent-loop", "orchestrator"],
+      "node": "agents-multi"
+    },
+    {
+      "id": "parallel-tool-calls",
+      "t": "Parallel Tool Calls",
+      "he": "קריאות כלים מקבילות",
+      "d": "Issuing multiple tool calls in one model turn to reduce round-trip latency.",
+      "rel": ["tool-use", "inference-latency"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "prompt-injection",
+      "t": "Prompt Injection",
+      "he": "הזרקת הנחיות",
+      "d": "Attack where malicious text in retrieved content overrides the system prompt's intent.",
+      "rel": ["system-prompt", "rag"],
+      "node": "alignment"
+    },
+    {
+      "id": "jailbreak",
+      "t": "Jailbreak",
+      "he": "שבירת מגבלות",
+      "d": "Adversarial prompts that bypass safety guardrails, eliciting restricted model behaviour.",
+      "rel": ["red-teaming", "prompt-injection"],
+      "node": "alignment"
+    },
+    {
+      "id": "safety-filter",
+      "t": "Safety Filter",
+      "he": "מסנן בטיחות",
+      "d": "Post-hoc classifier or guardrail layer that blocks harmful model outputs.",
+      "rel": ["red-teaming", "constitutional-ai"],
+      "node": "alignment"
+    },
+    {
+      "id": "sparse-mixture-experts",
+      "t": "Sparse Mixture of Experts",
+      "he": "תערובת מומחים דלילה",
+      "d": "MoE with a top-k gating function activating only k of N experts per token.",
+      "rel": ["mixture-of-experts"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "retrieval-eval",
+      "t": "Retrieval Evaluation",
+      "he": "הערכת אחזור",
+      "d": "Metrics like recall@k, MRR and nDCG measuring how well retrieved docs match ground truth.",
+      "rel": ["evals", "dense-retrieval"],
+      "node": "evals-basics"
+    },
+    {
+      "id": "generation-eval",
+      "t": "Generation Evaluation",
+      "he": "הערכת יצירה",
+      "d": "Metrics for LLM output quality: faithfulness, answer relevance, coherence, fluency.",
+      "rel": ["evals", "rag"],
+      "node": "evals-basics"
+    },
+    {
+      "id": "confidence-calibration",
+      "t": "Confidence Calibration",
+      "he": "כיול אמינות",
+      "d": "A well-calibrated model's stated confidence matches its empirical accuracy.",
+      "rel": ["evaluation-metrics"],
+      "node": "evals-basics"
+    },
+    {
+      "id": "curriculum-learning",
+      "t": "Curriculum Learning",
+      "he": "למידה מתכנית לימודים",
+      "d": "Training on examples ordered from easy to hard to improve sample efficiency.",
+      "rel": ["fine-tuning", "data-parallelism"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "data-augmentation",
+      "t": "Data Augmentation",
+      "he": "הגדלת נתונים",
+      "d": "Synthetically expanding training data via transformations to improve generalisation.",
+      "rel": ["curriculum-learning"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "overfit",
+      "t": "Overfitting",
+      "he": "התאמת יתר",
+      "d": "Model memorises training data and fails to generalise to unseen examples.",
+      "rel": ["regularization", "data-augmentation"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "underfit",
+      "t": "Underfitting",
+      "he": "חסר-התאמה",
+      "d": "Model is too simple to capture the data's structure; both train and test error are high.",
+      "rel": ["overfit"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "bias-variance",
+      "t": "Bias-Variance Trade-off",
+      "he": "פשרת הטיה-שונות",
+      "d": "High bias → underfit; high variance → overfit. Optimal model balances both.",
+      "rel": ["overfit", "underfit"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "cross-entropy-loss",
+      "t": "Cross-Entropy Loss",
+      "he": "פסד אנטרופיה צולבת",
+      "d": "Standard classification loss: -Σ y log p̂; used for next-token prediction.",
+      "rel": ["language-model", "backpropagation"],
+      "node": "dl-building-blocks"
+    },
+    {
+      "id": "weight-tying",
+      "t": "Weight Tying",
+      "he": "קשירת משקלים",
+      "d": "Sharing the embedding matrix between the input and output projection in LMs.",
+      "rel": ["vocabulary", "language-model"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "rope",
+      "t": "Rotary Position Embedding",
+      "he": "הטמעת מיקום רוטציה",
+      "d": "Encodes position via rotation matrices applied to Q and K; extrapolates to unseen lengths.",
+      "rel": ["positional-encoding", "self-attention"],
+      "node": "attention"
+    },
+    {
+      "id": "grouped-query-attention",
+      "t": "Grouped-Query Attention",
+      "he": "קשב שאילתה מקובץ",
+      "d": "Shares K/V heads across groups of Q heads, reducing KV cache size with little quality loss.",
+      "rel": ["multi-head-attention", "kv-cache"],
+      "node": "attention"
+    },
+    {
+      "id": "sliding-window-attention",
+      "t": "Sliding Window Attention",
+      "he": "קשב חלון הזזה",
+      "d": "Each token attends to only the w nearest tokens; O(n·w) instead of O(n²).",
+      "rel": ["sparse-attention"],
+      "node": "attention"
+    },
+    {
+      "id": "mamba",
+      "t": "Mamba",
+      "he": "מאמבה",
+      "d": "State-space model with selective state updates; linear inference cost vs quadratic attention.",
+      "rel": ["transformer-arch"],
+      "node": "language-modeling"
+    },
+    {
+      "id": "icl",
+      "t": "In-Context Learning",
+      "he": "למידה בהקשר",
+      "d": "Model adapts to a task from examples in the prompt without any weight updates.",
+      "rel": ["few-shot", "prompt-engineering"],
+      "node": "prompting"
+    },
+    {
+      "id": "dpo",
+      "t": "Direct Preference Optimisation",
+      "he": "אופטימיזציה ישירה של העדפות",
+      "d": "Fine-tunes an LM on preference pairs without an explicit reward model, via a closed-form loss.",
+      "rel": ["rlhf", "fine-tuning"],
+      "node": "alignment"
+    },
+    {
+      "id": "orpo",
+      "t": "ORPO",
+      "he": "ORPO",
+      "d": "Odds Ratio Preference Optimisation: single-stage alignment without a reference model.",
+      "rel": ["dpo", "rlhf"],
+      "node": "alignment"
+    },
+    {
+      "id": "sft",
+      "t": "Supervised Fine-Tuning",
+      "he": "כיוון עדין מפוקח",
+      "d": "Fine-tuning on demonstration pairs (input, output) with cross-entropy loss.",
+      "rel": ["fine-tuning", "rlhf"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "instruction-tuning",
+      "t": "Instruction Tuning",
+      "he": "כיוון עדין להוראות",
+      "d": "SFT on (instruction, response) pairs to make models follow natural-language directives.",
+      "rel": ["sft", "prompt-engineering"],
+      "node": "fine-tuning"
+    },
+    {
+      "id": "tool-augmented-llm",
+      "t": "Tool-Augmented LLM",
+      "he": "LLM מוגבר כלים",
+      "d": "An LLM integrated with external tools (search, code interpreter, calculators) at inference.",
+      "rel": ["tool-use", "agent-loop"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "code-interpreter",
+      "t": "Code Interpreter",
+      "he": "מפרש קוד",
+      "d": "Sandboxed execution environment that runs LLM-generated code and returns results.",
+      "rel": ["tool-use", "tool-augmented-llm"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "web-search-tool",
+      "t": "Web Search Tool",
+      "he": "כלי חיפוש ברשת",
+      "d": "Tool that queries a search engine and returns snippets for LLM grounding.",
+      "rel": ["tool-use", "rag"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "mcp-resource",
+      "t": "MCP Resource",
+      "he": "משאב MCP",
+      "d": "A URI-addressable data source (file, DB row, API endpoint) exposed by an MCP server.",
+      "rel": ["mcp-protocol"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "mcp-tool",
+      "t": "MCP Tool",
+      "he": "כלי MCP",
+      "d": "A callable function exposed by an MCP server, schema-described, invoked by the model.",
+      "rel": ["mcp-protocol", "tool-schema"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "mcp-sampling",
+      "t": "MCP Sampling",
+      "he": "דגימת MCP",
+      "d": "MCP server requests that the client LLM generate text; inverts control for agentic workflows.",
+      "rel": ["mcp-protocol", "mcp-tool"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "cot-with-tools",
+      "t": "CoT with Tools",
+      "he": "שרשרת מחשבה עם כלים",
+      "d": "Interleaving chain-of-thought reasoning steps with tool calls in a single agent turn.",
+      "rel": ["chain-of-thought", "tool-use"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "task-decomposition",
+      "t": "Task Decomposition",
+      "he": "פירוק משימה",
+      "d": "Breaking a complex task into subtasks an agent or orchestrator can tackle sequentially.",
+      "rel": ["orchestrator", "react-pattern"],
+      "node": "agents-multi"
+    },
+    {
+      "id": "plan-and-execute",
+      "t": "Plan-and-Execute",
+      "he": "תכנון וביצוע",
+      "d": "Agent first generates a full plan, then executes steps, re-planning when blocked.",
+      "rel": ["task-decomposition", "orchestrator"],
+      "node": "agents-multi"
+    },
+    {
+      "id": "tool-selection",
+      "t": "Tool Selection",
+      "he": "בחירת כלי",
+      "d": "Model decision of which tool to call given context; quality depends on prompt and schema clarity.",
+      "rel": ["tool-schema", "function-calling"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "observation-action",
+      "t": "Observation-Action Loop",
+      "he": "לולאת תצפית-פעולה",
+      "d": "Each agent step receives an observation (tool result) and emits the next action.",
+      "rel": ["react-pattern", "agent-loop"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "token-streaming",
+      "t": "Token Streaming",
+      "he": "הזרמת טוקנים",
+      "d": "Sending generated tokens to the client as they are produced, reducing perceived latency.",
+      "rel": ["autoregressive", "inference-latency"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "batching-strategy",
+      "t": "Batching Strategy",
+      "he": "אסטרטגיית אצוות",
+      "d": "Continuous or dynamic batching groups requests to maximise GPU utilisation.",
+      "rel": ["throughput", "inference-serving"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "prefix-sharing",
+      "t": "Prefix Sharing",
+      "he": "שיתוף קידומת",
+      "d": "Multiple requests with the same system prompt share one KV cache copy.",
+      "rel": ["prompt-caching", "batching-strategy"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "model-routing",
+      "t": "Model Routing",
+      "he": "ניתוב מודל",
+      "d": "Directing easy queries to small cheap models and hard ones to larger expensive models.",
+      "rel": ["inference-serving", "knowledge-distillation"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "latency-budget",
+      "t": "Latency Budget",
+      "he": "תקציב זמן תגובה",
+      "d": "Maximum allowable end-to-end time for a request, allocated across retrieval, inference, postprocessing.",
+      "rel": ["inference-latency", "token-budget"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "rate-limiting",
+      "t": "Rate Limiting",
+      "he": "הגבלת קצב",
+      "d": "Throttling API requests per token or per time window to manage cost and abuse.",
+      "rel": ["token-budget", "inference-serving"],
+      "node": "mlops-serving"
+    },
+    {
+      "id": "sysdesign-availability",
+      "t": "Availability",
+      "he": "זמינות",
+      "d": "Fraction of time a system is operational and serving requests correctly.",
+      "rel": ["fault-tolerance", "replication"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "fault-tolerance",
+      "t": "Fault Tolerance",
+      "he": "סובלנות לתקלות",
+      "d": "Ability of a system to continue operating correctly when components fail.",
+      "rel": ["sysdesign-availability", "replication"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "replication",
+      "t": "Replication",
+      "he": "רפליקציה",
+      "d": "Maintaining copies of data or services on multiple nodes to increase availability and durability.",
+      "rel": ["fault-tolerance", "consistency"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "consistency",
+      "t": "Consistency",
+      "he": "עקביות",
+      "d": "All nodes see the same data at the same time (strong), or eventually converge (eventual).",
+      "rel": ["replication", "cap-theorem"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "cap-theorem",
+      "t": "CAP Theorem",
+      "he": "משפט CAP",
+      "d": "A distributed system can guarantee at most two of Consistency, Availability, Partition Tolerance.",
+      "rel": ["consistency", "sysdesign-availability"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "sharding",
+      "t": "Sharding",
+      "he": "שיבוץ לרסיסים",
+      "d": "Horizontally partitioning data across nodes so each holds a subset.",
+      "rel": ["replication", "hash-ring"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "hash-ring",
+      "t": "Consistent Hashing",
+      "he": "גיבוב עקבי",
+      "d": "Maps keys and nodes onto a ring so only k/n keys remap when a node joins or leaves.",
+      "rel": ["sharding"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "load-balancer",
+      "t": "Load Balancer",
+      "he": "מאזן עומסים",
+      "d": "Distributes incoming requests across backend instances; layer-4 (TCP) or layer-7 (HTTP).",
+      "rel": ["fault-tolerance", "sysdesign-availability"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "cdn",
+      "t": "Content Delivery Network",
+      "he": "רשת הפצת תוכן",
+      "d": "Geographically distributed caches that serve static assets close to the user.",
+      "rel": ["load-balancer", "caching-layer"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "message-queue",
+      "t": "Message Queue",
+      "he": "תור הודעות",
+      "d": "Durable buffer decoupling producers from consumers; Kafka, SQS, RabbitMQ.",
+      "rel": ["event-driven", "backpressure"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "event-driven",
+      "t": "Event-Driven Architecture",
+      "he": "ארכיטקטורה מונעת אירועים",
+      "d": "Components communicate by producing and consuming events, loosely coupled.",
+      "rel": ["message-queue"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "backpressure",
+      "t": "Backpressure",
+      "he": "לחץ נגדי",
+      "d": "Signal propagated upstream when a consumer is overwhelmed, slowing producers.",
+      "rel": ["message-queue"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "circuit-breaker",
+      "t": "Circuit Breaker",
+      "he": "מנתק מעגל",
+      "d": "Stops requests to a failing service after a threshold and retries after a cool-down.",
+      "rel": ["fault-tolerance"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "rate-limiting-pattern",
+      "t": "Rate Limiting Pattern",
+      "he": "תבנית הגבלת קצב",
+      "d": "Token bucket or leaky bucket algorithm to cap request rates per client.",
+      "rel": ["rate-limiting", "circuit-breaker"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "api-gateway",
+      "t": "API Gateway",
+      "he": "שער API",
+      "d": "Single entry point for microservices: routing, auth, rate limiting, logging.",
+      "rel": ["load-balancer", "rate-limiting-pattern"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "service-mesh",
+      "t": "Service Mesh",
+      "he": "רשת שירותים",
+      "d": "Infra layer (Istio, Linkerd) handling service-to-service communication, telemetry, auth.",
+      "rel": ["api-gateway", "fault-tolerance"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "idempotency",
+      "t": "Idempotency",
+      "he": "אידמפוטנטיות",
+      "d": "An operation that can be retried safely: applying it multiple times yields the same result.",
+      "rel": ["fault-tolerance", "event-driven"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "two-phase-commit",
+      "t": "Two-Phase Commit",
+      "he": "אישור דו-שלבי",
+      "d": "Distributed protocol ensuring all participants commit or all abort a transaction.",
+      "rel": ["consistency", "fault-tolerance"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "saga-pattern",
+      "t": "Saga Pattern",
+      "he": "תבנית SAGA",
+      "d": "Chains local transactions with compensating transactions on failure, avoiding 2PC.",
+      "rel": ["two-phase-commit", "event-driven"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "cqrs",
+      "t": "CQRS",
+      "he": "CQRS",
+      "d": "Command Query Responsibility Segregation: separate models for reads and writes.",
+      "rel": ["event-driven", "replication"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "event-sourcing",
+      "t": "Event Sourcing",
+      "he": "מקור אירועים",
+      "d": "Persisting state as an immutable log of events; current state is derived by replaying.",
+      "rel": ["cqrs", "message-queue"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "write-ahead-log",
+      "t": "Write-Ahead Log",
+      "he": "יומן כתיבה מקדימה",
+      "d": "Durably logs changes before applying them, enabling crash recovery and replication.",
+      "rel": ["event-sourcing", "replication"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "bloom-filter",
+      "t": "Bloom Filter",
+      "he": "פילטר בלום",
+      "d": "Space-efficient probabilistic set membership: false positives possible, false negatives not.",
+      "rel": ["hash-ring"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "b-tree",
+      "t": "B-Tree",
+      "he": "עץ-B",
+      "d": "Self-balancing tree with high branching factor; underpins most relational DB indexes.",
+      "rel": ["lsm-tree"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "lsm-tree",
+      "t": "LSM Tree",
+      "he": "עץ LSM",
+      "d": "Log-Structured Merge Tree: writes go to an in-memory buffer, flushed as immutable SSTables.",
+      "rel": ["b-tree", "write-ahead-log"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "column-store",
+      "t": "Column Store",
+      "he": "מאגר עמודות",
+      "d": "Stores each column contiguously on disk; excellent for analytical scans, poor for point writes.",
+      "rel": ["lsm-tree", "b-tree"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "olap-oltp",
+      "t": "OLAP vs OLTP",
+      "he": "OLAP מול OLTP",
+      "d": "Online Analytical Processing (aggregations, wide scans) vs Online Transactional Processing (point reads/writes).",
+      "rel": ["column-store", "b-tree"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "geo-distributed",
+      "t": "Geo-Distributed System",
+      "he": "מערכת מופצת גיאוגרפית",
+      "d": "Data and compute replicated across geographic regions for latency and disaster recovery.",
+      "rel": ["replication", "consistency"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "object-storage",
+      "t": "Object Storage",
+      "he": "אחסון אובייקטים",
+      "d": "Flat-namespace key-value store for large blobs (S3, GCS); high throughput, eventual consistency.",
+      "rel": ["replication"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "time-series-db",
+      "t": "Time-Series Database",
+      "he": "מסד נתוני סדרות זמן",
+      "d": "Optimised for append-mostly timestamped data: InfluxDB, TimescaleDB, Prometheus.",
+      "rel": ["lsm-tree", "column-store"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "graph-db",
+      "t": "Graph Database",
+      "he": "מסד נתוני גרף",
+      "d": "Stores entities as nodes and relationships as edges; efficient traversal (Neo4j, Neptune).",
+      "rel": ["b-tree"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "search-index",
+      "t": "Search Index",
+      "he": "אינדקס חיפוש",
+      "d": "Inverted index mapping terms to document lists, the core of Elasticsearch and Solr.",
+      "rel": ["sparse-retrieval", "document-store"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "cache-eviction",
+      "t": "Cache Eviction",
+      "he": "פינוי מטמון",
+      "d": "Policy for removing items when cache is full: LRU, LFU, FIFO, ARC.",
+      "rel": ["caching-layer"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "cdn-cache-invalidation",
+      "t": "Cache Invalidation",
+      "he": "ביטול מטמון",
+      "d": "Mechanism to expire stale cached content: TTL, event-based purge, surrogate keys.",
+      "rel": ["cdn", "cache-eviction"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "schema-registry",
+      "t": "Schema Registry",
+      "he": "רישום סכמה",
+      "d": "Central store for message schemas (Avro/Protobuf) enabling producer-consumer compatibility.",
+      "rel": ["message-queue", "event-sourcing"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "stream-processing",
+      "t": "Stream Processing",
+      "he": "עיבוד זרם",
+      "d": "Processing events as they arrive with low latency: Kafka Streams, Flink, Spark Streaming.",
+      "rel": ["message-queue", "event-driven"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "batch-processing",
+      "t": "Batch Processing",
+      "he": "עיבוד אצווה",
+      "d": "Processing large volumes of data at scheduled intervals: Spark, Hadoop MapReduce.",
+      "rel": ["stream-processing"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "lambda-architecture",
+      "t": "Lambda Architecture",
+      "he": "ארכיטקטורת לאמדה",
+      "d": "Combines batch and stream layers: batch for accuracy, speed layer for freshness.",
+      "rel": ["batch-processing", "stream-processing"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "url-shortener",
+      "t": "URL Shortener",
+      "he": "מקצר URL",
+      "d": "Service that maps a short key to a long URL via a redirect, with high read:write ratio.",
+      "rel": ["hash-ring", "b-tree"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "rate-limiter-sysdesign",
+      "t": "Rate Limiter System Design",
+      "he": "עיצוב מערכת הגבלת קצב",
+      "d": "Distributed rate limiter using Redis INCR with TTL or token-bucket in a central store.",
+      "rel": ["rate-limiting-pattern", "replication"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "notification-system",
+      "t": "Notification System",
+      "he": "מערכת הודעות",
+      "d": "Fan-out service routing alerts to push, email, SMS channels via async queues.",
+      "rel": ["message-queue", "event-driven"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "news-feed",
+      "t": "News Feed System",
+      "he": "מערכת פיד חדשות",
+      "d": "Fan-out-on-write (celebrity: fan-out-on-read) delivering posts to follower timelines.",
+      "rel": ["message-queue", "caching-layer"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "typeahead",
+      "t": "Typeahead / Autocomplete",
+      "he": "השלמה אוטומטית",
+      "d": "Returns top-k completions for a prefix in <100 ms using trie or inverted index + cache.",
+      "rel": ["search-index", "caching-layer"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "web-crawler",
+      "t": "Web Crawler",
+      "he": "סורק אינטרנט",
+      "d": "Distributed system fetching and indexing web pages: frontier queue, DNS cache, dedup bloom filter.",
+      "rel": ["message-queue", "bloom-filter"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "payment-system",
+      "t": "Payment System",
+      "he": "מערכת תשלומים",
+      "d": "Requires exactly-once semantics, idempotency keys, reconciliation and ledger append-only writes.",
+      "rel": ["idempotency", "two-phase-commit"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "booking-system",
+      "t": "Booking System",
+      "he": "מערכת הזמנות",
+      "d": "Concurrency challenge: prevent double-booking via distributed locks or optimistic concurrency.",
+      "rel": ["two-phase-commit", "idempotency"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "video-streaming",
+      "t": "Video Streaming",
+      "he": "הזרמת וידאו",
+      "d": "Encode at multiple bitrates, store in object storage, serve via CDN, adapt via HLS/DASH.",
+      "rel": ["cdn", "object-storage"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "live-streaming",
+      "t": "Live Streaming",
+      "he": "שידור חי",
+      "d": "RTMP ingest → WebRTC or HLS with 2–5 s latency; transcoding at edge for multi-bitrate.",
+      "rel": ["video-streaming", "cdn"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "metrics-pipeline",
+      "t": "Metrics Pipeline",
+      "he": "צינור מדדים",
+      "d": "Collects, aggregates and stores time-series metrics: Prometheus scrape → remote_write → Thanos.",
+      "rel": ["time-series-db", "stream-processing"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "distributed-lock",
+      "t": "Distributed Lock",
+      "he": "נעילה מבוזרת",
+      "d": "Mutual exclusion across nodes: Redlock (Redis), ZooKeeper, etcd; each with trade-offs.",
+      "rel": ["booking-system", "fault-tolerance"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "leader-election",
+      "t": "Leader Election",
+      "he": "בחירת מוביל",
+      "d": "Single node acts as coordinator; Raft or ZooKeeper ZAB ensure consensus on leader identity.",
+      "rel": ["distributed-lock", "consistency"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "gossip-protocol",
+      "t": "Gossip Protocol",
+      "he": "פרוטוקול רכילות",
+      "d": "Nodes propagate state to random peers; eventually consistent, robust to failures.",
+      "rel": ["consistency", "fault-tolerance"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "quorum",
+      "t": "Quorum",
+      "he": "קוורום",
+      "d": "W + R > N ensures that at least one node has the latest write; trades availability for consistency.",
+      "rel": ["replication", "consistency"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "vector-clock",
+      "t": "Vector Clock",
+      "he": "שעון וקטור",
+      "d": "Logical timestamps that capture causal ordering between events in a distributed system.",
+      "rel": ["consistency", "gossip-protocol"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "task-queue",
+      "t": "Task Queue",
+      "he": "תור משימות",
+      "d": "Workers pull jobs from a queue (Celery, BullMQ) for async background processing.",
+      "rel": ["message-queue", "backpressure"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "durable-execution",
+      "t": "Durable Execution",
+      "he": "ביצוע עמיד",
+      "d": "Framework (Temporal, Durable Functions) that persists workflow state so crashes are transparent.",
+      "rel": ["task-queue", "event-sourcing"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "chaos-engineering",
+      "t": "Chaos Engineering",
+      "he": "הנדסת כאוס",
+      "d": "Intentionally injecting failures to verify system resilience and fault-tolerance.",
+      "rel": ["fault-tolerance", "circuit-breaker"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "slo-sla",
+      "t": "SLO / SLA",
+      "he": "SLO / SLA",
+      "d": "Service-Level Objective (internal target) and Service-Level Agreement (contractual promise).",
+      "rel": ["sysdesign-availability", "metrics-pipeline"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "sre",
+      "t": "Site Reliability Engineering",
+      "he": "הנדסת אמינות אתר",
+      "d": "Applies software engineering to operations: error budgets, toil reduction, blameless post-mortems.",
+      "rel": ["slo-sla", "chaos-engineering"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-mcp-capability-neg",
+      "t": "MCP Capability Negotiation",
+      "he": "משא ומתן על יכולות MCP",
+      "d": "Client and server exchange supported feature sets at initialization so both sides adapt gracefully.",
+      "rel": ["mcp-protocol"],
+      "node": "agents-loop"
+    },
+    {
+      "id": "nearby-friends",
+      "t": "Nearby Friends System",
+      "he": "מערכת חברים בסביבה",
+      "d": "מערכת שמציגה חברים גיאוגרפיים בזמן אמת. מבוססת geohash לחיפוש שכנות, Redis GEOADD לאחסון, Kafka ל-event streaming ו-WebSocket לדחיפה.",
+      "rel": ["redis-geospatial"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "redis-geospatial",
+      "t": "Redis Geospatial",
+      "he": "Redis גיאוגרפי",
+      "d": "Redis Sorted Set שמקודד קואורדינטות כ-geohash. GEOADD מוסיף נקודה, GEOSEARCH מחזיר כל מה שבתוך radius. O(log n) על N משתמשים.",
+      "rel": ["nearby-friends"],
+      "node": "sysdesign"
+    },
+    {
+      "id": "location-service",
+      "t": "Location Service",
+      "he": "שירות מיקום",
+      "d": "שירות שמקבל עדכוני GPS ממכשירים, מחשב geohash, מעדכן Redis ו-Cassandra, ומפרסם events ל-Kafka. TTL קצר ב-Redis כדי שמשתמשים לא פעילים לא יופיעו בתוצאות.",
+      "rel": ["nearby-friends", "redis-geospatial"],
+      "node": "sysdesign"
+    }
+  ],
+  "items": [

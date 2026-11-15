@@ -7737,6 +7737,105 @@
         "c-geohash"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-discrete-distribution",
+      "t": "Discrete Distribution",
+      "he": "התפלגות בדידה",
+      "d": "התפלגות על קבוצת ערכים ספירים. P(X=k) מוגדר ישירות דרך PMF. סכום כל ההסתברויות שווה 1.",
+      "rel": [
+        "c-pmf",
+        "c-bernoulli-dist",
+        "c-binomial-dist",
+        "c-poisson-dist"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-continuous-distribution",
+      "t": "Continuous Distribution",
+      "he": "התפלגות רציפה",
+      "d": "התפלגות על continuum. הסיכוי לנקודה מדויקת הוא 0; הסיכוי לרצועה הוא אינטגרל ה-PDF.",
+      "rel": [
+        "c-pdf",
+        "c-normal-dist"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-pmf",
+      "t": "PMF (Probability Mass Function)",
+      "he": "פונקציית מסה הסתברותית",
+      "d": "P(X=k) לכל ערך בדיד k. תקינה כשסכומה 1.",
+      "rel": [
+        "c-discrete-distribution"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-pdf",
+      "t": "PDF (Probability Density Function)",
+      "he": "פונקציית צפיפות הסתברות",
+      "d": "הצפיפות f(x) בנקודה x. הסיכוי לרצועה [a,b] הוא האינטגרל, לא הצפיפות עצמה.",
+      "rel": [
+        "c-continuous-distribution"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-cdf",
+      "t": "CDF (Cumulative Distribution Function)",
+      "he": "פונקציית התפלגות מצטברת",
+      "d": "F(x) = P(X<=x). עולה מ-0 ל-1. תקינה לחישוב percentiles וסיכויי tail.",
+      "rel": [
+        "c-pmf",
+        "c-pdf"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-bernoulli-dist",
+      "t": "Bernoulli Distribution",
+      "he": "התפלגות ברנולי",
+      "d": "ניסוי בינארי יחיד עם פרמטר p. תוחלת p, שונות p(1-p). בסיס לבינומיאלית.",
+      "rel": [
+        "c-discrete-distribution",
+        "c-binomial-dist"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-binomial-dist",
+      "t": "Binomial Distribution",
+      "he": "התפלגות בינומיאלית",
+      "d": "סכום n ניסויי Bernoulli עצמאיים. P(X=k)=C(n,k)*p^k*(1-p)^(n-k). תוחלת np, שונות np(1-p).",
+      "rel": [
+        "c-bernoulli-dist",
+        "c-discrete-distribution"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-normal-dist",
+      "t": "Normal Distribution",
+      "he": "התפלגות נורמלית (גאוסיאנית)",
+      "d": "התפלגות רציפה סימטרית עם פרמטרים μ ו-σ². כלל 68-95-99.7. נפוצה בטבע בזכות ה-CLT.",
+      "rel": [
+        "c-continuous-distribution",
+        "c-pdf"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-poisson-dist",
+      "t": "Poisson Distribution",
+      "he": "התפלגות פואסון",
+      "d": "ספירת אירועים נדירים ביחידת זמן. פרמטר λ. תוחלת ושונות שוות ל-λ. P(X=k)=λ^k*e^-λ/k!",
+      "rel": [
+        "c-discrete-distribution",
+        "c-pmf"
+      ],
+      "node": "prob-stats"
     }
   ]
 }

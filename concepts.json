@@ -7836,6 +7836,69 @@
         "c-pmf"
       ],
       "node": "prob-stats"
+    },
+    {
+      "id": "c-map-tile",
+      "t": "Map tile",
+      "he": "אריח מפה",
+      "d": "ריבוע תמונה 256×256 פיקסלים של המפה; המפה כולה מחולקת לרשת tiles בכל zoom level",
+      "rel": [
+        "c-vector-tile",
+        "c-zoom-level"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-vector-tile",
+      "t": "Vector tile",
+      "he": "אריח וקטורי",
+      "d": "tile המכיל גאומטריה (קווים, פוליגונים) שהלקוח מרנדר; קטן פי 4-20 מ-PNG raster ומאפשר smooth zoom",
+      "rel": [
+        "c-map-tile"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-zoom-level",
+      "t": "Zoom level",
+      "he": "רמת הגדלה",
+      "d": "ב-zoom z יש 4^z tiles; zoom 0 = עולם כולו, zoom 15 = שכונה. כל zoom level מכפיל מספר tiles ב-4",
+      "rel": [
+        "c-map-tile"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-contraction-hierarchies",
+      "t": "Contraction Hierarchies",
+      "he": "היררכיות כיווץ",
+      "d": "precomputation לגרף כבישים שמוסיף shortcuts ומאפשר bi-directional A* בזמן מילישניות על גרפים של מיליארד קשתות",
+      "rel": [
+        "c-road-graph",
+        "c-time-dependent-routing"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-road-graph",
+      "t": "Road graph",
+      "he": "גרף כבישים",
+      "d": "גרף מכוון שצמתיו הם צמתות כביש וקשתותיו הן מקטעי כביש עם משקל (זמן נסיעה צפוי)",
+      "rel": [
+        "c-contraction-hierarchies"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-time-dependent-routing",
+      "t": "Time-dependent routing",
+      "he": "ניווט תלוי-זמן",
+      "d": "לכל קשת בגרף הכבישים שומרים פרופיל מהירות לפי שעה, יום, חגים; מאפשר ETA מדויק לפי שעת היציאה",
+      "rel": [
+        "c-contraction-hierarchies",
+        "c-road-graph"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

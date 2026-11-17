@@ -7899,6 +7899,60 @@
         "c-road-graph"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-mq-partition",
+      "t": "Partition",
+      "he": "מחיצה",
+      "d": "append-only log בתוך topic; מבטיח FIFO בתוך עצמו; יחידת parallelism של consumer group",
+      "rel": [
+        "message-queue-arch",
+        "c-mq-offset"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-mq-offset",
+      "t": "Offset",
+      "he": "אופסט",
+      "d": "מספר שלם עולה שמסמן מיקום הודעה בתוך partition; consumer שומר committed offset להמשך אחרי crash",
+      "rel": [
+        "c-mq-partition"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-consumer-group",
+      "t": "Consumer Group",
+      "he": "קבוצת צרכנים",
+      "d": "קבוצת processes שחולקות partition-ים; כל partition מוקצה לצרכן אחד בלבד לאיזון עומס",
+      "rel": [
+        "message-queue-arch",
+        "c-mq-partition"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-mq-broker",
+      "t": "Message Broker",
+      "he": "מתווך הודעות",
+      "d": "שרת שמחזיק partitions על disk, מנהל replication ומשמש כנקודת כניסה ל-producers ו-consumers",
+      "rel": [
+        "message-queue-arch",
+        "c-mq-partition"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "c-mq-replication",
+      "t": "Replication Factor",
+      "he": "גורם שכפול",
+      "d": "מספר העותקים של כל partition על brokers שונים; factor=3 שורד נפילת 2 brokers ללא אובדן data",
+      "rel": [
+        "c-mq-broker",
+        "c-mq-partition"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

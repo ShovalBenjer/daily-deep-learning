@@ -113,3 +113,5 @@ print(np.var(samples, ddof=1))# ~2.9, ddof=1 (unbiased)
 ```quiz
 {"id":"u-m6-expectation-variance-q2","tree":"systems","skill":"ml-classic","q":"X מקבל ערכים 0 ו-2 בהסתברות שווה. מה Var(X)?","options":["0.5","1","2","4"],"answer":1,"explain":"E[X]=(0+2)/2=1. E[X²]=(0²+2²)/2=2. Var(X)=E[X²]-(E[X])²=2-1=1. לא 0.5 ולא 2; השגיאה הנפוצה היא לחשב E[X²] בלי לחסר (E[X])²."}
 ```
+
+<!-- audited -->

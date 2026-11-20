@@ -8039,6 +8039,71 @@
         "metrics-monitoring"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-null-hypothesis",
+      "t": "Null hypothesis",
+      "he": "השערת האפס",
+      "d": "H₀: הנחת ברירת המחדל שאין אפקט; נדחית רק אם הנתונים קיצוניים מדי בהינתנה",
+      "rel": [
+        "c-p-value",
+        "c-significance-level"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-p-value",
+      "t": "p-value",
+      "he": "ערך p",
+      "d": "P(נתונים קיצוניים לפחות כך | H₀); לא ההסתברות שH₀ נכונה",
+      "rel": [
+        "c-null-hypothesis",
+        "c-type-i-error"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-significance-level",
+      "t": "Significance level",
+      "he": "רמת מובהקות",
+      "d": "הסף α שמתחתיו דוחים H₀; שווה לשיעור שגיאת סוג I שמוכנים לסבול",
+      "rel": [
+        "c-p-value",
+        "c-type-i-error"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-type-i-error",
+      "t": "Type I error",
+      "he": "שגיאת סוג I",
+      "d": "דחיית H₀ כשהיא נכונה (false positive); שכיחותה = α",
+      "rel": [
+        "c-significance-level",
+        "c-type-ii-error"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-type-ii-error",
+      "t": "Type II error",
+      "he": "שגיאת סוג II",
+      "d": "כשל בדחיית H₀ כשהיא שקרית (false negative); שכיחותה = β = 1 - power",
+      "rel": [
+        "c-type-i-error"
+      ],
+      "node": "prob-stats"
+    },
+    {
+      "id": "c-test-statistic",
+      "t": "Test statistic",
+      "he": "סטטיסטיקת המבחן",
+      "d": "ערך מחושב מהנתונים (t, z, F, χ²) שמסכם כמה קיצוני המדגם תחת H₀",
+      "rel": [
+        "c-null-hypothesis",
+        "c-p-value"
+      ],
+      "node": "prob-stats"
     }
   ]
 }

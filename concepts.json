@@ -8104,6 +8104,51 @@
         "c-p-value"
       ],
       "node": "prob-stats"
+    },
+    {
+      "id": "ad-click-event",
+      "t": "Click Event",
+      "he": "אירוע לחיצה",
+      "d": "הפרטיקל הבסיסי במערכת צבירת מודעות: {ad_id, user_id, timestamp, ip}; מגיע במאות אלפים לשנייה בסקאלה גדולה",
+      "rel": [
+        "hot-partition",
+        "late-arriving-event",
+        "tumbling-window-agg"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "tumbling-window-agg",
+      "t": "Tumbling Window",
+      "he": "חלון מתהפך",
+      "d": "חלון זמן קבוע שאינו מתחפף; כל event שייך לחלון אחד בלבד; מתאים לbilling ולאגרגציה מדויקת",
+      "rel": [
+        "late-arriving-event",
+        "ad-click-event"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "late-arriving-event",
+      "t": "Late-Arriving Event",
+      "he": "אירוע מאוחר",
+      "d": "event שמגיע לאחר שחלון הזמן שלו נסגר; נפוץ ממכשירים ניידים שחזרו לרשת; מטופל באמצעות watermark",
+      "rel": [
+        "tumbling-window-agg",
+        "ad-click-event"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "hot-partition",
+      "t": "Hot Partition",
+      "he": "מחיצה חמה",
+      "d": "partition ב-Kafka שמקבל תעבורה גבוהה באופן לא-פרופורציונלי עקב mapping ad_id; פתרון: shard suffix אקראי וצבירה דו-שלבית",
+      "rel": [
+        "ad-click-event",
+        "tumbling-window-agg"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

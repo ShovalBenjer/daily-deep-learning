@@ -8149,6 +8149,37 @@
         "tumbling-window-agg"
       ],
       "node": "sysdesign"
+    },
+    {
+      "id": "c-mla",
+      "t": "Multi-head Latent Attention",
+      "he": "תשומת לב חבויה רב-ראשית",
+      "d": "מנגנון attention שדוחס K ו-V לוקטור latent משותף c_KV; חוסך עד 57x זיכרון ב-KV cache",
+      "rel": [
+        "c-kv-cache",
+        "c-low-rank-kv"
+      ],
+      "node": "llm-core"
+    },
+    {
+      "id": "c-low-rank-kv",
+      "t": "Low-rank KV compression",
+      "he": "דחיסת KV דרגה נמוכה",
+      "d": "הנחה שמטריצות K ו-V ניתנות לייצוג ב-subspace ממדיות נמוכה, בסיס ל-MLA ו-LoRA",
+      "rel": [
+        "c-mla"
+      ],
+      "node": "llm-core"
+    },
+    {
+      "id": "c-matrix-absorption",
+      "t": "Matrix absorption",
+      "he": "ספיגת מטריצה",
+      "d": "אופטימיזציית inference שמקפלת uprojection matrices לתוך Q כדי לחשב attention ישירות על c_KV ללא פריסה מפורשת",
+      "rel": [
+        "c-mla"
+      ],
+      "node": "llm-core"
     }
   ]
 }

@@ -8180,6 +8180,60 @@
         "c-mla"
       ],
       "node": "llm-core"
+    },
+    {
+      "id": "room-inventory",
+      "t": "Room Inventory",
+      "he": "מלאי חדרים",
+      "d": "טבלת (hotel_id, room_type_id, date) שעוקבת אחר זמינות חדרים ליום ספציפי",
+      "rel": [
+        "double-booking",
+        "optimistic-locking-db"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "double-booking",
+      "t": "Double Booking",
+      "he": "הזמנה כפולה",
+      "d": "שני לקוחות שמצליחים להזמין את אותו חדר ביום אחד בגלל race condition",
+      "rel": [
+        "room-inventory",
+        "optimistic-locking-db"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "optimistic-locking-db",
+      "t": "Optimistic Locking (DB)",
+      "he": "נעילה אופטימיסטית בבסיס נתונים",
+      "d": "UPDATE אטומי עם תנאי מונע race condition בלי lock מפורש",
+      "rel": [
+        "double-booking",
+        "room-inventory"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "idempotency-key",
+      "t": "Idempotency Key",
+      "he": "מפתח אידמפוטנטיות",
+      "d": "UUID שהלקוח שולח כדי למנוע יצירת כפילות ב-retry; מאוחסן עם UNIQUE constraint",
+      "rel": [
+        "double-booking"
+      ],
+      "node": "sysdesign"
+    },
+    {
+      "id": "pending-reservation-timeout",
+      "t": "Pending Reservation Timeout",
+      "he": "פקיעת הזמנה ממתינה",
+      "d": "background job שמבטל הזמנות PENDING ישנות ומשחרר inventory לאחר timeout",
+      "rel": [
+        "room-inventory",
+        "double-booking"
+      ],
+      "node": "sysdesign"
     }
   ]
 }

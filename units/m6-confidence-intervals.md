@@ -74,3 +74,4 @@
 ```concepts
 {"items":[{"id":"confidence-interval","t":"Confidence Interval","he":"רווח סמך","d":"רווח המוגדר על-ידי נוהל דגימה כך ש-95% מהרווחים שייבנו כך יכילו את הפרמטר האמיתי; הפרמטר עצמו קבוע, לא מקרי.","rel":["standard-error","central-limit-theorem"],"node":"prob-stats"},{"id":"standard-error","t":"Standard Error","he":"שגיאת תקן","d":"סטיית התקן של מחלק הדגימה: sigma/sqrt(n) לממוצע, sqrt(p(1-p)/n) לפרופורציה; מודד כמה משתנה האומד בין דגימות שונות.","rel":["confidence-interval","central-limit-theorem"],"node":"prob-stats"},{"id":"central-limit-theorem","t":"Central Limit Theorem","he":"משפט הגבול המרכזי","d":"ממוצע דגימה של n תצפיות iid מתכנס ל-N(mu, sigma^2/n) כש-n גדל, ללא תלות בהתפלגות המקור; הבסיס לרוב רווחי הסמך.","rel":["confidence-interval","standard-error"],"node":"prob-stats"}]}
 ```
+<!-- audited -->

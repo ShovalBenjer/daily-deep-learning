@@ -5478,6 +5478,50 @@
     "object-store"
    ],
    "node": "sysdesign"
+  },
+  {
+   "id": "leaderboard-zset",
+   "t": "Leaderboard Sorted Set",
+   "he": "לוח דירוג כקבוצה ממוינת",
+   "d": "שימוש ב-Redis ZSET כבסיס לשירות דירוג: ZINCRBY לעדכון, ZREVRANGE ל-top-N, ZREVRANK לדירוג אחד",
+   "rel": [
+    "redis-zadd",
+    "redis-zrevrank",
+    "windowed-leaderboard"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "redis-zadd",
+   "t": "ZADD",
+   "he": "הוספה לקבוצה ממוינת",
+   "d": "פקודת Redis שמוסיפה (member, score) ל-ZSET ב-O(log N). עם NX מוסיפה רק אם לא קיים",
+   "rel": [
+    "leaderboard-zset",
+    "redis-zrevrank"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "redis-zrevrank",
+   "t": "ZREVRANK",
+   "he": "דירוג הפוך",
+   "d": "פקודת Redis שמחזירה 0-indexed rank בסדר יורד. יש להוסיף 1 לתצוגת מקום human-readable",
+   "rel": [
+    "leaderboard-zset",
+    "redis-zadd"
+   ],
+   "node": "sysdesign"
+  },
+  {
+   "id": "windowed-leaderboard",
+   "t": "Windowed Leaderboard",
+   "he": "לוח חלון-זמן",
+   "d": "ZSETs נפרדים לכל חלון (all-time, weekly, daily) עם TTL על daily/weekly לאיפוס אוטומטי",
+   "rel": [
+    "leaderboard-zset"
+   ],
+   "node": "sysdesign"
   }
  ],
  "items": [
